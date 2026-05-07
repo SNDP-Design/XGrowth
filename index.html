@@ -181,10 +181,6 @@
     <div id="loginBox" class="login-card">
       <div class="small muted">Sign in</div>
       <div id="googleBtn" class="gbtn"></div>
-      <div id="loginHint" class="small muted" style="margin-top:8px;display:none">
-        Set your Google Client ID to enable sign-in.
-        <a href="#" onclick="openSettings();return false">Configure</a>
-      </div>
     </div>
     <div id="userBox" class="user-chip" style="display:none">
       <img id="uAvatar" src="" alt=""/>
@@ -193,10 +189,7 @@
     </div>
     <div class="foot">
       <div class="pill"><span>Session</span><b id="sessionTag">Guest</b></div>
-      <div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center">
-        <span>v1.1 · saves locally</span>
-        <a href="#" onclick="openSettings();return false" class="small">Settings</a>
-      </div>
+      <div style="margin-top:8px">v1.2 · saves locally</div>
     </div>
   </aside>
   <div class="scrim" id="scrim" onclick="toggleSide(false)"></div>
@@ -549,31 +542,13 @@
   </div>
 </div>
 
-<!-- Settings modal -->
-<div class="modal" id="settings">
-  <div class="box">
-    <h2 style="margin:0 0 6px">Settings</h2>
-    <p class="muted small" style="margin:0 0 12px">Paste your Google OAuth Client ID to enable Sign in with Google. Saved in your browser only.</p>
-    <label>Google OAuth Client ID</label>
-    <input id="sClientId" type="text" placeholder="1234-xxxxxxxx.apps.googleusercontent.com"/>
-    <div class="small muted" style="margin-top:8px">
-      Get one at <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">console.cloud.google.com/apis/credentials</a> → "Create Credentials" → "OAuth client ID" → "Web application". Add your site URL to <b>Authorized JavaScript origins</b> (e.g. <code>https://sndp-design.github.io</code>).
-    </div>
-    <div class="row" style="margin-top:14px;justify-content:flex-end">
-      <button class="btn ghost" onclick="closeSettings()">Close</button>
-      <button class="btn" onclick="saveSettings()">Save</button>
-    </div>
-  </div>
-</div>
-
 <div class="toast" id="toast">Copied</div>
 
 <script>
 /* ========= State ========= */
 const KEY = 'foundergrowth_v1';
-const SETTINGS_KEY = 'foundergrowth_settings_v1';
 const USER_KEY = 'foundergrowth_user_v1';
-let settings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+const GOOGLE_CLIENT_ID = '831637981752-v53higohtieql40g6sitqpoali846igs.apps.googleusercontent.com';
 let currentUser = JSON.parse(localStorage.getItem(USER_KEY) || 'null');
 const state = load() || {
   profile: null,
@@ -1309,20 +1284,6 @@ document.getElementById('nav').addEventListener('click', e=>{
   if(e.target.closest('button[data-view]') && window.innerWidth <= 980) toggleSide(false);
 });
 
-/* ========= Settings (Google Client ID) ========= */
-function openSettings(){
-  $('sClientId').value = settings.clientId || '';
-  $('settings').classList.add('show');
-}
-function closeSettings(){ $('settings').classList.remove('show'); }
-function saveSettings(){
-  settings.clientId = val('sClientId').trim();
-  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-  closeSettings();
-  toast('Settings saved');
-  initGoogle();
-}
-
 /* ========= Google Sign-In ========= */
 function decodeJwt(token){
   try{
@@ -1347,21 +1308,14 @@ function handleGoogleCredential(resp){
   toast(`Welcome, ${currentUser.name.split(' ')[0]}`);
 }
 function initGoogle(){
-  const cid = settings.clientId;
   const box = $('googleBtn'); box.innerHTML = '';
-  if(!cid){
-    $('loginHint').style.display = 'block';
-    return;
-  }
-  $('loginHint').style.display = 'none';
   if(!window.google || !google.accounts || !google.accounts.id){
-    // GSI script not yet loaded — retry shortly
     setTimeout(initGoogle, 500);
     return;
   }
   try{
     google.accounts.id.initialize({
-      client_id: cid,
+      client_id: GOOGLE_CLIENT_ID,
       callback: handleGoogleCredential,
       auto_select: false,
       ux_mode: 'popup'
@@ -1370,8 +1324,7 @@ function initGoogle(){
       theme:'filled_black', size:'large', shape:'pill', text:'signin_with', width: 220
     });
   }catch(e){
-    $('loginHint').textContent = 'Google init error: ' + e.message;
-    $('loginHint').style.display = 'block';
+    box.innerHTML = `<div class="small muted">Google init error: ${e.message}</div>`;
   }
 }
 function applyUser(){
