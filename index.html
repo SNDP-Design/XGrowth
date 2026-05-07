@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>FounderGrowth AI — X Growth Engine for US Startup Founders</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
   :root{
     --bg:#000000;
@@ -52,7 +53,48 @@
   .grid.cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}
   .grid.cols-5{grid-template-columns:repeat(5,minmax(0,1fr))}
   @media (max-width:1180px){.grid.cols-5{grid-template-columns:repeat(2,minmax(0,1fr))}}
-  @media (max-width:980px){.grid.cols-2,.grid.cols-3,.grid.cols-4,.grid.cols-5{grid-template-columns:1fr}.app{grid-template-columns:1fr}.side{position:relative;height:auto}}
+  /* Hamburger / drawer */
+  .menu-btn{display:none;background:var(--chip);border:1px solid var(--line);color:var(--ink);width:38px;height:38px;border-radius:10px;align-items:center;justify-content:center;font-size:18px}
+  .scrim{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:40}
+  .scrim.show{display:block}
+  @media (max-width:980px){
+    .grid.cols-2,.grid.cols-3,.grid.cols-4,.grid.cols-5{grid-template-columns:1fr}
+    .app{grid-template-columns:1fr}
+    .side{position:fixed;left:0;top:0;height:100vh;width:280px;transform:translateX(-100%);transition:transform .25s ease;z-index:50;box-shadow:0 0 40px rgba(0,0,0,.6)}
+    .side.show{transform:translateX(0)}
+    .menu-btn{display:inline-flex}
+    main{padding:18px 16px 60px}
+    h2.section{font-size:18px}
+    .topbar .row{gap:6px}
+    .pill{font-size:11px;padding:3px 8px}
+    .kpi .v{font-size:22px}
+    .bar-row{height:90px}
+    table{font-size:12px}
+    th,td{padding:8px 6px}
+    .modal .box{max-width:100%;padding:16px}
+    .funnel-bar{font-size:11px}
+  }
+  @media (max-width:600px){
+    .topbar{flex-direction:column;align-items:flex-start}
+    .topbar .row{width:100%}
+    .pill{flex:1;justify-content:center}
+    .range{width:100%;justify-content:center}
+    .range button{flex:1}
+    .btn{padding:9px 12px;font-size:13px}
+    .crumbs{font-size:11px}
+    .output{font-size:12px}
+  }
+  /* Tables scroll horizontally on tiny screens */
+  .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  /* Google Sign-In */
+  .login-card{margin-top:8px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+  .login-card .gbtn{margin-top:8px;display:flex;justify-content:center}
+  .user-chip{display:flex;align-items:center;gap:10px;padding:8px;border:1px solid var(--line);border-radius:12px;background:var(--panel);margin-top:8px}
+  .user-chip img{width:32px;height:32px;border-radius:50%;border:1px solid var(--line)}
+  .user-chip .meta{flex:1;min-width:0}
+  .user-chip .meta b{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .user-chip .meta span{color:var(--muted);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+  .signout{background:transparent;border:1px solid var(--line);color:var(--muted);padding:6px 10px;border-radius:8px;font-size:11px}
   /* Range selector */
   .range{display:inline-flex;background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:3px;gap:2px}
   .range button{background:transparent;border:0;color:var(--muted);padding:6px 12px;border-radius:999px;font-size:12px;font-weight:600}
@@ -136,16 +178,36 @@
       <button data-view="auditor"><span class="dot"></span> Analytics Auditor</button>
       <button data-view="reports"><span class="dot"></span> Reports & Exports</button>
     </div>
+    <div id="loginBox" class="login-card">
+      <div class="small muted">Sign in</div>
+      <div id="googleBtn" class="gbtn"></div>
+      <div id="loginHint" class="small muted" style="margin-top:8px;display:none">
+        Set your Google Client ID to enable sign-in.
+        <a href="#" onclick="openSettings();return false">Configure</a>
+      </div>
+    </div>
+    <div id="userBox" class="user-chip" style="display:none">
+      <img id="uAvatar" src="" alt=""/>
+      <div class="meta"><b id="uName">—</b><span id="uEmail">—</span></div>
+      <button class="signout" onclick="signOut()">Sign out</button>
+    </div>
     <div class="foot">
       <div class="pill"><span>Session</span><b id="sessionTag">Guest</b></div>
-      <div style="margin-top:8px">v1.0 · saves locally</div>
+      <div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center">
+        <span>v1.1 · saves locally</span>
+        <a href="#" onclick="openSettings();return false" class="small">Settings</a>
+      </div>
     </div>
   </aside>
+  <div class="scrim" id="scrim" onclick="toggleSide(false)"></div>
 
   <!-- Main -->
   <main>
     <div class="topbar">
-      <div class="crumbs"><span id="crumb">Dashboard</span> · <span class="muted">Track what moves the needle</span></div>
+      <div class="row" style="align-items:center;gap:8px">
+        <button class="menu-btn" onclick="toggleSide()" aria-label="Open menu">☰</button>
+        <div class="crumbs"><span id="crumb">Dashboard</span> · <span class="muted">Track what moves the needle</span></div>
+      </div>
       <div class="row">
         <span class="pill">Niche · <b id="nicheTag">—</b></span>
         <span class="pill">Stage · <b id="stageTag">—</b></span>
@@ -238,17 +300,17 @@
       <div class="grid cols-2" style="margin-top:14px">
         <div class="card">
           <div class="copybar"><h3>Top Posts This Week</h3><button class="btn ghost" id="addPost">+ Log post</button></div>
-          <table>
+          <div class="table-wrap"><table>
             <thead><tr><th>Post</th><th>Impr</th><th>WoW</th><th>Likes</th><th>Replies</th><th>RT</th><th>ER</th></tr></thead>
             <tbody id="postsBody"></tbody>
-          </table>
+          </table></div>
         </div>
         <div class="card">
           <h3>Campaign ROI</h3>
-          <table>
+          <div class="table-wrap"><table>
             <thead><tr><th>Campaign</th><th>Spend</th><th>Leads</th><th>CPL</th><th>Status</th></tr></thead>
             <tbody id="campBody"></tbody>
-          </table>
+          </table></div>
           <div class="divider"></div>
           <div class="row">
             <button class="btn secondary" onclick="exportJSON()">Export JSON</button>
@@ -487,11 +549,32 @@
   </div>
 </div>
 
+<!-- Settings modal -->
+<div class="modal" id="settings">
+  <div class="box">
+    <h2 style="margin:0 0 6px">Settings</h2>
+    <p class="muted small" style="margin:0 0 12px">Paste your Google OAuth Client ID to enable Sign in with Google. Saved in your browser only.</p>
+    <label>Google OAuth Client ID</label>
+    <input id="sClientId" type="text" placeholder="1234-xxxxxxxx.apps.googleusercontent.com"/>
+    <div class="small muted" style="margin-top:8px">
+      Get one at <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">console.cloud.google.com/apis/credentials</a> → "Create Credentials" → "OAuth client ID" → "Web application". Add your site URL to <b>Authorized JavaScript origins</b> (e.g. <code>https://sndp-design.github.io</code>).
+    </div>
+    <div class="row" style="margin-top:14px;justify-content:flex-end">
+      <button class="btn ghost" onclick="closeSettings()">Close</button>
+      <button class="btn" onclick="saveSettings()">Save</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast">Copied</div>
 
 <script>
 /* ========= State ========= */
 const KEY = 'foundergrowth_v1';
+const SETTINGS_KEY = 'foundergrowth_settings_v1';
+const USER_KEY = 'foundergrowth_user_v1';
+let settings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+let currentUser = JSON.parse(localStorage.getItem(USER_KEY) || 'null');
 const state = load() || {
   profile: null,
   metrics: {
@@ -1213,8 +1296,114 @@ function download(blob, name){
   URL.revokeObjectURL(a.href);
 }
 
+/* ========= Mobile drawer ========= */
+function toggleSide(force){
+  const s = document.querySelector('.side');
+  const sc = $('scrim');
+  const open = force === undefined ? !s.classList.contains('show') : !!force;
+  s.classList.toggle('show', open);
+  sc.classList.toggle('show', open);
+}
+// Close drawer when nav button tapped (mobile)
+document.getElementById('nav').addEventListener('click', e=>{
+  if(e.target.closest('button[data-view]') && window.innerWidth <= 980) toggleSide(false);
+});
+
+/* ========= Settings (Google Client ID) ========= */
+function openSettings(){
+  $('sClientId').value = settings.clientId || '';
+  $('settings').classList.add('show');
+}
+function closeSettings(){ $('settings').classList.remove('show'); }
+function saveSettings(){
+  settings.clientId = val('sClientId').trim();
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  closeSettings();
+  toast('Settings saved');
+  initGoogle();
+}
+
+/* ========= Google Sign-In ========= */
+function decodeJwt(token){
+  try{
+    const payload = token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
+    const json = decodeURIComponent(atob(payload).split('').map(c =>
+      '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+    ).join(''));
+    return JSON.parse(json);
+  }catch(e){ return null; }
+}
+function handleGoogleCredential(resp){
+  const data = decodeJwt(resp.credential);
+  if(!data){ toast('Sign-in failed'); return; }
+  currentUser = {
+    name: data.name || 'Founder',
+    email: data.email || '',
+    picture: data.picture || '',
+    sub: data.sub
+  };
+  localStorage.setItem(USER_KEY, JSON.stringify(currentUser));
+  applyUser();
+  toast(`Welcome, ${currentUser.name.split(' ')[0]}`);
+}
+function initGoogle(){
+  const cid = settings.clientId;
+  const box = $('googleBtn'); box.innerHTML = '';
+  if(!cid){
+    $('loginHint').style.display = 'block';
+    return;
+  }
+  $('loginHint').style.display = 'none';
+  if(!window.google || !google.accounts || !google.accounts.id){
+    // GSI script not yet loaded — retry shortly
+    setTimeout(initGoogle, 500);
+    return;
+  }
+  try{
+    google.accounts.id.initialize({
+      client_id: cid,
+      callback: handleGoogleCredential,
+      auto_select: false,
+      ux_mode: 'popup'
+    });
+    google.accounts.id.renderButton(box, {
+      theme:'filled_black', size:'large', shape:'pill', text:'signin_with', width: 220
+    });
+  }catch(e){
+    $('loginHint').textContent = 'Google init error: ' + e.message;
+    $('loginHint').style.display = 'block';
+  }
+}
+function applyUser(){
+  if(currentUser){
+    $('loginBox').style.display = 'none';
+    $('userBox').style.display = 'flex';
+    $('uName').textContent = currentUser.name;
+    $('uEmail').textContent = currentUser.email;
+    $('uAvatar').src = currentUser.picture || '';
+    $('sessionTag').textContent = currentUser.name.split(' ')[0];
+    // Pre-fill brand kit name field if present and empty
+    const bn = document.getElementById('bName');
+    if(bn && !bn.value) bn.value = currentUser.name;
+  }else{
+    $('loginBox').style.display = 'block';
+    $('userBox').style.display = 'none';
+  }
+}
+function signOut(){
+  if(window.google && google.accounts && google.accounts.id){
+    try{ google.accounts.id.disableAutoSelect(); }catch(e){}
+  }
+  currentUser = null;
+  localStorage.removeItem(USER_KEY);
+  applyUser();
+  toast('Signed out');
+}
+
 /* ========= Init ========= */
-window.addEventListener('resize', ()=>{ renderKPIs(); });
+window.addEventListener('resize', ()=>{ renderKPIs(); renderBars(); renderVelocity(); });
+applyUser();
+initGoogle();
 if(!state.profile){ openWelcome(); }
 else { applyProfile(); }
 </script>
