@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>FounderGrowth AI — X Growth Engine for US Startup Founders</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <style>
   :root{
     --bg:#000000;
@@ -95,6 +98,13 @@
   .user-chip .meta b{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .user-chip .meta span{color:var(--muted);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
   .signout{background:transparent;border:1px solid var(--line);color:var(--muted);padding:6px 10px;border-radius:8px;font-size:11px}
+  .sync{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);margin-top:6px}
+  .sync .dot{width:7px;height:7px;border-radius:50%;background:var(--muted)}
+  .sync.synced .dot{background:#4ade80}
+  .sync.syncing .dot{background:#fbbf24;animation:pulse 1s infinite}
+  .sync.offline .dot{background:#f87171}
+  .sync.error .dot{background:#f87171}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
   /* Range selector */
   .range{display:inline-flex;background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:3px;gap:2px}
   .range button{background:transparent;border:0;color:var(--muted);padding:6px 12px;border-radius:999px;font-size:12px;font-weight:600}
@@ -182,10 +192,13 @@
       <div class="small muted">Sign in</div>
       <div id="googleBtn" class="gbtn"></div>
     </div>
-    <div id="userBox" class="user-chip" style="display:none">
-      <img id="uAvatar" src="" alt=""/>
-      <div class="meta"><b id="uName">—</b><span id="uEmail">—</span></div>
-      <button class="signout" onclick="signOut()">Sign out</button>
+    <div id="userBox" style="display:none">
+      <div class="user-chip">
+        <img id="uAvatar" src="" alt=""/>
+        <div class="meta"><b id="uName">—</b><span id="uEmail">—</span></div>
+        <button class="signout" onclick="signOut()">Sign out</button>
+      </div>
+      <div id="syncStatus" class="sync"><span class="dot"></span><span id="syncLabel">Offline</span></div>
     </div>
     <div class="foot">
       <div class="pill"><span>Session</span><b id="sessionTag">Guest</b></div>
@@ -555,6 +568,22 @@ const KEY = 'foundergrowth_v1';
 const USER_KEY = 'foundergrowth_user_v1';
 const GOOGLE_CLIENT_ID = '831637981752-v53higohtieql40g6sitqpoali846igs.apps.googleusercontent.com';
 let currentUser = JSON.parse(localStorage.getItem(USER_KEY) || 'null');
+
+/* ========= Firebase init ========= */
+const firebaseConfig = {
+  apiKey: "AIzaSyBdf9wvcLM2k4xHD2rZQ_bQlvqYIoyrFHU",
+  authDomain: "xgrowth-351de.firebaseapp.com",
+  projectId: "xgrowth-351de",
+  storageBucket: "xgrowth-351de.firebasestorage.app",
+  messagingSenderId: "595634587931",
+  appId: "1:595634587931:web:d6123a514e45a41c286bbe",
+  measurementId: "G-WEXX5KT98Z"
+};
+firebase.initializeApp(firebaseConfig);
+const fbAuth = firebase.auth();
+const db = firebase.firestore();
+let saveDebounce = null;
+let cloudLoaded = false;
 const state = load() || {
   profile: null,
   metrics: {
@@ -570,8 +599,51 @@ const state = load() || {
 };
 if(state.range == null) state.range = 14;
 
-function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
+function save(){
+  localStorage.setItem(KEY, JSON.stringify(state));
+  // Mirror to Firestore (debounced) when signed in
+  if(fbAuth.currentUser && cloudLoaded){
+    setSync('syncing');
+    clearTimeout(saveDebounce);
+    saveDebounce = setTimeout(()=>{
+      db.collection('users').doc(fbAuth.currentUser.uid).set(state, {merge:false})
+        .then(()=> setSync('synced'))
+        .catch(err=>{ console.error('Cloud save failed', err); setSync('error'); });
+    }, 700);
+  }
+}
 function load(){ try{return JSON.parse(localStorage.getItem(KEY))}catch{return null} }
+function setSync(status){
+  const el = $('syncStatus'); if(!el) return;
+  el.className = 'sync ' + status;
+  $('syncLabel').textContent = {synced:'Synced', syncing:'Syncing…', offline:'Offline', error:'Sync error'}[status] || status;
+}
+async function loadFromCloud(){
+  if(!fbAuth.currentUser) return;
+  setSync('syncing');
+  try{
+    const snap = await db.collection('users').doc(fbAuth.currentUser.uid).get();
+    if(snap.exists){
+      const cloud = snap.data() || {};
+      // Cloud wins on initial load
+      Object.assign(state, cloud);
+      localStorage.setItem(KEY, JSON.stringify(state));
+      cloudLoaded = true;
+      if(state.profile){ applyProfile(); }
+      else { renderAll(); }
+      setSync('synced');
+    } else {
+      // First sign-in on this account → push current local state up
+      cloudLoaded = true;
+      await db.collection('users').doc(fbAuth.currentUser.uid).set(state);
+      setSync('synced');
+    }
+  }catch(err){
+    console.error('Cloud load failed', err);
+    setSync('error');
+    cloudLoaded = false;
+  }
+}
 
 /* ========= Navigation ========= */
 const nav = document.getElementById('nav');
@@ -1311,6 +1383,15 @@ function handleGoogleCredential(resp){
   localStorage.setItem(USER_KEY, JSON.stringify(currentUser));
   applyUser();
   toast(`Welcome, ${currentUser.name.split(' ')[0]}`);
+  // Also sign into Firebase using the same Google credential
+  setSync('syncing');
+  const cred = firebase.auth.GoogleAuthProvider.credential(resp.credential);
+  fbAuth.signInWithCredential(cred).catch(err=>{
+    console.error('Firebase sign-in failed', err);
+    setSync('error');
+    toast('Cloud sync unavailable');
+  });
+  // loadFromCloud is triggered by onAuthStateChanged below
 }
 function initGoogle(){
   const box = $('googleBtn'); box.innerHTML = '';
@@ -1353,10 +1434,35 @@ function signOut(){
     try{ google.accounts.id.disableAutoSelect(); }catch(e){}
   }
   currentUser = null;
+  cloudLoaded = false;
   localStorage.removeItem(USER_KEY);
+  fbAuth.signOut().catch(()=>{});
   applyUser();
+  setSync('offline');
   toast('Signed out');
 }
+
+/* React to Firebase auth state changes (page reloads, token refresh, etc.) */
+fbAuth.onAuthStateChanged(user=>{
+  if(user){
+    // Already signed in — pull cloud data
+    loadFromCloud();
+    // Refresh local user info from Firebase if missing
+    if(!currentUser){
+      currentUser = {
+        name: user.displayName || 'Founder',
+        email: user.email || '',
+        picture: user.photoURL || '',
+        sub: user.uid
+      };
+      localStorage.setItem(USER_KEY, JSON.stringify(currentUser));
+      applyUser();
+    }
+  } else {
+    cloudLoaded = false;
+    setSync('offline');
+  }
+});
 
 /* ========= Init ========= */
 window.addEventListener('resize', ()=>{ renderKPIs(); renderBars(); renderVelocity(); });
