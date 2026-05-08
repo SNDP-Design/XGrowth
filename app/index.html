@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>XGrowth — X Growth Engine for US Startup Founders</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3CradialGradient id='g' cx='50%25' cy='40%25' r='60%25'%3E%3Cstop offset='0%25' stop-color='%23ffffff'/%3E%3Cstop offset='100%25' stop-color='%233a3a3a'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='%23000'/%3E%3Ccircle cx='32' cy='30' r='18' fill='url(%23g)'/%3E%3Ctext x='32' y='52' font-family='Helvetica,Arial,sans-serif' font-size='14' font-weight='700' fill='%23ededed' text-anchor='middle'%3EX%3C/text%3E%3C/svg%3E"/>
+<title>XGrowth — Marketing &amp; Personal Branding OS</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='b' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0%25' stop-color='%231a1a1a'/%3E%3Cstop offset='100%25' stop-color='%23000'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='url(%23b)'/%3E%3Cg stroke='%23fafafa' stroke-width='7' stroke-linecap='round'%3E%3Cline x1='19' y1='19' x2='45' y2='45'/%3E%3Cline x1='45' y1='19' x2='19' y2='45'/%3E%3C/g%3E%3C/svg%3E"/>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
@@ -35,7 +35,8 @@
   .side-spacer{flex:1}
   .nav button svg{width:18px;height:18px;flex-shrink:0;stroke:currentColor}
   .brand{display:flex;align-items:center;gap:10px;padding:6px 8px}
-  .logo{width:32px;height:32px;border-radius:9px;background:conic-gradient(from 220deg,#3a3a3a,#ffffff,#3a3a3a);box-shadow:0 6px 20px rgba(255,255,255,.12)}
+  .logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(180deg,#1a1a1a,#000);border:1px solid #2a2a2a;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 6px 20px rgba(0,0,0,.4)}
+  .logo svg{width:18px;height:18px}
   .brand h1{font-size:16px;margin:0;letter-spacing:.2px;font-weight:700}
   .brand small{display:block;color:var(--muted);font-size:11px}
   .nav{display:flex;flex-direction:column;gap:4px;margin-top:8px}
@@ -185,10 +186,10 @@
   <!-- Sidebar -->
   <aside class="side">
     <a href="/" class="brand" style="text-decoration:none;color:inherit" title="Back to homepage">
-      <div class="logo"></div>
+      <span class="logo"><svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><g stroke="#fafafa" stroke-width="9" stroke-linecap="round"><line x1="14" y1="14" x2="50" y2="50"/><line x1="50" y1="14" x2="14" y2="50"/></g></svg></span>
       <div>
         <h1>XGrowth</h1>
-        <small>X Growth Engine · for US founders</small>
+        <small>Marketing &amp; Personal Branding OS</small>
       </div>
     </a>
     <div class="nav" id="nav">
@@ -271,7 +272,7 @@
           <span class="small muted" id="rangeNote">vs prior 14 days</span>
         </div>
       </div>
-      <p class="lede">Real founder-friendly metrics for your X growth, content engine, and campaigns. Connect data manually or paste from X analytics.</p>
+      <p class="lede">Real metrics across every platform you publish on. Connect data manually or paste from your platform's analytics.</p>
 
       <div class="grid cols-5">
         <div class="card kpi">
@@ -580,8 +581,8 @@
 <!-- Welcome modal -->
 <div class="modal" id="welcome">
   <div class="box">
-    <h2 style="margin:0 0 6px">Hey founder — let's build your X growth engine.</h2>
-    <p class="muted" style="margin:0 0 12px">Tell me your niche and top goal. We'll tailor every output for US founders (pre-seed → Series A).</p>
+    <h2 style="margin:0 0 6px">Welcome — let's set up your marketing OS.</h2>
+    <p class="muted" style="margin:0 0 12px">Tell me about your brand and goals. We'll tune every output to your niche, audience, and platform mix.</p>
     <div class="grid cols-2">
       <div>
         <label>Niche</label>
@@ -1207,7 +1208,7 @@ function genCopy(){
   const cta=val('wCTA')||'Book a 15-min demo';
   const out = `## Hero
 # ${w}.
-${n} helps US founders cut busywork by 80% — without hiring.
+${n} helps you cut marketing busywork by 80% — without an agency.
 [${cta}]
 
 ## About
@@ -1230,7 +1231,7 @@ ${bio} I built ${n} after watching teams lose weeks to manual ops. Now ${n} runs
 <section style="padding:80px 24px;text-align:center">
   <h1 style="font-size:56px;margin:0 0 12px">${w}.</h1>
   <p style="font-size:18px;color:#475569;max-width:640px;margin:0 auto 24px">
-    ${n} helps US founders cut busywork by 80% — without hiring.
+    ${n} helps you cut marketing busywork by 80% — without an agency.
   </p>
   <a href="#cta" style="background:#111;color:#fff;padding:14px 22px;border-radius:10px;text-decoration:none">${cta}</a>
 </section>
@@ -1460,6 +1461,14 @@ function initGoogle(){
     google.accounts.id.renderButton(box, {
       theme:'filled_black', size:'large', shape:'pill', text:'signin_with', width: 220
     });
+    // If we arrived from the marketing site with ?signin=1, auto-prompt the One Tap chooser
+    const params = new URLSearchParams(window.location.search);
+    if(params.get('signin') === '1' && !fbAuth.currentUser){
+      try{ google.accounts.id.prompt(); }catch(e){}
+      // Strip the param so refreshes don't re-trigger
+      const url = new URL(window.location.href); url.searchParams.delete('signin');
+      history.replaceState({}, '', url.toString());
+    }
   }catch(e){
     box.innerHTML = `<div class="small muted">Google init error: ${e.message}</div>`;
   }

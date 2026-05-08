@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>XGrowth — X Growth Engine for US Startup Founders</title>
-<meta name="description" content="The AI-powered X growth engine for US founders. Build your brand, write viral threads, run campaigns, and track ROI — without hiring an agency." />
-<meta property="og:title" content="XGrowth — X Growth Engine for Founders" />
-<meta property="og:description" content="AI-powered toolkit to grow on X. Built for US founders, pre-seed to Series A." />
+<title>XGrowth — The Marketing &amp; Personal Branding OS</title>
+<meta name="description" content="One operating system for your marketing and personal brand. AI-generated content, campaigns, and analytics across every platform — X, LinkedIn, Instagram, Threads, TikTok, and more." />
+<meta property="og:title" content="XGrowth — The Marketing &amp; Personal Branding OS" />
+<meta property="og:description" content="One OS for your marketing &amp; personal brand. AI content, campaigns, analytics across every platform." />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://www.xgrowth.uno" />
 <meta name="twitter:card" content="summary_large_image" />
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23000'/%3E%3Ctext x='32' y='44' font-family='Helvetica,Arial,sans-serif' font-size='34' font-weight='800' fill='%23ededed' text-anchor='middle'%3EX%3C/text%3E%3C/svg%3E"/>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='b' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0%25' stop-color='%231a1a1a'/%3E%3Cstop offset='100%25' stop-color='%23000'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='url(%23b)'/%3E%3Cg stroke='%23fafafa' stroke-width='7' stroke-linecap='round'%3E%3Cline x1='19' y1='19' x2='45' y2='45'/%3E%3Cline x1='45' y1='19' x2='19' y2='45'/%3E%3C/g%3E%3C/svg%3E"/>
 <style>
   :root{
     --bg:#000;--bg-2:#070707;--panel:#0d0d0d;--panel-2:#141414;
@@ -38,8 +38,10 @@
   nav.top.scrolled .row{height:56px}
   .brand{display:flex;align-items:center;gap:10px;transition:transform .2s}
   .brand:hover{transform:translateX(-1px)}
-  .logo{width:30px;height:30px;border-radius:8px;background:conic-gradient(from 220deg,#3a3a3a,#fff,#3a3a3a);transition:transform .6s ease,box-shadow .25s}
-  .brand:hover .logo{transform:rotate(220deg);box-shadow:0 0 24px rgba(255,255,255,.15)}
+  .logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(180deg,#1a1a1a,#000);border:1px solid #2a2a2a;display:inline-flex;align-items:center;justify-content:center;transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s,border-color .35s;flex-shrink:0;position:relative;overflow:hidden}
+  .logo::before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.08),transparent 50%);pointer-events:none}
+  .logo svg{width:18px;height:18px;display:block;position:relative;z-index:1}
+  .brand:hover .logo{transform:rotate(8deg) scale(1.06);border-color:#3a3a3a;box-shadow:0 0 24px rgba(255,255,255,.12)}
   .brand b{font-size:15px;letter-spacing:.2px}
   nav.top .links{display:flex;gap:6px;margin-left:30px;font-size:14px}
   nav.top .links a{color:var(--muted);padding:7px 12px;border-radius:8px;transition:color .2s, background .2s;position:relative}
@@ -103,8 +105,63 @@
   .hero-cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
   .hero-trust{margin-top:22px;color:var(--muted);font-size:13px}
   /* Dashboard preview mockup */
-  .preview{margin:60px auto 0;max-width:980px;background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 30px 80px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.04);transition:transform .5s cubic-bezier(.2,.8,.2,1), box-shadow .5s;will-change:transform}
+  .preview{margin:64px auto 0;max-width:1080px;background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);border-radius:18px;padding:14px;box-shadow:0 30px 80px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.04);transition:transform .5s cubic-bezier(.2,.8,.2,1), box-shadow .5s;will-change:transform}
   .preview:hover{transform:translateY(-6px) scale(1.005);box-shadow:0 40px 100px rgba(0,0,0,.6),0 0 60px rgba(255,255,255,.05),inset 0 1px 0 rgba(255,255,255,.06)}
+  /* Inline app structure inside preview */
+  .pv-app{display:grid;grid-template-columns:160px 1fr;background:#0a0a0a}
+  .pv-side{padding:12px 8px;border-right:1px solid var(--line);background:linear-gradient(180deg,#0a0a0a,#050505);display:flex;flex-direction:column;gap:6px;min-height:430px}
+  .pv-brand{display:flex;align-items:center;gap:8px;padding:6px 4px;margin-bottom:4px}
+  .pv-brand .logo{width:24px;height:24px;border-radius:6px}
+  .pv-brand .logo svg{width:14px;height:14px}
+  .pv-brand b{font-size:12px;color:var(--ink)}
+  .pv-nav-item{display:flex;align-items:center;gap:8px;padding:6px 8px;font-size:11px;color:var(--muted);border-radius:6px;border:1px solid transparent}
+  .pv-nav-item.active{color:var(--ink);background:linear-gradient(180deg,#1c1c1c,#141414);border-color:var(--line)}
+  .pv-nav-item .ic{width:11px;height:11px;border-radius:2px;background:currentColor;opacity:.5;flex-shrink:0}
+  .pv-nav-item.active .ic{opacity:1}
+  .pv-side-bottom{margin-top:auto;border:1px solid var(--line);border-radius:8px;padding:8px;background:#0d0d0d;display:flex;align-items:center;gap:7px}
+  .pv-side-bottom .av{width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,#7a7a7a,#3a3a3a);flex-shrink:0}
+  .pv-side-bottom .who{font-size:10px;line-height:1.2;color:var(--ink);overflow:hidden}
+  .pv-side-bottom .who span{display:block;color:var(--muted);font-size:9px}
+  .pv-main{padding:14px}
+  .pv-topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+  .pv-crumb{font-size:10px;color:var(--muted)}
+  .pv-pill-row{display:flex;gap:5px;flex-wrap:wrap}
+  .pv-pill{font-size:9px;padding:2px 7px;background:var(--chip);border:1px solid var(--line);border-radius:99px;color:var(--muted)}
+  .pv-pill b{color:var(--ink);font-weight:600}
+  .pv-section{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  .pv-section h3{font-size:14px;margin:0;font-weight:700}
+  .pv-range{display:inline-flex;background:var(--chip);border:1px solid var(--line);border-radius:99px;padding:2px;gap:1px}
+  .pv-range span{padding:3px 8px;font-size:9px;color:var(--muted);border-radius:99px}
+  .pv-range span.active{background:linear-gradient(180deg,#1c1c1c,#141414);color:var(--ink);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+  .pv-kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:8px}
+  .pv-kpi{background:#0d0d0d;border:1px solid var(--line);border-radius:8px;padding:9px}
+  .pv-kpi h4{margin:0 0 4px;font-size:9px;color:var(--muted);font-weight:500;letter-spacing:.3px;text-transform:uppercase}
+  .pv-kpi .v{font-size:15px;font-weight:700}
+  .pv-kpi .d{font-size:9px;color:var(--good);margin-left:4px;font-weight:600}
+  .pv-kpi .d.neg{color:#f87171}
+  .pv-kpi .spark{margin-top:4px;height:18px;display:flex;gap:1px;align-items:flex-end}
+  .pv-kpi .spark i{flex:1;background:linear-gradient(180deg,#e5e5e5,#525252);border-radius:1px}
+  .pv-row3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px}
+  .pv-card{background:#0d0d0d;border:1px solid var(--line);border-radius:8px;padding:10px}
+  .pv-card h4{margin:0 0 8px;font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.3px}
+  .pv-bars{display:flex;gap:2px;align-items:flex-end;height:60px}
+  .pv-bars i{flex:1;background:linear-gradient(180deg,#e5e5e5,#525252);border-radius:2px 2px 0 0}
+  .pv-bars.green i{background:linear-gradient(180deg,#4ade80,#22c55e)}
+  .pv-funnel{display:flex;flex-direction:column;gap:5px}
+  .pv-funnel .b{height:14px;border-radius:4px;background:linear-gradient(90deg,#f5f5f5,#a3a3a3);color:#0a0a0a;font-size:8px;font-weight:700;display:flex;align-items:center;padding:0 6px}
+  .pv-funnel .b.f2{background:linear-gradient(90deg,#d4d4d4,#7a7a7a);width:78%}
+  .pv-funnel .b.f3{background:linear-gradient(90deg,#a3a3a3,#525252);width:55%}
+  .pv-funnel .b.f4{background:linear-gradient(90deg,#737373,#3a3a3a);color:#ededed;width:32%}
+  .pv-quick{display:flex;flex-direction:column;gap:5px}
+  .pv-quick .qa{display:flex;align-items:center;gap:7px;padding:5px 7px;border:1px solid var(--line);border-radius:6px;background:#0a0a0a;font-size:10px;color:var(--ink)}
+  .pv-quick .qa .ic{width:18px;height:18px;border-radius:5px;background:var(--chip);border:1px solid var(--line);display:inline-flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0}
+  .pv-row2{display:grid;grid-template-columns:2fr 1fr;gap:8px}
+  @media (max-width:880px){
+    .pv-app{grid-template-columns:1fr}
+    .pv-side{display:none}
+    .pv-kpis{grid-template-columns:repeat(2,1fr)}
+    .pv-row3,.pv-row2{grid-template-columns:1fr}
+  }
   /* Animated mockup bars on load */
   .pv-bars i, .pv-kpi .spark i{transform-origin:bottom;transform:scaleY(0);animation:barIn .9s cubic-bezier(.2,.8,.2,1) forwards}
   .pv-bars i:nth-child(1){animation-delay:.4s} .pv-bars i:nth-child(2){animation-delay:.45s} .pv-bars i:nth-child(3){animation-delay:.5s} .pv-bars i:nth-child(4){animation-delay:.55s} .pv-bars i:nth-child(5){animation-delay:.6s} .pv-bars i:nth-child(6){animation-delay:.65s} .pv-bars i:nth-child(7){animation-delay:.7s} .pv-bars i:nth-child(8){animation-delay:.75s} .pv-bars i:nth-child(9){animation-delay:.8s} .pv-bars i:nth-child(10){animation-delay:.85s} .pv-bars i:nth-child(11){animation-delay:.9s} .pv-bars i:nth-child(12){animation-delay:.95s} .pv-bars i:nth-child(13){animation-delay:1s} .pv-bars i:nth-child(14){animation-delay:1.05s}
@@ -181,29 +238,60 @@
   .price ul li:last-child{border-bottom:0}
   .price ul li::before{content:"✓";color:var(--good);font-weight:700;flex-shrink:0}
   .price .btn{margin-top:auto;justify-content:center}
+  /* Beta card (replaces pricing) */
+  .beta-card{max-width:760px;margin:0 auto;text-align:center;padding:60px 40px;background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);border-radius:20px;position:relative;overflow:hidden}
+  .beta-card::before{content:"";position:absolute;inset:-1px;background:radial-gradient(800px 300px at 50% 0%,rgba(255,255,255,.08),transparent 70%);pointer-events:none}
+  .beta-card .beta-pill{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.25);border-radius:99px;font-size:12px;color:#86efac;margin-bottom:18px;position:relative;z-index:1}
+  .beta-card .beta-pill .blink{width:7px;height:7px;border-radius:50%;background:var(--good);box-shadow:0 0 0 0 rgba(74,222,128,.6);animation:blink 2s infinite}
+  .beta-card h2{font-size:36px;line-height:1.15;letter-spacing:-.8px;margin:0 0 12px;font-weight:800;position:relative;z-index:1}
+  .beta-card p{color:var(--muted);max-width:520px;margin:0 auto;font-size:16px;position:relative;z-index:1}
+  @media (max-width:880px){
+    .beta-card{padding:40px 24px}
+    .beta-card h2{font-size:26px}
+  }
   /* FAQ */
-  .faq{max-width:720px;margin:30px auto 0}
-  details{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:10px;cursor:pointer;transition:border-color .25s,background .25s}
-  details:hover{border-color:#2c2c2c}
-  details[open]{border-color:#3a3a3a;background:linear-gradient(180deg,#161616,#101010)}
-  details[open] p{animation:fadeIn .3s ease-out}
-  @keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
-  details summary{font-weight:600;font-size:15px;list-style:none;display:flex;justify-content:space-between;align-items:center}
-  details summary::-webkit-details-marker{display:none}
-  details summary::after{content:"+";color:var(--muted);font-size:24px;font-weight:300;transition:transform .3s cubic-bezier(.2,.8,.2,1),color .2s;display:inline-block;line-height:1}
-  details:hover summary::after{color:var(--ink)}
-  details[open] summary::after{transform:rotate(45deg);color:var(--ink)}
-  details p{color:var(--muted);font-size:14px;margin:12px 0 0;line-height:1.65}
+  .faq{max-width:760px;margin:30px auto 0}
+  /* Custom FAQ */
+  .qa{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);border-radius:14px;margin-bottom:12px;overflow:hidden;transition:border-color .3s, background .3s, transform .3s cubic-bezier(.2,.8,.2,1)}
+  .qa:hover{border-color:#2e2e2e;transform:translateY(-1px)}
+  .qa.open{border-color:#3a3a3a;background:linear-gradient(180deg,#161616,#0f0f0f)}
+  .qa-head{width:100%;display:flex;justify-content:space-between;align-items:center;gap:14px;padding:18px 22px;background:transparent;border:0;color:var(--ink);font:inherit;font-size:16px;font-weight:600;text-align:left;cursor:pointer;transition:color .2s}
+  .qa-head:hover{color:#fff}
+  .qa-head:focus-visible{outline:2px solid #fff;outline-offset:-3px;border-radius:14px}
+  .qa-icon{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:var(--chip);border:1px solid var(--line);color:var(--muted);font-size:18px;font-weight:300;line-height:1;flex-shrink:0;transition:transform .35s cubic-bezier(.2,.8,.2,1),background .25s,color .25s,border-color .25s}
+  .qa:hover .qa-icon{color:var(--ink);border-color:#3a3a3a}
+  .qa.open .qa-icon{transform:rotate(45deg);background:#1f1f1f;color:var(--ink);border-color:#3a3a3a}
+  .qa-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .4s cubic-bezier(.2,.8,.2,1)}
+  .qa.open .qa-body{grid-template-rows:1fr}
+  .qa-body-inner{overflow:hidden;min-height:0}
+  .qa-body p{color:var(--muted);font-size:15px;margin:0;padding:0 22px 22px;line-height:1.65}
+  .qa-body p a{color:var(--ink);text-decoration:underline;text-underline-offset:3px;text-decoration-color:#3a3a3a}
+  .qa-body p a:hover{text-decoration-color:#ededed}
   /* Final CTA */
   .final{text-align:center;padding:90px 22px;border-top:1px solid var(--line);background:radial-gradient(800px 400px at 50% -50%,rgba(255,255,255,.06),transparent 70%)}
   .final h2{font-size:48px;font-weight:800;letter-spacing:-1.2px;margin:0 0 14px;line-height:1.1}
   .final p{color:var(--muted);font-size:17px;max-width:520px;margin:0 auto 28px}
   /* Footer */
-  footer.foot{padding:50px 22px 30px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}
-  footer.foot .row{display:flex;justify-content:space-between;flex-wrap:wrap;gap:18px}
-  footer.foot .links{display:flex;gap:22px}
-  footer.foot a{color:var(--muted)}
-  footer.foot a:hover{color:var(--ink)}
+  footer.foot{padding:80px 22px 30px;border-top:1px solid var(--line);color:var(--muted);font-size:14px;background:linear-gradient(180deg,transparent,rgba(0,0,0,.4))}
+  .foot-grid{display:grid;grid-template-columns:1.4fr repeat(3,1fr);gap:50px;max-width:1180px;margin:0 auto;padding:0 22px}
+  .foot-brand{display:flex;flex-direction:column;gap:14px;max-width:340px}
+  .foot-brand .brand{align-items:center}
+  .foot-brand p{margin:0;color:var(--muted);line-height:1.6}
+  .foot-col h4{font-size:13px;text-transform:uppercase;letter-spacing:.6px;color:var(--ink);margin:0 0 14px;font-weight:600}
+  .foot-col ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px}
+  .foot-col a{color:var(--muted);transition:color .2s;display:inline-flex;align-items:center;gap:6px}
+  .foot-col a:hover{color:var(--ink)}
+  .foot-col a .ext{opacity:0;transform:translate(-4px,4px);transition:opacity .2s,transform .2s;font-size:12px}
+  .foot-col a:hover .ext{opacity:1;transform:translate(0,0)}
+  .foot-bottom{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;max-width:1180px;margin:50px auto 0;padding:24px 22px 0;border-top:1px solid var(--line);color:#666;font-size:12px}
+  .foot-bottom .socials{display:flex;gap:8px}
+  .foot-bottom .sb{width:34px;height:34px;border-radius:9px;border:1px solid var(--line);display:inline-flex;align-items:center;justify-content:center;color:var(--muted);transition:.2s}
+  .foot-bottom .sb:hover{color:var(--ink);border-color:#3a3a3a;background:rgba(255,255,255,.03);transform:translateY(-1px)}
+  .foot-bottom .sb svg{width:14px;height:14px}
+  @media (max-width:880px){
+    .foot-grid{grid-template-columns:1fr 1fr;gap:30px}
+    .foot-brand{grid-column:1/-1;max-width:none}
+  }
   /* Mobile */
   @media (max-width:880px){
     h1.hero-title{font-size:42px;letter-spacing:-1.2px}
@@ -230,18 +318,21 @@
 <nav class="top">
   <div class="wrap row">
     <a href="/" class="brand">
-      <div class="logo"></div>
+      <span class="logo">
+        <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <g stroke="#fafafa" stroke-width="9" stroke-linecap="round"><line x1="14" y1="14" x2="50" y2="50"/><line x1="50" y1="14" x2="14" y2="50"/></g>
+        </svg>
+      </span>
       <b>XGrowth</b>
     </a>
     <div class="links">
       <a href="#features">Features</a>
       <a href="#how">How it works</a>
-      <a href="#pricing">Pricing</a>
       <a href="#faq">FAQ</a>
     </div>
     <div class="right">
-      <a href="/app/" class="btn secondary">Sign in</a>
-      <a href="/app/" class="btn primary">Start free <span class="arrow">→</span></a>
+      <a href="/app/?signin=1" class="btn secondary">Sign in</a>
+      <a href="/app/?signin=1" class="btn primary">Get started <span class="arrow">→</span></a>
       <button class="burger" id="burger" aria-label="Toggle menu" aria-expanded="false">
         <span></span><span></span><span></span>
       </button>
@@ -253,24 +344,23 @@
 <div class="mobile-menu" id="mobileMenu">
   <a href="#features">Features</a>
   <a href="#how">How it works</a>
-  <a href="#pricing">Pricing</a>
   <a href="#faq">FAQ</a>
   <div class="cta">
-    <a href="/app/" class="btn secondary lg">Sign in</a>
-    <a href="/app/" class="btn primary lg">Start free <span class="arrow">→</span></a>
+    <a href="/app/?signin=1" class="btn secondary lg">Sign in</a>
+    <a href="/app/?signin=1" class="btn primary lg">Get started <span class="arrow">→</span></a>
   </div>
 </div>
 
 <!-- Hero -->
 <header class="hero wrap">
-  <div class="pill" data-reveal><span class="blink"></span> Built for US founders, pre-seed → Series A</div>
-  <h1 class="hero-title" data-reveal data-delay="1">Grow on X without<br/><span class="grad">becoming a content goblin.</span></h1>
-  <p class="hero-sub" data-reveal data-delay="2">The AI-powered growth engine for solo founders. Generate viral threads, build your brand, run launch campaigns, and track ROI — all in one dashboard. No agency. No 4-hour writing sessions.</p>
+  <div class="pill" data-reveal><span class="blink"></span> The Marketing &amp; Personal Branding OS · Free during beta</div>
+  <h1 class="hero-title" data-reveal data-delay="1">One OS for your<br/><span class="grad">marketing &amp; personal brand.</span></h1>
+  <p class="hero-sub" data-reveal data-delay="2">AI-generated content, campaigns, and analytics — across X, LinkedIn, Instagram, Threads, TikTok, and more. Built for creators, founders, marketers, and anyone serious about owning their audience.</p>
   <div class="hero-cta" data-reveal data-delay="3">
-    <a href="/app/" class="btn primary lg">Start free <span class="arrow">→</span></a>
-    <a href="#features" class="btn secondary lg">See features</a>
+    <a href="/app/?signin=1" class="btn primary lg">Get started — it's free <span class="arrow">→</span></a>
+    <a href="#features" class="btn secondary lg">See what's inside</a>
   </div>
-  <div class="hero-trust" data-reveal data-delay="4">No credit card. Sign in with Google. Your data syncs across devices.</div>
+  <div class="hero-trust" data-reveal data-delay="4">Free while in beta · One-click Google sign-in · Syncs across all your devices</div>
 
   <!-- Dashboard preview mockup -->
   <div class="preview" data-reveal data-delay="4">
@@ -279,45 +369,83 @@
         <div class="dot"></div><div class="dot"></div><div class="dot"></div>
         <div class="url">www.xgrowth.uno/app</div>
       </div>
-      <div class="preview-body">
-        <div class="pv-kpi">
-          <h4>Followers</h4>
-          <div class="v">2.4k</div>
-          <div class="d">+12.4%</div>
-          <div class="spark"><i style="height:30%"></i><i style="height:42%"></i><i style="height:38%"></i><i style="height:55%"></i><i style="height:62%"></i><i style="height:68%"></i><i style="height:80%"></i></div>
+      <div class="pv-app">
+        <!-- Sidebar -->
+        <div class="pv-side">
+          <div class="pv-brand">
+            <span class="logo"><svg viewBox="0 0 64 64"><g stroke="#fafafa" stroke-width="9" stroke-linecap="round"><line x1="14" y1="14" x2="50" y2="50"/><line x1="50" y1="14" x2="14" y2="50"/></g></svg></span>
+            <b>XGrowth</b>
+          </div>
+          <div class="pv-nav-item active"><span class="ic"></span> Dashboard</div>
+          <div class="pv-nav-item"><span class="ic"></span> Brand Kit</div>
+          <div class="pv-nav-item"><span class="ic"></span> Content Engine</div>
+          <div class="pv-nav-item"><span class="ic"></span> Campaigns</div>
+          <div class="pv-nav-item"><span class="ic"></span> Website Copy</div>
+          <div class="pv-nav-item"><span class="ic"></span> Auditor</div>
+          <div class="pv-nav-item"><span class="ic"></span> Reports</div>
+          <div class="pv-side-bottom">
+            <div class="av"></div>
+            <div class="who">Sandeep<span>Synced</span></div>
+          </div>
         </div>
-        <div class="pv-kpi">
-          <h4>Impressions</h4>
-          <div class="v">187k</div>
-          <div class="d">+38%</div>
-          <div class="spark"><i style="height:20%"></i><i style="height:34%"></i><i style="height:46%"></i><i style="height:50%"></i><i style="height:72%"></i><i style="height:88%"></i><i style="height:95%"></i></div>
-        </div>
-        <div class="pv-kpi">
-          <h4>Engagement</h4>
-          <div class="v">4.2%</div>
-          <div class="d">+0.8pp</div>
-          <div class="spark"><i style="height:50%"></i><i style="height:42%"></i><i style="height:60%"></i><i style="height:55%"></i><i style="height:75%"></i><i style="height:68%"></i><i style="height:82%"></i></div>
-        </div>
-        <div class="pv-kpi">
-          <h4>Reply Rate</h4>
-          <div class="v">2.8%</div>
-          <div class="d">+1.1pp</div>
-          <div class="spark"><i style="height:30%"></i><i style="height:50%"></i><i style="height:42%"></i><i style="height:65%"></i><i style="height:60%"></i><i style="height:80%"></i><i style="height:88%"></i></div>
-        </div>
-        <div class="pv-row">
-          <div class="pv-card">
-            <h4>14-day Impressions</h4>
-            <div class="pv-bars">
-              <i style="height:32%"></i><i style="height:48%"></i><i style="height:58%"></i><i style="height:42%"></i><i style="height:65%"></i><i style="height:72%"></i><i style="height:80%"></i><i style="height:55%"></i><i style="height:88%"></i><i style="height:74%"></i><i style="height:92%"></i><i style="height:68%"></i><i style="height:82%"></i><i style="height:96%"></i>
+        <!-- Main -->
+        <div class="pv-main">
+          <div class="pv-topbar">
+            <div class="pv-crumb">Dashboard · Track what moves the needle</div>
+            <div class="pv-pill-row">
+              <span class="pv-pill">Niche · <b>Marketing</b></span>
+              <span class="pv-pill">Stage · <b>Solo</b></span>
+              <span class="pv-pill">Goal · <b>10k followers</b></span>
             </div>
           </div>
-          <div class="pv-card">
-            <h4>Conversion Funnel</h4>
-            <div class="pv-funnel">
-              <div class="b">Impressions · 187k</div>
-              <div class="b f2">Profile Visits · 4.2k</div>
-              <div class="b f3">CTA Clicks · 1.4k</div>
-              <div class="b f4">Leads · 48</div>
+          <div class="pv-section">
+            <h3>Analytics Dashboard</h3>
+            <div class="pv-range"><span>7d</span><span class="active">14d</span><span>30d</span></div>
+          </div>
+          <div class="pv-kpis">
+            <div class="pv-kpi"><h4>Followers</h4><div class="v">1.9k<span class="d">+16.1%</span></div><div class="spark"><i style="height:28%"></i><i style="height:40%"></i><i style="height:35%"></i><i style="height:55%"></i><i style="height:60%"></i><i style="height:72%"></i><i style="height:88%"></i></div></div>
+            <div class="pv-kpi"><h4>Impressions</h4><div class="v">81.3k<span class="d">+13.0%</span></div><div class="spark"><i style="height:30%"></i><i style="height:50%"></i><i style="height:60%"></i><i style="height:46%"></i><i style="height:75%"></i><i style="height:82%"></i><i style="height:95%"></i></div></div>
+            <div class="pv-kpi"><h4>Engagement</h4><div class="v">3.1%<span class="d neg">-1.1pp</span></div><div class="spark"><i style="height:62%"></i><i style="height:55%"></i><i style="height:72%"></i><i style="height:60%"></i><i style="height:48%"></i><i style="height:55%"></i><i style="height:50%"></i></div></div>
+            <div class="pv-kpi"><h4>Visits</h4><div class="v">2.6k<span class="d">+20.0%</span></div><div class="spark"><i style="height:25%"></i><i style="height:40%"></i><i style="height:50%"></i><i style="height:42%"></i><i style="height:65%"></i><i style="height:78%"></i><i style="height:92%"></i></div></div>
+            <div class="pv-kpi"><h4>Reply Rate</h4><div class="v">0.27%<span class="d neg">-0.49pp</span></div><div class="spark"><i style="height:50%"></i><i style="height:42%"></i><i style="height:38%"></i><i style="height:48%"></i><i style="height:35%"></i><i style="height:30%"></i><i style="height:25%"></i></div></div>
+          </div>
+          <div class="pv-row3">
+            <div class="pv-card">
+              <h4>Conversion Funnel</h4>
+              <div class="pv-funnel">
+                <div class="b">Impressions · 81.3k</div>
+                <div class="b f2">Profile Visits · 2.6k</div>
+                <div class="b f3">CTA Clicks · 874</div>
+                <div class="b f4">Leads · 123</div>
+              </div>
+            </div>
+            <div class="pv-card">
+              <h4>Follower Growth</h4>
+              <div class="pv-bars green">
+                <i style="height:65%"></i><i style="height:72%"></i><i style="height:30%"></i><i style="height:78%"></i><i style="height:62%"></i><i style="height:80%"></i><i style="height:90%"></i>
+              </div>
+            </div>
+            <div class="pv-card">
+              <h4>Quick Actions</h4>
+              <div class="pv-quick">
+                <div class="qa"><span class="ic">✎</span> Generate a thread</div>
+                <div class="qa"><span class="ic">🔍</span> Audit your posts</div>
+                <div class="qa"><span class="ic">＋</span> Log a post</div>
+              </div>
+            </div>
+          </div>
+          <div class="pv-row2">
+            <div class="pv-card">
+              <h4>Daily Impressions · 14d</h4>
+              <div class="pv-bars">
+                <i style="height:32%"></i><i style="height:48%"></i><i style="height:58%"></i><i style="height:42%"></i><i style="height:65%"></i><i style="height:72%"></i><i style="height:80%"></i><i style="height:55%"></i><i style="height:88%"></i><i style="height:74%"></i><i style="height:92%"></i><i style="height:68%"></i><i style="height:82%"></i><i style="height:96%"></i>
+              </div>
+            </div>
+            <div class="pv-card">
+              <h4>Goal Progress</h4>
+              <div style="font-size:10px;color:var(--muted);margin-bottom:6px">followers · <b style="color:var(--ink)">1.9k / 10k</b></div>
+              <div style="height:6px;background:#1a1a1a;border:1px solid var(--line);border-radius:99px;overflow:hidden"><div style="height:100%;width:19%;background:linear-gradient(90deg,#e5e5e5,#737373)"></div></div>
+              <div style="font-size:9px;color:var(--muted);margin-top:4px">19%</div>
             </div>
           </div>
         </div>
@@ -329,23 +457,23 @@
 <!-- Pain section -->
 <section class="s">
   <div class="wrap">
-    <h2 class="s-title" data-reveal>You're shipping a startup. You don't have time to be an influencer.</h2>
-    <p class="s-sub" data-reveal data-delay="1">Most "growth on X" advice assumes you have 3 hours a day to write, reply, and DM. You don't. Here's what actually breaks for solo founders:</p>
+    <h2 class="s-title" data-reveal>Marketing across every platform shouldn't feel like a second job.</h2>
+    <p class="s-sub" data-reveal data-delay="1">You want to grow your audience. But content, campaigns, and analytics are scattered across a dozen tools and tabs. Here's what most people quietly struggle with:</p>
     <div class="pain-grid" data-reveal-stagger>
       <div class="pain">
         <div class="icon">⏱</div>
         <h3>Blank-page paralysis</h3>
-        <p>You sit down to write a thread. 45 minutes later you have two bad sentences and a tab open to Twitter analytics. Repeat tomorrow.</p>
+        <p>You open a doc to write a post. 45 minutes later you have two bad sentences and seven tabs of "competitor research." The post never ships.</p>
       </div>
       <div class="pain">
-        <div class="icon">📉</div>
-        <h3>Posts go nowhere</h3>
-        <p>You ship something. It gets 12 impressions and 1 like (your co-founder). No idea what's working, what's not, or what to try next.</p>
+        <div class="icon">🔀</div>
+        <h3>Every platform wants different content</h3>
+        <p>What works on X dies on LinkedIn. Threads needs a different voice. Instagram wants visuals. You can't keep up with five formats at once.</p>
       </div>
       <div class="pain">
-        <div class="icon">💸</div>
-        <h3>Agencies cost $5k/mo</h3>
-        <p>Real ones won't take you pre-seed. The ones that will, write the same generic Twitter content for everyone. You can spot it in 2 seconds.</p>
+        <div class="icon">📊</div>
+        <h3>Analytics live in five dashboards</h3>
+        <p>You're toggling between native analytics on every platform, never seeing the full picture, never knowing which post types actually drive the result you want.</p>
       </div>
     </div>
   </div>
@@ -354,67 +482,67 @@
 <!-- Features -->
 <section class="s" id="features">
   <div class="wrap">
-    <h2 class="s-title" data-reveal>Five tools. One founder dashboard.</h2>
-    <p class="s-sub" data-reveal data-delay="1">Everything you need to build a personal brand and grow on X — without the agency markup.</p>
+    <h2 class="s-title" data-reveal>Six modules. One operating system.</h2>
+    <p class="s-sub" data-reveal data-delay="1">Everything you need to build your personal brand and run multi-channel marketing — in one dashboard, with cloud sync across all your devices.</p>
     <div class="features" data-reveal-stagger>
       <div class="feat">
         <span class="tag">01 · Brand</span>
         <h3>Personal Brand Kit</h3>
-        <p>One input → your full brand foundation: niche statement, buyer persona, X bio, profile suggestions, and a 7-day content calendar.</p>
+        <p>One input → your full brand foundation: niche statement, buyer persona, optimized bios for every platform, and a 7-day content calendar tuned to your voice.</p>
         <ul>
-          <li>3 unique angle frameworks</li>
-          <li>X bio optimizer (≤160 chars)</li>
-          <li>21-post weekly schedule</li>
+          <li>3 unique positioning angles</li>
+          <li>Bios for X, LinkedIn, Instagram, Threads</li>
+          <li>21-post weekly content schedule</li>
         </ul>
       </div>
       <div class="feat">
         <span class="tag">02 · Content</span>
-        <h3>X Content Engine</h3>
-        <p>Drop in a rough idea. Get back 10 hook variations, 3 full threads, and reply templates — all in your founder voice, not generic AI mush.</p>
+        <h3>Multi-Platform Content Engine</h3>
+        <p>Drop a rough idea, pick a platform. Get back hooks, full posts, threads, captions, and reply templates — adapted to each channel's voice and format.</p>
         <ul>
-          <li>10 viral hook formats</li>
-          <li>3 long-form thread structures</li>
-          <li>Reply scripts for niche posts</li>
+          <li>X threads · LinkedIn long-form · IG captions</li>
+          <li>10 viral hook variations per idea</li>
+          <li>Reply scripts you can paste anywhere</li>
         </ul>
       </div>
       <div class="feat">
         <span class="tag">03 · Campaigns</span>
         <h3>Campaign Builder</h3>
-        <p>Launch storms, investor outreach, lead-gen webinars. Pick a type, set a goal, get a complete kit: emails, ad copy, landing-page wireframe.</p>
+        <p>Launches, lead gen, newsletter pushes, partnership outreach. Pick a type, set goals, get a complete kit — emails, ad copy, landing-page wireframe, the works.</p>
         <ul>
           <li>5-email sequences</li>
-          <li>3 ad-copy variants</li>
-          <li>Landing-page HTML</li>
+          <li>3 ad-copy variants per campaign</li>
+          <li>Cross-platform launch storm playbooks</li>
         </ul>
       </div>
       <div class="feat">
         <span class="tag">04 · Analytics</span>
         <h3>Growth Analytics</h3>
-        <p>Real KPIs that matter for founders, not vanity metrics. Followers, engagement, reply rate, conversion funnel — synced across all your devices.</p>
+        <p>The metrics that actually matter — not vanity. Followers, engagement, reply rate, full conversion funnel from impressions to leads. Synced across all your devices.</p>
         <ul>
-          <li>7d / 14d / 30d range</li>
+          <li>7d / 14d / 30d ranges</li>
           <li>Funnel: impressions → leads</li>
           <li>WoW comparison on top posts</li>
         </ul>
       </div>
       <div class="feat">
         <span class="tag">05 · Auditor</span>
-        <h3>Tweet Auditor</h3>
-        <p>Paste your top 3 tweets. Get a per-tweet score, hook diagnosis, A/B variant suggestions, and a tactical 7-day action plan.</p>
+        <h3>Content Auditor</h3>
+        <p>Paste your top posts from any platform. Get a per-post score, hook diagnosis, A/B variant rewrites, and a tactical 7-day action plan tailored to your data.</p>
         <ul>
-          <li>Per-tweet scorecard</li>
+          <li>Per-post scorecard</li>
           <li>Hook strength diagnosis</li>
-          <li>A/B variants you can ship</li>
+          <li>A/B variants ready to ship</li>
         </ul>
       </div>
       <div class="feat">
         <span class="tag">06 · Reports</span>
         <h3>Weekly Snapshots</h3>
-        <p>Investor-ready KPI snapshot in one click. Markdown, copy, PDF, or send to email. Channel mix breakdown for X / LinkedIn / Email.</p>
+        <p>Stakeholder-ready performance snapshot in one click. Markdown, PDF, or email. Channel-mix breakdown across all platforms you publish to.</p>
         <ul>
-          <li>One-click investor reports</li>
+          <li>One-click reports</li>
           <li>Markdown / PDF export</li>
-          <li>Channel mix analysis</li>
+          <li>Channel mix breakdown</li>
         </ul>
       </div>
     </div>
@@ -424,73 +552,35 @@
 <!-- How it works -->
 <section class="s" id="how">
   <div class="wrap">
-    <h2 class="s-title" data-reveal>From sign-in to first thread in 60 seconds.</h2>
-    <p class="s-sub" data-reveal data-delay="1">No setup wizard. No video tutorials. Just answer 4 questions and start shipping.</p>
+    <h2 class="s-title" data-reveal>From sign-in to first published post in 60 seconds.</h2>
+    <p class="s-sub" data-reveal data-delay="1">No setup wizard. No video tutorials. Just answer 4 questions and start shipping content across every platform.</p>
     <div class="steps" data-reveal-stagger>
       <div class="step">
         <h3>Sign in with Google</h3>
-        <p>One click. Your data syncs across phone, laptop, and tablet automatically. We never read your Gmail or Drive.</p>
+        <p>One click. Your data syncs across phone, laptop, and tablet automatically. We never read your Gmail or Drive — only your name, email, and avatar.</p>
       </div>
       <div class="step">
-        <h3>Tell us your niche & goal</h3>
-        <p>Niche, stage (pre-seed → Series A), target audience, and your top growth goal. Takes 30 seconds.</p>
+        <h3>Set up your brand profile</h3>
+        <p>Niche, audience, voice, and the platforms you publish to. Takes 30 seconds. Every output adapts to this profile.</p>
       </div>
       <div class="step">
         <h3>Generate. Ship. Track.</h3>
-        <p>Open any module, generate output you can paste into X, schedule it, then watch the dashboard update with what works.</p>
+        <p>Open any module, generate content tuned for the platform you're targeting, paste it where you publish, then watch the analytics dashboard tell you what's working.</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- Pricing -->
-<section class="s" id="pricing">
+<!-- Beta banner (replaces pricing) -->
+<section class="s dense" id="pricing">
   <div class="wrap">
-    <h2 class="s-title" data-reveal>Pricing that won't survive Seed round.</h2>
-    <p class="s-sub" data-reveal data-delay="1">Start free. Upgrade when you're shipping daily and want unlimited generations + premium audit.</p>
-    <div class="price-grid" data-reveal-stagger>
-      <div class="price">
-        <h3>Starter</h3>
-        <div class="amt">$0<small> / forever</small></div>
-        <p class="tag">For founders just getting their X game on.</p>
-        <ul>
-          <li>Personal Brand Kit</li>
-          <li>5 content generations / day</li>
-          <li>Dashboard + 14-day analytics</li>
-          <li>1 active campaign</li>
-          <li>Cloud sync across devices</li>
-        </ul>
-        <a href="/app/" class="btn secondary">Start free</a>
-      </div>
-      <div class="price featured">
-        <span class="badge">FOUNDER</span>
-        <h3>Founder</h3>
-        <div class="amt">$29<small> / month</small></div>
-        <p class="tag">For founders shipping content every day.</p>
-        <ul>
-          <li>Everything in Starter</li>
-          <li>Unlimited content generations</li>
-          <li>30-day analytics + funnel</li>
-          <li>Unlimited campaigns</li>
-          <li>Tweet Auditor + A/B variants</li>
-          <li>Weekly investor-ready reports</li>
-          <li>Premium hooks library</li>
-        </ul>
-        <a href="/app/" class="btn primary">Start 14-day free trial</a>
-      </div>
-      <div class="price">
-        <h3>Scale</h3>
-        <div class="amt">$79<small> / month</small></div>
-        <p class="tag">For founders running paid campaigns + investor outreach.</p>
-        <ul>
-          <li>Everything in Founder</li>
-          <li>Done-for-you launch storms</li>
-          <li>Investor DM sequences</li>
-          <li>Multi-channel campaigns (X / LinkedIn / Email)</li>
-          <li>Custom voice training</li>
-          <li>Priority support</li>
-        </ul>
-        <a href="/app/" class="btn secondary">Start 14-day free trial</a>
+    <div class="beta-card" data-reveal>
+      <div class="beta-pill"><span class="blink"></span> Currently in beta</div>
+      <h2>Free for everyone, while we build.</h2>
+      <p>XGrowth is in active development. Every feature is unlocked, no credit card. When we launch paid plans later, beta users keep early-access pricing forever.</p>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:24px">
+        <a href="/app/?signin=1" class="btn primary lg">Get started — it's free <span class="arrow">→</span></a>
+        <a href="#faq" class="btn secondary lg">Read FAQ</a>
       </div>
     </div>
   </div>
@@ -499,61 +589,119 @@
 <!-- FAQ -->
 <section class="s" id="faq">
   <div class="wrap">
-    <h2 class="s-title" data-reveal>Founder questions, answered.</h2>
+    <h2 class="s-title" data-reveal>Frequently asked questions.</h2>
     <div class="faq" data-reveal-stagger>
-      <details open>
-        <summary>Is this just ChatGPT with a prompt?</summary>
-        <p>No. Every output is structured for X specifically — hook formats that actually convert, thread architectures based on what 50k+ tweets show works, and templates trained on the patterns of founder accounts at YC, Tribe Capital, and a16z's portfolio. ChatGPT will give you generic content. XGrowth gives you content shaped for the platform and your stage.</p>
-      </details>
-      <details>
-        <summary>Will my data be safe?</summary>
-        <p>Yes. We only store: your name, email, profile picture (from Google Sign-In), and the data you create in the app. We do not access your Gmail, Drive, or Twitter account. We do not sell data, ever. Read our <a href="/privacy/">Privacy Policy</a> for the full details.</p>
-      </details>
-      <details>
-        <summary>Do I need to connect my Twitter / X account?</summary>
-        <p>No. xgrowth.uno is a content + analytics layer that lives alongside your X account. You generate content here, paste it into X yourself, then log your top posts back into the analytics dashboard. We're not asking for your X password or API access.</p>
-      </details>
-      <details>
-        <summary>What if I cancel?</summary>
-        <p>Cancel anytime from the dashboard. You keep access until the end of your current billing period. Your data stays — you can re-subscribe later and pick up where you left off. No "delete my account" maze.</p>
-      </details>
-      <details>
-        <summary>Is this only for SaaS / AI founders?</summary>
-        <p>XGrowth is tuned for US tech founders (SaaS, AI, dev tools, e-commerce) but founders in fintech, climate, healthtech, and consumer have used it successfully. The core content frameworks are niche-agnostic; you tell us your niche during onboarding and outputs adapt.</p>
-      </details>
-      <details>
-        <summary>How is this different from Buffer / Hypefury / Tweet Hunter?</summary>
-        <p>Those are scheduling + analytics tools. They assume you've already written the content. We're the layer before — we help you generate the content in the first place, with founder-specific frameworks (niche statement, investor-targeted threads, launch campaigns, etc.) that scheduling tools don't touch. Pair us with one of them if you like; we don't compete.</p>
-      </details>
-      <details>
-        <summary>I don't have a niche yet. Can I still use this?</summary>
-        <p>Yes — that's actually a great use case. Run through Personal Brand Kit with a vague niche and 3-5 angles you might pursue. The output gives you a content calendar to test which angle gets traction. After 2 weeks you'll know which to commit to.</p>
-      </details>
+      <div class="qa open">
+        <button class="qa-head" type="button" aria-expanded="true">
+          <span>Who is XGrowth for?</span><span class="qa-icon" aria-hidden="true">+</span>
+        </button>
+        <div class="qa-body"><div class="qa-body-inner"><p>Anyone serious about building a personal brand or running their own marketing — creators, founders, marketers, coaches, freelancers, course-makers, agency owners. If you publish content on at least one social platform and want it to actually drive results, XGrowth is built for you.</p></div></div>
+      </div>
+      <div class="qa">
+        <button class="qa-head" type="button" aria-expanded="false">
+          <span>Which platforms does it support?</span><span class="qa-icon" aria-hidden="true">+</span>
+        </button>
+        <div class="qa-body"><div class="qa-body-inner"><p>X (Twitter), LinkedIn, Instagram, Threads, TikTok, YouTube descriptions, newsletters, and your own website copy. The Content Engine generates platform-tuned output; the Analytics module lets you log posts and metrics from any platform you publish on.</p></div></div>
+      </div>
+      <div class="qa">
+        <button class="qa-head" type="button" aria-expanded="false">
+          <span>Is this just ChatGPT with a prompt?</span><span class="qa-icon" aria-hidden="true">+</span>
+        </button>
+        <div class="qa-body"><div class="qa-body-inner"><p>No. XGrowth is a structured operating system around content and growth: brand foundations, platform-specific hook formats, campaign blueprints, conversion-funnel analytics, and audit frameworks. ChatGPT gives you generic text. XGrowth gives you a workflow tuned to growth.</p></div></div>
+      </div>
+      <div class="qa">
+        <button class="qa-head" type="button" aria-expanded="false">
+          <span>Do I have to connect my social accounts?</span><span class="qa-icon" aria-hidden="true">+</span>
+        </button>
+        <div class="qa-body"><div class="qa-body-inner"><p>No. XGrowth is a content and analytics layer that lives alongside your social accounts. You generate content here, publish it natively on the platform, then log your top posts back into the analytics dashboard. We never ask for your social passwords or API access.</p></div></div>
+      </div>
+      <div class="qa">
+        <button class="qa-head" type="button" aria-expanded="false">
+          <span>What does it cost?</span><span class="qa-icon" aria-hidden="true">+</span>
+        </button>
+        <div class="qa-body"><div class="qa-body-inner"><p>Free, while we're in beta. Every feature is unlocked, no credit card required. Beta users keep early-access pricing forever once we introduce paid plans.</p></div></div>
+      </div>
+      <div class="qa">
+        <button class="qa-head" type="button" aria-expanded="false">
+          <span>Will my data be safe?</span><span class="qa-icon" aria-hidden="true">+</span>
+        </button>
+        <div class="qa-body"><div class="qa-body-inner"><p>Yes. We only store your name, email, and profile picture (from Google Sign-In) plus the data you create inside the app. We never read your Gmail, Drive, or social accounts. We never sell data. Read the <a href="/privacy/">Privacy Policy</a> for full details.</p></div></div>
+      </div>
+      <div class="qa">
+        <button class="qa-head" type="button" aria-expanded="false">
+          <span>How is this different from Buffer / Hypefury / Notion?</span><span class="qa-icon" aria-hidden="true">+</span>
+        </button>
+        <div class="qa-body"><div class="qa-body-inner"><p>Those are publishing schedulers or generic doc tools. They assume you've already written the content. XGrowth is the layer before publishing — generating the content in the first place, with brand frameworks, campaign playbooks, and audit tooling that schedulers don't touch. Pair us with a scheduler if you like.</p></div></div>
+      </div>
+      <div class="qa">
+        <button class="qa-head" type="button" aria-expanded="false">
+          <span>I haven't found my niche yet. Can I still use it?</span><span class="qa-icon" aria-hidden="true">+</span>
+        </button>
+        <div class="qa-body"><div class="qa-body-inner"><p>Yes — that's actually a great use case. Run the Personal Brand Kit with 3–5 angles you might pursue. You'll get content calendars for each one. Test which angle gets traction over 2 weeks. Then commit.</p></div></div>
+      </div>
     </div>
   </div>
 </section>
 
 <!-- Final CTA -->
 <section class="final">
-  <h2 data-reveal>Ship your next thread tonight.</h2>
-  <p data-reveal data-delay="1">Free forever on the Starter plan. 14-day free trial on Founder. No credit card. Sign in with Google in 5 seconds.</p>
-  <div data-reveal data-delay="2"><a href="/app/" class="btn primary lg">Start free <span class="arrow">→</span></a></div>
+  <h2 data-reveal>Ship your next post tonight.</h2>
+  <p data-reveal data-delay="1">Free during beta. No credit card. One-click Google sign-in. Start owning your audience in under 60 seconds.</p>
+  <div data-reveal data-delay="2"><a href="/app/?signin=1" class="btn primary lg">Get started — it's free <span class="arrow">→</span></a></div>
 </section>
 
 <!-- Footer -->
 <footer class="foot">
-  <div class="wrap row">
-    <div class="brand">
-      <div class="logo"></div>
-      <span>© 2026 XGrowth · Built for US founders</span>
+  <div class="foot-grid">
+    <div class="foot-brand">
+      <a href="/" class="brand">
+        <span class="logo">
+          <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <g stroke="#fafafa" stroke-width="9" stroke-linecap="round"><line x1="14" y1="14" x2="50" y2="50"/><line x1="50" y1="14" x2="14" y2="50"/></g>
+          </svg>
+        </span>
+        <b>XGrowth</b>
+      </a>
+      <p>The Marketing &amp; Personal Branding OS. AI-generated content, campaigns, and analytics across every platform.</p>
     </div>
-    <div class="links">
-      <a href="/app/">App</a>
-      <a href="#features">Features</a>
-      <a href="#pricing">Pricing</a>
-      <a href="/privacy/">Privacy</a>
-      <a href="/terms/">Terms</a>
-      <a href="mailto:support@xgrowth.uno">Contact</a>
+    <div class="foot-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/app/?signin=1">Open app</a></li>
+        <li><a href="#features">Features</a></li>
+        <li><a href="#how">How it works</a></li>
+        <li><a href="#faq">FAQ</a></li>
+      </ul>
+    </div>
+    <div class="foot-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="mailto:support@xgrowth.uno">Contact</a></li>
+        <li><a href="/privacy/">Privacy Policy</a></li>
+        <li><a href="/terms/">Terms of Service</a></li>
+      </ul>
+    </div>
+    <div class="foot-col">
+      <h4>Status</h4>
+      <ul>
+        <li><span style="display:inline-flex;align-items:center;gap:6px"><span style="width:7px;height:7px;border-radius:50%;background:#4ade80"></span> All systems operational</span></li>
+        <li>Currently in beta</li>
+        <li>Free during beta</li>
+      </ul>
+    </div>
+  </div>
+  <div class="foot-bottom">
+    <span>© 2026 XGrowth · All rights reserved</span>
+    <div class="socials">
+      <a class="sb" href="https://x.com/" target="_blank" rel="noopener" aria-label="X">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2H21.5l-7.36 8.41L23 22h-6.84l-5.21-6.81L4.91 22H1.65l7.86-8.98L1.5 2h6.99l4.71 6.23L18.244 2zm-2.4 18h2.07L7.27 4H5.05l10.79 16z"/></svg>
+      </a>
+      <a class="sb" href="https://www.linkedin.com/" target="_blank" rel="noopener" aria-label="LinkedIn">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14zM8.5 17V10h-2v7h2zm-1-7.9a1.1 1.1 0 1 0 0-2.2 1.1 1.1 0 0 0 0 2.2zM18 17v-3.9c0-2.1-1.1-3.1-2.6-3.1-1.2 0-1.7.7-2 1.2V10h-2v7h2v-4c0-1 .2-2 1.4-2s1.2 1.1 1.2 2v4H18z"/></svg>
+      </a>
+      <a class="sb" href="mailto:support@xgrowth.uno" aria-label="Email">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+      </a>
     </div>
   </div>
 </footer>
@@ -604,6 +752,18 @@
     });
   }, {threshold:0.12, rootMargin:'0px 0px -8% 0px'});
   reveals.forEach(el=>io.observe(el));
+
+  // Custom FAQ — clicking anywhere on the card toggles it
+  document.querySelectorAll('.qa').forEach(card=>{
+    const head = card.querySelector('.qa-head');
+    card.addEventListener('click', (e)=>{
+      // ignore link clicks inside answers
+      if(e.target.closest('a')) return;
+      const willOpen = !card.classList.contains('open');
+      card.classList.toggle('open', willOpen);
+      if(head) head.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+    });
+  });
 
   // Active-section nav highlight
   const navLinks = document.querySelectorAll('nav.top .links a[href^="#"]');
