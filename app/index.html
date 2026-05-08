@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>FounderGrowth AI — X Growth Engine for US Startup Founders</title>
+<title>XGrowth — X Growth Engine for US Startup Founders</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3CradialGradient id='g' cx='50%25' cy='40%25' r='60%25'%3E%3Cstop offset='0%25' stop-color='%23ffffff'/%3E%3Cstop offset='100%25' stop-color='%233a3a3a'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='%23000'/%3E%3Ccircle cx='32' cy='30' r='18' fill='url(%23g)'/%3E%3Ctext x='32' y='52' font-family='Helvetica,Arial,sans-serif' font-size='14' font-weight='700' fill='%23ededed' text-anchor='middle'%3EX%3C/text%3E%3C/svg%3E"/>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
@@ -26,24 +26,28 @@
     --chip:#161616;
   }
   *{box-sizing:border-box}
-  html,body{margin:0;padding:0;background:radial-gradient(1200px 600px at 80% -10%,#1a1a1a 0%,transparent 60%),radial-gradient(900px 500px at -10% 110%,#101010 0%,transparent 60%),var(--bg);color:var(--ink);font:14px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text","Inter",system-ui,sans-serif}
+  html,body{margin:0;padding:0;background:radial-gradient(1200px 600px at 80% -10%,#1a1a1a 0%,transparent 60%),radial-gradient(900px 500px at -10% 110%,#101010 0%,transparent 60%),var(--bg);color:var(--ink);font:16px/1.55 -apple-system,BlinkMacSystemFont,"SF Pro Text","Inter",system-ui,sans-serif}
   a{color:var(--accent-2);text-decoration:none}
   button{font:inherit;cursor:pointer}
   .app{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
   /* Sidebar */
-  .side{background:linear-gradient(180deg,#0a0a0a,#050505);border-right:1px solid var(--line);padding:18px 14px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:10px}
+  .side{background:linear-gradient(180deg,#0a0a0a,#050505);border-right:1px solid var(--line);padding:18px 14px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:10px;overflow-y:auto}
+  .side-spacer{flex:1}
+  .nav button svg{width:18px;height:18px;flex-shrink:0;stroke:currentColor}
   .brand{display:flex;align-items:center;gap:10px;padding:6px 8px}
   .logo{width:32px;height:32px;border-radius:9px;background:conic-gradient(from 220deg,#3a3a3a,#ffffff,#3a3a3a);box-shadow:0 6px 20px rgba(255,255,255,.12)}
-  .brand h1{font-size:15px;margin:0;letter-spacing:.2px}
+  .brand h1{font-size:16px;margin:0;letter-spacing:.2px;font-weight:700}
   .brand small{display:block;color:var(--muted);font-size:11px}
   .nav{display:flex;flex-direction:column;gap:4px;margin-top:8px}
-  .nav button{display:flex;align-items:center;gap:10px;background:transparent;border:1px solid transparent;color:var(--ink);text-align:left;padding:10px 12px;border-radius:10px;width:100%;transition:.15s}
+  .nav button{display:flex;align-items:center;gap:12px;background:transparent;border:1px solid transparent;color:var(--ink);text-align:left;padding:11px 12px;border-radius:10px;width:100%;transition:.15s;font-size:14px;font-weight:500}
+  .nav button:not(.active){color:var(--muted)}
+  .nav button:hover{color:var(--ink)}
   .nav button:hover{background:var(--panel)}
   .nav button.active{background:linear-gradient(180deg,#1c1c1c,#141414);border-color:var(--line);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
   .nav .dot{width:8px;height:8px;border-radius:50%;background:var(--accent)}
   .side .foot{margin-top:auto;color:var(--muted);font-size:11px;padding:8px}
   /* Main */
-  main{padding:22px 28px 60px;max-width:1200px}
+  main{padding:24px 32px 60px;max-width:none;width:100%}
   .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;flex-wrap:wrap}
   .crumbs{color:var(--muted);font-size:12px}
   .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:var(--chip);border:1px solid var(--line);border-radius:999px;font-size:12px;color:var(--muted)}
@@ -119,6 +123,13 @@
   .funnel-bar.f3{background:linear-gradient(90deg,#a3a3a3,#525252)}
   .funnel-bar.f4{background:linear-gradient(90deg,#737373,#3a3a3a);color:#ededed}
   .conv{font-size:11px;color:var(--muted);margin-left:8px}
+  /* Quick Actions */
+  .quick-list{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+  .qa{display:flex;align-items:center;gap:12px;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:#0a0a0a;color:var(--ink);text-align:left;cursor:pointer;transition:.15s;font-size:14px;font-weight:500}
+  .qa:hover{border-color:#3a3a3a;background:#101010;transform:translateX(2px)}
+  .qa-icon{display:inline-flex;width:30px;height:30px;border-radius:8px;background:var(--chip);border:1px solid var(--line);align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+  .qa b{display:block;font-size:14px;font-weight:600;line-height:1.2;margin-bottom:2px}
+  .qa .small{font-size:12px;line-height:1.3}
   .card{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);border-radius:14px;padding:16px}
   .card h3{margin:0 0 10px;font-size:14px;letter-spacing:.2px}
   .kpi .v{font-size:26px;font-weight:700}
@@ -176,19 +187,41 @@
     <a href="/" class="brand" style="text-decoration:none;color:inherit" title="Back to homepage">
       <div class="logo"></div>
       <div>
-        <h1>xgrowth.uno</h1>
+        <h1>XGrowth</h1>
         <small>X Growth Engine · for US founders</small>
       </div>
     </a>
     <div class="nav" id="nav">
-      <button data-view="dashboard" class="active"><span class="dot"></span> Dashboard</button>
-      <button data-view="brand"><span class="dot"></span> Personal Brand Kit</button>
-      <button data-view="content"><span class="dot"></span> X Content Engine</button>
-      <button data-view="campaign"><span class="dot"></span> Campaign Builder</button>
-      <button data-view="copy"><span class="dot"></span> Website Copy</button>
-      <button data-view="auditor"><span class="dot"></span> Analytics Auditor</button>
-      <button data-view="reports"><span class="dot"></span> Reports & Exports</button>
+      <button data-view="dashboard" class="active">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+        Dashboard
+      </button>
+      <button data-view="brand">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Personal Brand Kit
+      </button>
+      <button data-view="content">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+        X Content Engine
+      </button>
+      <button data-view="campaign">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
+        Campaign Builder
+      </button>
+      <button data-view="copy">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
+        Website Copy
+      </button>
+      <button data-view="auditor">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Analytics Auditor
+      </button>
+      <button data-view="reports">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+        Reports &amp; Exports
+      </button>
     </div>
+    <div class="side-spacer"></div>
     <div id="loginBox" class="login-card">
       <div class="small muted">Sign in</div>
       <div id="googleBtn" class="gbtn"></div>
@@ -201,14 +234,10 @@
       </div>
       <div id="syncStatus" class="sync"><span class="dot"></span><span id="syncLabel">Offline</span></div>
     </div>
-    <div class="foot">
-      <div class="pill"><span>Session</span><b id="sessionTag">Guest</b></div>
-      <div style="margin-top:8px">v1.2 · saves locally</div>
-      <div style="margin-top:6px;display:flex;gap:10px;font-size:11px">
-        <a href="/privacy/" target="_blank" rel="noopener">Privacy</a>
-        <span>·</span>
-        <a href="/terms/" target="_blank" rel="noopener">Terms</a>
-      </div>
+    <div style="display:flex;gap:10px;font-size:12px;padding:4px 6px;color:var(--muted)">
+      <a href="/privacy/" target="_blank" rel="noopener" style="color:inherit">Privacy</a>
+      <span>·</span>
+      <a href="/terms/" target="_blank" rel="noopener" style="color:inherit">Terms</a>
     </div>
   </aside>
   <div class="scrim" id="scrim" onclick="toggleSide(false)"></div>
@@ -277,7 +306,7 @@
         </div>
       </div>
 
-      <div class="grid cols-2" style="margin-top:14px">
+      <div class="grid cols-3" style="margin-top:14px">
         <div class="card">
           <div class="copybar"><h3>Conversion Funnel</h3><span class="small muted" id="funnelRange">last 14 days</span></div>
           <div class="funnel" id="funnel"></div>
@@ -288,10 +317,31 @@
           <div class="bar-row" id="velChart"></div>
           <div class="legend"><span><i></i>Daily net new followers</span><span id="velSummary" class="muted"></span></div>
         </div>
+        <div class="card">
+          <h3>Quick Actions</h3>
+          <div class="quick-list" id="quickActions">
+            <button class="qa" onclick="document.querySelector('button[data-view=\'content\']').click()">
+              <span class="qa-icon">✎</span>
+              <div><b>Generate a thread</b><div class="muted small">Hooks, full thread, replies</div></div>
+            </button>
+            <button class="qa" onclick="document.querySelector('button[data-view=\'auditor\']').click()">
+              <span class="qa-icon">🔍</span>
+              <div><b>Audit your tweets</b><div class="muted small">Score, hooks, A/B variants</div></div>
+            </button>
+            <button class="qa" onclick="document.getElementById('addPost').click()">
+              <span class="qa-icon">＋</span>
+              <div><b>Log a post</b><div class="muted small">Track impressions & ER</div></div>
+            </button>
+            <button class="qa" onclick="document.querySelector('button[data-view=\'reports\']').click()">
+              <span class="qa-icon">📊</span>
+              <div><b>Build weekly report</b><div class="muted small">Investor-ready snapshot</div></div>
+            </button>
+          </div>
+        </div>
       </div>
 
-      <div class="grid cols-2" style="margin-top:14px">
-        <div class="card">
+      <div class="grid cols-3" style="margin-top:14px">
+        <div class="card" style="grid-column:span 2">
           <div class="copybar"><h3>Daily Impressions (last 14 days)</h3><span class="small" id="impSummary"></span></div>
           <div class="bar-row" id="barChart"></div>
           <div class="legend"><span><i></i>Impressions per day</span></div>
@@ -697,7 +747,7 @@ function applyProfile(){
   document.getElementById('nicheTag').textContent = p.niche;
   document.getElementById('stageTag').textContent = p.stage;
   document.getElementById('goalTag').textContent  = p.goal;
-  document.getElementById('sessionTag').textContent = p.niche.split(' ')[0];
+  const st = document.getElementById('sessionTag'); if(st) st.textContent = p.niche.split(' ')[0];
   renderAll();
 }
 
@@ -1322,7 +1372,7 @@ ${state.campaigns.map(c=>`- ${c.name}: $${c.spend} spend · ${c.leads} leads · 
 function downloadReport(){
   const md = $('reportOut').innerText;
   if(!md || md.startsWith('Click ')){ toast('Build a report first'); return; }
-  download(new Blob([md],{type:'text/markdown'}), `foundergrowth-snapshot-${new Date().toISOString().slice(0,10)}.md`);
+  download(new Blob([md],{type:'text/markdown'}), `xgrowth-snapshot-${new Date().toISOString().slice(0,10)}.md`);
 }
 
 function mockSend(){
@@ -1333,7 +1383,7 @@ function mockSend(){
 
 function exportJSON(){
   const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
-  download(blob, 'foundergrowth-data.json');
+  download(blob, 'xgrowth-data.json');
 }
 function exportCSV(){
   const rows = [['day','followers','impressions','engagement_rate','profile_visits']];
@@ -1341,7 +1391,7 @@ function exportCSV(){
     rows.push([i+1, state.metrics.followers[i], state.metrics.impressions[i], state.metrics.engagement[i], state.metrics.visits[i]]);
   }
   const csv = rows.map(r=>r.join(',')).join('\n');
-  download(new Blob([csv],{type:'text/csv'}), 'foundergrowth-metrics.csv');
+  download(new Blob([csv],{type:'text/csv'}), 'xgrowth-metrics.csv');
 }
 function download(blob, name){
   const a = document.createElement('a');
@@ -1421,7 +1471,7 @@ function applyUser(){
     $('uName').textContent = currentUser.name;
     $('uEmail').textContent = currentUser.email;
     $('uAvatar').src = currentUser.picture || '';
-    $('sessionTag').textContent = currentUser.name.split(' ')[0];
+    const st2 = $('sessionTag'); if(st2) st2.textContent = currentUser.name.split(' ')[0];
     // Pre-fill brand kit name field if present and empty
     const bn = document.getElementById('bName');
     if(bn && !bn.value) bn.value = currentUser.name;
