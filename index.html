@@ -198,8 +198,9 @@
   .pain-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:30px}
   .pain{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);border-radius:14px;padding:24px;transition:transform .3s cubic-bezier(.2,.8,.2,1), border-color .3s, box-shadow .3s}
   .pain:hover{transform:translateY(-4px);border-color:#3a3a3a;box-shadow:0 20px 40px rgba(0,0,0,.4)}
-  .pain .icon{font-size:24px;margin-bottom:14px;display:inline-flex;width:46px;height:46px;border-radius:12px;background:var(--chip);border:1px solid var(--line);align-items:center;justify-content:center;transition:transform .3s cubic-bezier(.2,.8,.2,1),background .3s}
-  .pain:hover .icon{transform:rotate(-6deg) scale(1.08);background:#1f1f1f}
+  .pain .icon{margin-bottom:18px;display:inline-flex;width:48px;height:48px;border-radius:12px;background:var(--chip);border:1px solid var(--line);align-items:center;justify-content:center;transition:transform .3s cubic-bezier(.2,.8,.2,1),background .3s,border-color .3s;color:#ededed}
+  .pain .icon svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .pain:hover .icon{transform:rotate(-6deg) scale(1.08);background:#1f1f1f;border-color:#3a3a3a}
   .pain h3{margin:0 0 10px;font-size:20px;letter-spacing:-.2px}
   .pain p{margin:0;color:var(--muted);font-size:16px;line-height:1.6}
   /* Features */
@@ -460,17 +461,23 @@
     <p class="s-sub" data-reveal data-delay="1">You shipped a beautiful digital product. But getting it in front of users means juggling content, campaigns, and analytics across a dozen tools. Here's what slows most product makers down:</p>
     <div class="pain-grid" data-reveal-stagger>
       <div class="pain">
-        <div class="icon">⏱</div>
+        <div class="icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5"/><path d="M9 2h6"/><path d="M12 2v3"/></svg>
+        </div>
         <h3>Blank-page paralysis</h3>
         <p>You sit down to write a launch post. 45 minutes later you have two bad sentences and seven tabs of competitor research. The post never ships.</p>
       </div>
       <div class="pain">
-        <div class="icon">🔀</div>
+        <div class="icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M16 3h5v5"/><path d="M21 3 13 11"/><path d="M3 21l8-8"/><path d="M16 21h5v-5"/><path d="M3 3l8 8"/></svg>
+        </div>
         <h3>Every platform wants different content</h3>
         <p>What works on X dies on LinkedIn. Threads needs a different voice. Instagram wants visuals. Five platforms, five formats, one founder. The math doesn't work.</p>
       </div>
       <div class="pain">
-        <div class="icon">📊</div>
+        <div class="icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 16V11"/><path d="M12 16V7"/><path d="M17 16v-3"/></svg>
+        </div>
         <h3>No clear path from post to signup</h3>
         <p>You're shipping content but the dashboard is foggy. You can't tell which post types drive trials, which channels send buyers, or what to ship next.</p>
       </div>
