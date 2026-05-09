@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>XGrowth — The Marketing OS for Digital Products</title>
-<meta name="description" content="The operating system for your digital product's marketing. AI-generated content, campaigns, and analytics across every platform — X, LinkedIn, Instagram, Threads, TikTok, and more." />
-<meta property="og:title" content="XGrowth — The Marketing OS for Digital Products" />
+<title>XGrowth · The Marketing OS for Digital Products</title>
+<meta name="description" content="The operating system for your digital product's marketing. AI-generated content, campaigns, and analytics across every platform: X, LinkedIn, Instagram, Threads, TikTok, and more." />
+<meta property="og:title" content="XGrowth · The Marketing OS for Digital Products" />
 <meta property="og:description" content="The operating system for your digital product's marketing. AI content, campaigns, and analytics across every platform." />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://www.xgrowth.uno" />
@@ -32,11 +32,9 @@
   @keyframes aurora2{0%,100%{transform:translate(0,0)}50%{transform:translate(-100px,60px)}}
   nav.top, main, section, footer, .wrap{position:relative;z-index:1}
   .wrap{max-width:1180px;margin:0 auto;padding:0 22px}
-  /* Nav */
-  nav.top{position:sticky;top:0;z-index:30;background:rgba(0,0,0,.55);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-bottom:1px solid transparent;transition:background .25s, border-color .25s, height .25s}
-  nav.top.scrolled{background:rgba(0,0,0,.78);border-bottom-color:var(--line)}
-  nav.top .row{display:flex;align-items:center;height:64px;gap:18px;transition:height .25s}
-  nav.top.scrolled .row{height:56px}
+  /* Nav (non-sticky) */
+  nav.top{position:relative;z-index:30;background:transparent;border-bottom:1px solid var(--line)}
+  nav.top .row{display:flex;align-items:center;height:72px;gap:18px}
   .brand{display:flex;align-items:center;gap:10px}
   .logo{width:36px;height:36px;border-radius:10px;background:#000;border:1px solid #1f1f1f;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;overflow:hidden}
   .logo svg{width:24px;height:24px;display:block}
@@ -92,20 +90,20 @@
     body::before, body::after, *{animation:none !important}
   }
   /* Hero */
-  .hero{padding:100px 0 60px;text-align:center}
-  .pill{display:inline-flex;align-items:center;gap:8px;padding:5px 12px;background:var(--chip);border:1px solid var(--line);border-radius:999px;font-size:12px;color:var(--muted);margin-bottom:24px}
+  .hero{padding:120px 0 80px;text-align:center}
+  .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;background:var(--chip);border:1px solid var(--line);border-radius:999px;font-size:12px;color:var(--muted);margin-bottom:40px}
   .pill .blink{width:7px;height:7px;border-radius:50%;background:var(--good);box-shadow:0 0 0 0 rgba(74,222,128,.6);animation:blink 2s infinite}
   @keyframes blink{0%{box-shadow:0 0 0 0 rgba(74,222,128,.6)}70%{box-shadow:0 0 0 10px rgba(74,222,128,0)}100%{box-shadow:0 0 0 0 rgba(74,222,128,0)}}
-  h1.hero-title{font-size:68px;line-height:1.04;letter-spacing:-1.8px;margin:0 0 18px;font-weight:800}
+  h1.hero-title{font-size:68px;line-height:1.04;letter-spacing:-1.8px;margin:0 0 32px;font-weight:800}
   h1.hero-title .grad{background:linear-gradient(90deg,#fff 0%,#a3a3a3 50%,#fff 100%);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shimmer 7s linear infinite}
   @keyframes shimmer{0%{background-position:0% 50%}100%{background-position:200% 50%}}
-  p.hero-sub{font-size:19px;color:var(--muted);max-width:640px;margin:0 auto 30px}
-  .hero-cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-  .hero-trust{margin-top:22px;color:var(--muted);font-size:13px}
+  p.hero-sub{font-size:19px;color:var(--muted);max-width:660px;margin:0 auto 44px;line-height:1.65}
+  .hero-cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+  .hero-trust{margin-top:32px;color:var(--muted);font-size:13px;letter-spacing:.2px}
   /* Dashboard preview mockup */
   .preview{margin:64px auto 0;max-width:1080px;background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);border-radius:18px;padding:14px;box-shadow:0 30px 80px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.04);transition:transform .5s cubic-bezier(.2,.8,.2,1), box-shadow .5s;will-change:transform}
   .preview:hover{transform:translateY(-6px) scale(1.005);box-shadow:0 40px 100px rgba(0,0,0,.6),0 0 60px rgba(255,255,255,.05),inset 0 1px 0 rgba(255,255,255,.06)}
-  /* Inline app structure inside preview — matches real dashboard proportions */
+  /* Inline app structure inside preview, matches real dashboard proportions */
   .pv-app{display:grid;grid-template-columns:200px 1fr;background:#0a0a0a;min-height:600px}
   .pv-side{padding:16px 12px;border-right:1px solid var(--line);background:linear-gradient(180deg,#0a0a0a,#050505);display:flex;flex-direction:column;gap:4px}
   .pv-brand{display:flex;align-items:center;gap:9px;padding:6px 4px;margin-bottom:8px}
@@ -332,7 +330,7 @@
     </div>
     <div class="right">
       <a href="/app/?signin=1" class="btn secondary">Sign in</a>
-      <a href="/app/?signin=1" class="btn primary">Try now for Free <span class="arrow">→</span></a>
+      <a href="/app/?signin=1" class="btn primary">Get Started <span class="arrow">→</span></a>
       <button class="burger" id="burger" aria-label="Toggle menu" aria-expanded="false">
         <span></span><span></span><span></span>
       </button>
@@ -347,7 +345,7 @@
   <a href="#faq">FAQ</a>
   <div class="cta">
     <a href="/app/?signin=1" class="btn secondary lg">Sign in</a>
-    <a href="/app/?signin=1" class="btn primary lg">Try now for Free <span class="arrow">→</span></a>
+    <a href="/app/?signin=1" class="btn primary lg">Get Started <span class="arrow">→</span></a>
   </div>
 </div>
 
@@ -355,7 +353,7 @@
 <header class="hero wrap">
   <div class="pill" data-reveal><span class="blink"></span> The Marketing OS for digital products</div>
   <h1 class="hero-title" data-reveal data-delay="1">Ship features.<br/><span class="grad">We'll ship the marketing.</span></h1>
-  <p class="hero-sub" data-reveal data-delay="2">XGrowth is the operating system for your digital product's marketing. AI-generated content, multi-channel campaigns, and unified analytics — across X, LinkedIn, Instagram, Threads, TikTok, and more.</p>
+  <p class="hero-sub" data-reveal data-delay="2">XGrowth is the operating system for your digital product's marketing. AI-generated content, multi-channel campaigns, and unified analytics, across X, LinkedIn, Instagram, Threads, TikTok, and more.</p>
   <div class="hero-cta" data-reveal data-delay="3">
     <a href="/app/?signin=1" class="btn primary lg">Try now for Free <span class="arrow">→</span></a>
     <a href="#features" class="btn secondary lg">See what's inside</a>
@@ -489,7 +487,7 @@
 <section class="s" id="features">
   <div class="wrap">
     <h2 class="s-title" data-reveal>Six modules. One marketing OS.</h2>
-    <p class="s-sub" data-reveal data-delay="1">Everything you need to take a digital product to market — content, campaigns, analytics, and reporting. One dashboard. Cloud sync across all your devices.</p>
+    <p class="s-sub" data-reveal data-delay="1">Everything you need to take a digital product to market, content, campaigns, analytics, and reporting. One dashboard. Cloud sync across all your devices.</p>
     <div class="features" data-reveal-stagger>
       <div class="feat">
         <span class="tag">01 · Positioning</span>
@@ -504,7 +502,7 @@
       <div class="feat">
         <span class="tag">02 · Content</span>
         <h3>Multi-Platform Content Engine</h3>
-        <p>Drop a rough idea, pick a platform. Get back hooks, full posts, threads, captions, and reply templates — adapted to each channel's voice and format.</p>
+        <p>Drop a rough idea, pick a platform. Get back hooks, full posts, threads, captions, and reply templates, adapted to each channel's voice and format.</p>
         <ul>
           <li>X threads · LinkedIn long-form · IG captions</li>
           <li>10 viral hook variations per idea</li>
@@ -514,7 +512,7 @@
       <div class="feat">
         <span class="tag">03 · Campaigns</span>
         <h3>Campaign Builder</h3>
-        <p>Launches, lead gen, newsletter pushes, partnership outreach. Pick a type, set goals, get a complete kit — emails, ad copy, landing-page wireframe, the works.</p>
+        <p>Launches, lead gen, newsletter pushes, partnership outreach. Pick a type, set goals, get a complete kit, emails, ad copy, landing-page wireframe, the works.</p>
         <ul>
           <li>5-email sequences</li>
           <li>3 ad-copy variants per campaign</li>
@@ -524,7 +522,7 @@
       <div class="feat">
         <span class="tag">04 · Analytics</span>
         <h3>Growth Analytics</h3>
-        <p>The metrics that actually matter — not vanity. Followers, engagement, reply rate, full conversion funnel from impressions to leads. Synced across all your devices.</p>
+        <p>The metrics that actually matter, not vanity. Followers, engagement, reply rate, full conversion funnel from impressions to leads. Synced across all your devices.</p>
         <ul>
           <li>7d / 14d / 30d ranges</li>
           <li>Funnel: impressions → leads</li>
@@ -563,7 +561,7 @@
     <div class="steps" data-reveal-stagger>
       <div class="step">
         <h3>Sign in with Google</h3>
-        <p>One click. Your data syncs across phone, laptop, and tablet automatically. We never read your Gmail or Drive — only your name, email, and avatar.</p>
+        <p>One click. Your data syncs across phone, laptop, and tablet automatically. We never read your Gmail or Drive, only your name, email, and avatar.</p>
       </div>
       <div class="step">
         <h3>Set up your brand profile</h3>
@@ -601,7 +599,7 @@
         <button class="qa-head" type="button" aria-expanded="true">
           <span>Who is XGrowth for?</span><span class="qa-icon" aria-hidden="true">+</span>
         </button>
-        <div class="qa-body"><div class="qa-body-inner"><p>Makers of digital products — SaaS founders, indie hackers, AI tool builders, course creators, ebook authors, plugin/template sellers. If you ship a digital product and need to market it across multiple channels without hiring an agency, XGrowth is for you.</p></div></div>
+        <div class="qa-body"><div class="qa-body-inner"><p>Makers of digital products, SaaS founders, indie hackers, AI tool builders, course creators, ebook authors, plugin/template sellers. If you ship a digital product and need to market it across multiple channels without hiring an agency, XGrowth is for you.</p></div></div>
       </div>
       <div class="qa">
         <button class="qa-head" type="button" aria-expanded="false">
@@ -637,13 +635,13 @@
         <button class="qa-head" type="button" aria-expanded="false">
           <span>How is this different from Buffer / Hypefury / Notion?</span><span class="qa-icon" aria-hidden="true">+</span>
         </button>
-        <div class="qa-body"><div class="qa-body-inner"><p>Those are publishing schedulers or generic doc tools. They assume you've already written the content. XGrowth is the layer before publishing — generating product-specific content, launch playbooks, and audit tooling that schedulers don't touch. Pair us with a scheduler if you like.</p></div></div>
+        <div class="qa-body"><div class="qa-body-inner"><p>Those are publishing schedulers or generic doc tools. They assume you've already written the content. XGrowth is the layer before publishing, generating product-specific content, launch playbooks, and audit tooling that schedulers don't touch. Pair us with a scheduler if you like.</p></div></div>
       </div>
       <div class="qa">
         <button class="qa-head" type="button" aria-expanded="false">
           <span>I haven't found my niche yet. Can I still use it?</span><span class="qa-icon" aria-hidden="true">+</span>
         </button>
-        <div class="qa-body"><div class="qa-body-inner"><p>Yes — that's actually a great use case. Run the Product Brand Kit with 3–5 positioning angles you're considering. You'll get a content calendar for each one. Test which angle gets traction over 2 weeks. Then commit.</p></div></div>
+        <div class="qa-body"><div class="qa-body-inner"><p>Yes, that's actually a great use case. Run the Product Brand Kit with 3–5 positioning angles you're considering. You'll get a content calendar for each one. Test which angle gets traction over 2 weeks. Then commit.</p></div></div>
       </div>
     </div>
   </div>
@@ -668,7 +666,7 @@
         </span>
         <b>XGrowth</b>
       </a>
-      <p>The Marketing OS for digital products. AI-generated content, multi-channel campaigns, and unified analytics — built for SaaS founders and indie makers.</p>
+      <p>The Marketing OS for digital products. AI-generated content, multi-channel campaigns, and unified analytics, built for SaaS founders and indie makers.</p>
     </div>
     <div class="foot-col">
       <h4>Product</h4>
@@ -741,12 +739,6 @@
   // Close on escape
   document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeMenu(); });
 
-  // Nav scrolled state
-  const nav = document.querySelector('nav.top');
-  const onScroll = ()=>{ nav.classList.toggle('scrolled', window.scrollY > 12); };
-  onScroll();
-  window.addEventListener('scroll', onScroll, {passive:true});
-
   // Reveal-on-scroll via IntersectionObserver
   const reveals = document.querySelectorAll('[data-reveal], [data-reveal-stagger]');
   const io = new IntersectionObserver((entries)=>{
@@ -759,7 +751,7 @@
   }, {threshold:0.12, rootMargin:'0px 0px -8% 0px'});
   reveals.forEach(el=>io.observe(el));
 
-  // Custom FAQ — clicking anywhere on the card toggles it
+  // Custom FAQ, clicking anywhere on the card toggles it
   document.querySelectorAll('.qa').forEach(card=>{
     const head = card.querySelector('.qa-head');
     card.addEventListener('click', (e)=>{

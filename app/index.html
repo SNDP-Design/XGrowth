@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>XGrowth — Marketing &amp; Personal Branding OS</title>
+<title>XGrowth, Marketing &amp; Personal Branding OS</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='b' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0%25' stop-color='%231a1a1a'/%3E%3Cstop offset='100%25' stop-color='%23000'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='url(%23b)'/%3E%3Cg stroke='%23fafafa' stroke-width='7' stroke-linecap='round'%3E%3Cline x1='19' y1='19' x2='45' y2='45'/%3E%3Cline x1='45' y1='19' x2='19' y2='45'/%3E%3C/g%3E%3C/svg%3E"/>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
@@ -357,7 +357,7 @@
               <b>Premium Audit · $49</b>
               <div class="small">Hand-tuned thread review + 30-day calendar tailored to your niche.</div>
             </div>
-            <button class="btn" onclick="toast('Upsell flow coming soon — saved to your wishlist.')">Upgrade</button>
+            <button class="btn" onclick="toast('Upsell flow coming soon, saved to your wishlist.')">Upgrade</button>
           </div>
         </div>
       </div>
@@ -425,12 +425,12 @@
     <!-- CONTENT ENGINE -->
     <section data-view="content" class="hide">
       <h2 class="section">X Content Engine</h2>
-      <p class="lede">10 tweet variations, 3 full threads, reply templates — optimized for hooks, CTAs, and engagement.</p>
+      <p class="lede">10 tweet variations, 3 full threads, reply templates, optimized for hooks, CTAs, and engagement.</p>
       <div class="grid cols-2">
         <div class="card">
           <h3>Inputs</h3>
           <label>Core idea or bookmark</label>
-          <textarea id="cIdea" placeholder="e.g., Why most pre-seed SaaS dies before PMF — 5 patterns I saw at YC"></textarea>
+          <textarea id="cIdea" placeholder="e.g., Why most pre-seed SaaS dies before PMF, 5 patterns I saw at YC"></textarea>
           <label>Style</label>
           <select id="cStyle">
             <option>Naval wisdom</option>
@@ -461,7 +461,7 @@
     <!-- CAMPAIGN -->
     <section data-view="campaign" class="hide">
       <h2 class="section">Campaign Builder</h2>
-      <p class="lede">Tweet storms, investor outreach, and lead-gen webinars — with timeline, KPIs, emails and a landing-page wireframe.</p>
+      <p class="lede">Tweet storms, investor outreach, and lead-gen webinars, with timeline, KPIs, emails and a landing-page wireframe.</p>
       <div class="grid cols-2">
         <div class="card">
           <h3>Inputs</h3>
@@ -490,7 +490,7 @@
         </div>
         <div class="card">
           <div class="copybar"><h3>Plan & Assets</h3><button class="btn ghost" onclick="copyOut('campaignOut')">Copy</button></div>
-          <div class="output" id="campaignOut">Pick a type and generate — you'll get audience segments, timeline, KPIs, 5 emails, ad copy, and a landing-page wireframe (HTML).</div>
+          <div class="output" id="campaignOut">Pick a type and generate, you'll get audience segments, timeline, KPIs, 5 emails, ad copy, and a landing-page wireframe (HTML).</div>
         </div>
       </div>
     </section>
@@ -543,7 +543,7 @@
     <!-- REPORTS -->
     <section data-view="reports" class="hide">
       <h2 class="section">Reports & Exports</h2>
-      <p class="lede">Weekly snapshot of your KPIs, top posts, and campaign performance — exportable for investors or team.</p>
+      <p class="lede">Weekly snapshot of your KPIs, top posts, and campaign performance, exportable for investors or team.</p>
       <div class="card">
         <div class="copybar"><h3>Weekly Snapshot</h3>
           <div class="row">
@@ -572,7 +572,7 @@
             <button class="btn" onclick="mockSend()">Send snapshot</button>
             <button class="btn ghost" onclick="toast('Slack webhook coming soon')">Send to Slack</button>
           </div>
-          <div class="small muted" style="margin-top:8px">Demo only — no email is actually sent.</div>
+          <div class="small muted" style="margin-top:8px">Demo only, no email is actually sent.</div>
         </div>
       </div>
     </section>
@@ -583,7 +583,7 @@
 <!-- Welcome modal -->
 <div class="modal" id="welcome">
   <div class="box">
-    <h2 style="margin:0 0 6px">Welcome — let's set up your marketing OS.</h2>
+    <h2 style="margin:0 0 6px">Welcome, let's set up your marketing OS.</h2>
     <p class="muted" style="margin:0 0 12px">Tell me about your brand and goals. We'll tune every output to your niche, audience, and platform mix.</p>
     <div class="grid cols-2">
       <div>
@@ -819,7 +819,7 @@ function seedDemo(quiet){
   state.campaigns = [
     {name:'Launch Storm v1', spend:0, leads:48, status:'Live'},
     {name:'Investor Outreach', spend:120, leads:11, status:'Live'},
-    {name:'Webinar — AI for SMB', spend:380, leads:64, status:'Planned'},
+    {name:'Webinar, AI for SMB', spend:380, leads:64, status:'Planned'},
   ];
   if(state.profile && state.goals.length){
     // Update progress for "followers" goal if present
@@ -994,7 +994,7 @@ document.addEventListener('click', (e)=>{
 
 function renderGoals(){
   const wrap = $('goalList'); wrap.innerHTML = '';
-  if(!state.goals.length){ wrap.innerHTML = '<div class="muted small">No goals yet — set them in your profile.</div>'; return; }
+  if(!state.goals.length){ wrap.innerHTML = '<div class="muted small">No goals yet, set them in your profile.</div>'; return; }
   state.goals.forEach(g=>{
     const p = Math.min(100, (g.current/g.target)*100);
     wrap.insertAdjacentHTML('beforeend', `
@@ -1084,13 +1084,13 @@ ${name} · ${about}. ${niche}. Tactics > theory. ${prof.goal.split(',')[0]} → 
 - Pinned: best thread of last 30 days + CTA to your offer
 
 ## 7-Day Calendar (3 posts/day)
-Mon — Hook tweet (story) · Reply sprint (10 founders) · Insight thread (5 tweets)
-Tue — Contrarian take · Poll on niche pain · Build-in-public update
-Wed — Listicle (5 lessons) · Founder Q reply · Long thread (8–10 tweets)
-Thu — Quote a customer · Quick tip · Niche meme/visual
-Fri — Win recap · Friday founder thread · Weekend AMA prompt
-Sat — Evergreen long-form · Soft CTA · Reply to viral post in niche
-Sun — Reflection thread · Small tactical tip · Tease next week
+Mon, Hook tweet (story) · Reply sprint (10 founders) · Insight thread (5 tweets)
+Tue, Contrarian take · Poll on niche pain · Build-in-public update
+Wed, Listicle (5 lessons) · Founder Q reply · Long thread (8–10 tweets)
+Thu, Quote a customer · Quick tip · Niche meme/visual
+Fri, Win recap · Friday founder thread · Weekend AMA prompt
+Sat, Evergreen long-form · Soft CTA · Reply to viral post in niche
+Sun, Reflection thread · Small tactical tip · Tease next week
 
 ## Next Steps
 - Lock the bio. Pin a thread. Reply to 10 in-niche founders today.
@@ -1112,7 +1112,7 @@ function genContent(){
   const hooks = [
     `Most founders get ${idea.split(' ').slice(0,4).join(' ')}… wrong. Here's the fix:`,
     `I spent 6 months on this so you don't have to:`,
-    `${idea} — in 60 seconds.`,
+    `${idea}, in 60 seconds.`,
     `Hot take: ${idea}. Most disagree. Few are right.`,
     `If you only read one thread today, make it this one:`,
     `The 5-step playbook for ${idea.toLowerCase()}.`,
@@ -1121,12 +1121,12 @@ function genContent(){
     `Stop doing this. Start doing that. (${idea.split(' ').slice(-3).join(' ')})`,
     `If I had to restart from $0 today, I'd do this first:`
   ];
-  const thread = (title)=>`Thread — ${title}\n1/ Hook: ${hooks[Math.floor(Math.random()*hooks.length)]}\n2/ Stake: why this matters now (specific stat or story).\n3/ Insight #1 + a concrete example.\n4/ Insight #2 + a counter-example.\n5/ Insight #3 + a small tactic to ship today.\n6/ Pitfall most founders hit (and how to avoid it).\n7/ Mini-framework (3 steps, named).\n8/ Receipt: a screenshot, a number, a quote.\n9/ Recap: 3 bullets.\n10/ CTA: ${cta}`;
+  const thread = (title)=>`Thread, ${title}\n1/ Hook: ${hooks[Math.floor(Math.random()*hooks.length)]}\n2/ Stake: why this matters now (specific stat or story).\n3/ Insight #1 + a concrete example.\n4/ Insight #2 + a counter-example.\n5/ Insight #3 + a small tactic to ship today.\n6/ Pitfall most founders hit (and how to avoid it).\n7/ Mini-framework (3 steps, named).\n8/ Receipt: a screenshot, a number, a quote.\n9/ Recap: 3 bullets.\n10/ CTA: ${cta}`;
   const replies = [
-    `"Same here — what worked for us was X. Curious if you tried Y?"`,
+    `"Same here, what worked for us was X. Curious if you tried Y?"`,
     `"This. Most teams skip step 2 and wonder why retention dies."`,
     `"Counter: in ${state.profile?.niche||'our niche'}, the opposite is true. Here's why:"`,
-    `"Adding to this — one tactic that 10x'd our reply rate: …"`
+    `"Adding to this, one tactic that 10x'd our reply rate: …"`
   ];
   const out = `## Tweet Variations (${style})
 ${hooks.map((h,i)=>`${i+1}. ${h}`).join('\n')}
@@ -1181,12 +1181,12 @@ ${days>14? `${week(3)}: Case-study post + retargeting copy + email (#4)\n${week(
 - CPL target: $${budget? (budget/Math.max(40*(days/14),1)).toFixed(2):'0.00'}
 
 ## Email Sequence
-1. Subject: "${hook} — for ${state.profile?.niche||'founders'}"
+1. Subject: "${hook}, for ${state.profile?.niche||'founders'}"
    Body: 1-line story → problem → offer → 1 CTA.
 2. Subject: "Why we built this (and the metric that changed)"
 3. Subject: "A 90-second demo (no signup)"
 4. Subject: "Case study: how [persona] used it in week 1"
-5. Subject: "Last call — closing the cohort Friday"
+5. Subject: "Last call, closing the cohort Friday"
 
 ## Ad Copy (X promoted)
 - A: "${hook}. No card. 14 days." → CTA: Start free
@@ -1201,7 +1201,7 @@ ${days>14? `${week(3)}: Case-study post + retargeting copy + email (#4)\n${week(
   <a class="cta" href="#start">Start free</a>
 </section>
 <section class="proof">
-  <ul><li>"Saved 8 hrs/week" — Founder, SaaS</li><li>+34% reply rate</li><li>1-click setup</li></ul>
+  <ul><li>"Saved 8 hrs/week", Founder, SaaS</li><li>+34% reply rate</li><li>1-click setup</li></ul>
 </section>
 <section class="faq">
   <h2>FAQ</h2>
@@ -1217,7 +1217,7 @@ ${days>14? `${week(3)}: Case-study post + retargeting copy + email (#4)\n${week(
 - Done-for-you launch ($199): we write all assets + schedule.`;
   $('campaignOut').textContent = out;
   // Track in dashboard
-  state.campaigns.unshift({name:`${t} — ${new Date().toLocaleDateString()}`, spend:budget, leads:0, status:'Planned'});
+  state.campaigns.unshift({name:`${t}, ${new Date().toLocaleDateString()}`, spend:budget, leads:0, status:'Planned'});
   save(); renderCampaigns();
   toast('Campaign built & logged');
 }
@@ -1229,7 +1229,7 @@ function genCopy(){
   const cta=val('wCTA')||'Book a 15-min demo';
   const out = `## Hero
 # ${w}.
-${n} helps you cut marketing busywork by 80% — without an agency.
+${n} helps you cut marketing busywork by 80%, without an agency.
 [${cta}]
 
 ## About
@@ -1241,8 +1241,8 @@ ${bio} I built ${n} after watching teams lose weeks to manual ops. Now ${n} runs
 - Investor-ready exports in 1 click
 
 ## Testimonials
-- "Replaced 3 tools and an analyst." — Founder, SaaS (seed)
-- "First week saved me 9 hours." — Solo founder, e-com
+- "Replaced 3 tools and an analyst.", Founder, SaaS (seed)
+- "First week saved me 9 hours.", Solo founder, e-com
 
 ## CTA
 [${cta}]  ·  No card. Cancel anytime.
@@ -1252,7 +1252,7 @@ ${bio} I built ${n} after watching teams lose weeks to manual ops. Now ${n} runs
 <section style="padding:80px 24px;text-align:center">
   <h1 style="font-size:56px;margin:0 0 12px">${w}.</h1>
   <p style="font-size:18px;color:#475569;max-width:640px;margin:0 auto 24px">
-    ${n} helps you cut marketing busywork by 80% — without an agency.
+    ${n} helps you cut marketing busywork by 80%, without an agency.
   </p>
   <a href="#cta" style="background:#111;color:#fff;padding:14px 22px;border-radius:10px;text-decoration:none">${cta}</a>
 </section>
@@ -1286,10 +1286,10 @@ function genAudit(){
     `A: "Most founders get this wrong: " + ${shortify(t)}`,
     `B: "I tested ${Math.floor(Math.random()*5+3)} versions. Only one worked: " + ${shortify(t)}`
   ].join('\n   ');
-  const out = `## Audit Report — ${handle}
+  const out = `## Audit Report, ${handle}
 
 ## Scorecard
-${tweets.map((t,i)=>`Tweet ${i+1}: ${score(t)}/100 — ${t.length} chars`).join('\n')}
+${tweets.map((t,i)=>`Tweet ${i+1}: ${score(t)}/100, ${t.length} chars`).join('\n')}
 Avg: ${(tweets.map(score).reduce((a,b)=>a+b,0)/tweets.length).toFixed(0)}/100
 
 ## Hook Diagnosis
@@ -1322,8 +1322,8 @@ Sun: Reflection + tease
 
 function diagnose(t){
   const issues=[];
-  if(t.length>240) issues.push('too long for hook — trim to <140');
-  if(!/\?/.test(t) && !/^[A-Z]/.test(t)) issues.push('weak opener — start with I/We/Most/Stop/Here/If');
+  if(t.length>240) issues.push('too long for hook, trim to <140');
+  if(!/\?/.test(t) && !/^[A-Z]/.test(t)) issues.push('weak opener, start with I/We/Most/Stop/Here/If');
   if(!/\d/.test(t)) issues.push('add a number to add specificity');
   if(/!{2,}/.test(t)) issues.push('drop the hype punctuation');
   if(!issues.length) return 'Solid. Try an A/B with a stronger hook variant.';
@@ -1338,7 +1338,7 @@ function buildReport(){
   const impr7 = sum(m.impressions.slice(-7));
   const eng7 = avg(m.engagement.slice(-7));
   const top = state.posts.slice().sort((a,b)=>b.impr-a.impr)[0];
-  const md = `# Weekly Snapshot — ${state.profile?.niche||'Your Startup'}
+  const md = `# Weekly Snapshot, ${state.profile?.niche||'Your Startup'}
 Date: ${new Date().toISOString().slice(0,10)}
 
 ## Headlines
@@ -1348,7 +1348,7 @@ Date: ${new Date().toISOString().slice(0,10)}
 - Profile visits (7d): ${fmt(sum(m.visits.slice(-7)))}
 
 ## Top Post
-${top? `"${top.text}" — ${fmt(top.impr)} impressions, ${top.likes} likes` : 'No posts logged.'}
+${top? `"${top.text}", ${fmt(top.impr)} impressions, ${top.likes} likes` : 'No posts logged.'}
 
 ## Goals
 ${state.goals.map(g=>`- ${g.label}: ${fmt(g.current)} / ${fmt(g.target)} (${((g.current/g.target)*100).toFixed(0)}%)`).join('\n')||'- (none set)'}
@@ -1486,25 +1486,26 @@ function initGoogle(){
     box.innerHTML = `<div class="small muted">Google init error: ${e.message}</div>`;
   }
 }
-// Manual trigger usable by ANY button: opens a real Google sign-in popup
-async function startGoogleSignIn(){
+// Trigger Google sign-in. useRedirect=true for auto-triggered flows (no user gesture, popups would be blocked).
+async function startGoogleSignIn(useRedirect){
+  const provider = new firebase.auth.GoogleAuthProvider();
+  provider.setCustomParameters({prompt:'select_account'});
   try{
     setSync('syncing');
-    const provider = new firebase.auth.GoogleAuthProvider();
-    provider.setCustomParameters({prompt:'select_account'});
+    if(useRedirect){
+      await fbAuth.signInWithRedirect(provider);
+      return;
+    }
     await fbAuth.signInWithPopup(provider);
   }catch(err){
     if(err && err.code === 'auth/popup-blocked'){
-      // Popup blocked — fall back to redirect
+      // Popup blocked, fall back to redirect
       try{
-        const provider = new firebase.auth.GoogleAuthProvider();
-        provider.setCustomParameters({prompt:'select_account'});
         await fbAuth.signInWithRedirect(provider);
       }catch(e2){
         console.error(e2); toast('Sign-in failed: '+(e2.message||e2.code));
       }
     } else if(err && err.code === 'auth/popup-closed-by-user'){
-      // User dismissed — silent
       setSync('offline');
     } else {
       console.error('Sign-in error', err);
@@ -1548,7 +1549,7 @@ function signOut(){
 let signinTriggered = false;
 fbAuth.onAuthStateChanged(user=>{
   if(user){
-    // Already signed in — pull cloud data
+    // Already signed in, pull cloud data
     loadFromCloud();
     // Refresh local user info from Firebase if missing
     if(!currentUser){
@@ -1564,10 +1565,11 @@ fbAuth.onAuthStateChanged(user=>{
   } else {
     cloudLoaded = false;
     setSync('offline');
-    // If we arrived from a marketing CTA, trigger Google login immediately
+    // If we arrived from a marketing CTA, trigger Google login via REDIRECT
+    // (popups are blocked when triggered without a user gesture; redirect always works)
     if(wantsSignin && !signinTriggered){
       signinTriggered = true;
-      startGoogleSignIn();
+      startGoogleSignIn(true);
     }
   }
 });
