@@ -227,6 +227,7 @@
     <div id="loginBox" class="login-card">
       <div class="small muted">Sign in</div>
       <div id="googleBtn" class="gbtn"></div>
+      <button class="btn secondary" style="margin-top:8px;width:100%;justify-content:center" onclick="startGoogleSignIn()">Sign in with Google</button>
     </div>
     <div id="userBox" style="display:none">
       <div class="user-chip">
@@ -637,6 +638,25 @@ const fbAuth = firebase.auth();
 const db = firebase.firestore();
 let saveDebounce = null;
 let cloudLoaded = false;
+// Detect whether we arrived from a marketing CTA (?signin=1) and must auto-trigger Google login
+const wantsSignin = (new URLSearchParams(window.location.search)).get('signin') === '1';
+// Strip the param immediately so refreshes don't loop
+if(wantsSignin){
+  const u = new URL(window.location.href);
+  u.searchParams.delete('signin');
+  history.replaceState({}, '', u.toString());
+}
+// Process any pending redirect result from a Google sign-in flow
+fbAuth.getRedirectResult().then(res=>{
+  if(res && res.user){
+    toast(`Welcome, ${(res.user.displayName||'there').split(' ')[0]}`);
+  }
+}).catch(err=>{
+  if(err && err.code && err.code !== 'auth/null-credential'){
+    console.error('Redirect sign-in error', err);
+    toast('Sign-in failed: ' + (err.message||err.code));
+  }
+});
 const state = load() || {
   profile: null,
   metrics: {
@@ -1462,18 +1482,39 @@ function initGoogle(){
     google.accounts.id.renderButton(box, {
       theme:'filled_black', size:'large', shape:'pill', text:'signin_with', width: 220
     });
-    // If we arrived from the marketing site with ?signin=1, auto-prompt the One Tap chooser
-    const params = new URLSearchParams(window.location.search);
-    if(params.get('signin') === '1' && !fbAuth.currentUser){
-      try{ google.accounts.id.prompt(); }catch(e){}
-      // Strip the param so refreshes don't re-trigger
-      const url = new URL(window.location.href); url.searchParams.delete('signin');
-      history.replaceState({}, '', url.toString());
-    }
   }catch(e){
     box.innerHTML = `<div class="small muted">Google init error: ${e.message}</div>`;
   }
 }
+// Manual trigger usable by ANY button: opens a real Google sign-in popup
+async function startGoogleSignIn(){
+  try{
+    setSync('syncing');
+    const provider = new firebase.auth.GoogleAuthProvider();
+    provider.setCustomParameters({prompt:'select_account'});
+    await fbAuth.signInWithPopup(provider);
+  }catch(err){
+    if(err && err.code === 'auth/popup-blocked'){
+      // Popup blocked — fall back to redirect
+      try{
+        const provider = new firebase.auth.GoogleAuthProvider();
+        provider.setCustomParameters({prompt:'select_account'});
+        await fbAuth.signInWithRedirect(provider);
+      }catch(e2){
+        console.error(e2); toast('Sign-in failed: '+(e2.message||e2.code));
+      }
+    } else if(err && err.code === 'auth/popup-closed-by-user'){
+      // User dismissed — silent
+      setSync('offline');
+    } else {
+      console.error('Sign-in error', err);
+      toast('Sign-in failed: '+(err.message||err.code));
+      setSync('error');
+    }
+  }
+}
+// Expose for inline onclick / wrapping the "Sign in" pill
+window.startGoogleSignIn = startGoogleSignIn;
 function applyUser(){
   if(currentUser){
     $('loginBox').style.display = 'none';
@@ -1504,6 +1545,7 @@ function signOut(){
 }
 
 /* React to Firebase auth state changes (page reloads, token refresh, etc.) */
+let signinTriggered = false;
 fbAuth.onAuthStateChanged(user=>{
   if(user){
     // Already signed in — pull cloud data
@@ -1522,6 +1564,11 @@ fbAuth.onAuthStateChanged(user=>{
   } else {
     cloudLoaded = false;
     setSync('offline');
+    // If we arrived from a marketing CTA, trigger Google login immediately
+    if(wantsSignin && !signinTriggered){
+      signinTriggered = true;
+      startGoogleSignIn();
+    }
   }
 });
 
