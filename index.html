@@ -18,9 +18,8 @@
     --good:#4ade80;
   }
   *{box-sizing:border-box}
-  html{scroll-behavior:smooth;scroll-padding-top:80px}
+  html{scroll-behavior:smooth;scroll-padding-top:24px;margin:0;padding:0}
   body{margin:0;padding:0;background:var(--bg);color:var(--ink);font:16px/1.6 -apple-system,BlinkMacSystemFont,"SF Pro Text","Inter",system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:clip}
-  html{margin:0;padding:0}
   a{color:var(--ink);text-decoration:none}
   img{max-width:100%}
   /* Page bg with subtle radial glow + animated aurora blobs */
@@ -711,6 +710,13 @@
 </footer>
 
 <script>
+  // Disable browser auto-scroll restoration so refreshes always start at top
+  if('scrollRestoration' in history){ history.scrollRestoration = 'manual'; }
+  // Force scroll to top on initial load unless an anchor was specified
+  window.addEventListener('load', ()=>{
+    if(!window.location.hash){ window.scrollTo(0, 0); }
+  });
+
   // Smooth scroll for in-page anchors (also closes mobile menu)
   const mobileMenu = document.getElementById('mobileMenu');
   const burger = document.getElementById('burger');
