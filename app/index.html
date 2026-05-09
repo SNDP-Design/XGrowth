@@ -1647,7 +1647,10 @@ fbAuth.onAuthStateChanged(user=>{
         authGateError('Could not start sign-in: ' + (err.message||err.code));
       });
     } else {
-      setAuthState('signin');
+      // User landed on /app/ without an active sign-in attempt and isn't authenticated.
+      // Most likely: they pressed back from Google's sign-in page. Bounce to landing
+      // so the browser back-button history stays sensible.
+      window.location.replace('/');
     }
   }
 });
