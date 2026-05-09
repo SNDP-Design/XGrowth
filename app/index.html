@@ -200,9 +200,9 @@
   .auth-foot a{color:#888;text-decoration:none}
   .auth-foot a:hover{color:var(--ink)}
   /* Hide the entire app while not authed */
-  body:not(.authed) .app{display:none}
-  body:not(.authed) .modal{display:none !important}
-  body.authed .auth-gate{display:none}
+  body:not(.authed) .app{display:none !important;visibility:hidden !important}
+  body:not(.authed) .modal{display:none !important;visibility:hidden !important}
+  body.authed .auth-gate{display:none !important}
 </style>
 </head>
 <body>
