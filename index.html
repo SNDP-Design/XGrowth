@@ -11,6 +11,8 @@
 <meta property="og:url" content="https://www.xgrowth.uno" />
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23000'/%3E%3Cg fill='%23fff'%3E%3Cpath d='M14 16 L22 16 L50 48 L42 48 Z'/%3E%3Cpath d='M50 16 L42 16 L14 48 L22 48 Z'/%3E%3C/g%3E%3C/svg%3E"/>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <style>
   :root{
     --bg:#000;--bg-2:#070707;--panel:#0d0d0d;--panel-2:#141414;
@@ -710,6 +712,76 @@
 </footer>
 
 <script>
+  /* ============== Firebase auth on the landing page ============== */
+  // Initialise here so the CTAs can call signInWithPopup directly inside a user-gesture context
+  // (avoids popup-blockers AND cross-origin storage issues that break signInWithRedirect).
+  const firebaseConfig = {
+    apiKey: "AIzaSyBdf9wvcLM2k4xHD2rZQ_bQlvqYIoyrFHU",
+    authDomain: "xgrowth-351de.firebaseapp.com",
+    projectId: "xgrowth-351de",
+    storageBucket: "xgrowth-351de.firebasestorage.app",
+    messagingSenderId: "595634587931",
+    appId: "1:595634587931:web:d6123a514e45a41c286bbe"
+  };
+  let _fbAuth = null;
+  try{ firebase.initializeApp(firebaseConfig); _fbAuth = firebase.auth(); }catch(e){ console.warn('Firebase init failed on landing:', e); }
+
+  // If the user is already signed in, send them straight to the dashboard from any auth CTA.
+  if(_fbAuth){
+    _fbAuth.onAuthStateChanged(user=>{
+      // Don't auto-navigate, just let them click the CTA. Redirect happens on click.
+    });
+  }
+
+  // Hook every "/app/?signin=1" link so the click triggers a same-context popup.
+  function attachAuthCTAs(){
+    document.querySelectorAll('a[href="/app/?signin=1"]').forEach(a=>{
+      if(a.dataset.authBound) return;
+      a.dataset.authBound = '1';
+      a.addEventListener('click', async (e)=>{
+        if(!_fbAuth || !window.firebase || !firebase.auth){
+          // Firebase not loaded; let the link navigate (fallback uses redirect on /app/)
+          return;
+        }
+        // If already signed in, just open the app
+        if(_fbAuth.currentUser){
+          e.preventDefault();
+          window.location.href = '/app/';
+          return;
+        }
+        e.preventDefault();
+        try{
+          const provider = new firebase.auth.GoogleAuthProvider();
+          provider.setCustomParameters({prompt:'select_account'});
+          await _fbAuth.signInWithPopup(provider);
+          // Success — navigate into the app
+          window.location.href = '/app/';
+        }catch(err){
+          if(err && err.code === 'auth/popup-blocked'){
+            // Popup blocker active — fall back to the redirect route
+            window.location.href = '/app/?signin=1';
+            return;
+          }
+          if(err && err.code === 'auth/popup-closed-by-user'){
+            // user dismissed; do nothing
+            return;
+          }
+          if(err && err.code === 'auth/cancelled-popup-request'){
+            return;
+          }
+          console.error('Sign-in error:', err);
+          alert('Sign-in failed: ' + (err.message || err.code));
+        }
+      });
+    });
+  }
+  // Run after DOM is parsed
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', attachAuthCTAs);
+  } else {
+    attachAuthCTAs();
+  }
+
   // Disable browser auto-scroll restoration so refreshes always start at top
   if('scrollRestoration' in history){ history.scrollRestoration = 'manual'; }
   // Force scroll to top on initial load unless an anchor was specified
