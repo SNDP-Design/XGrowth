@@ -35,8 +35,9 @@
   .side-spacer{flex:1}
   .nav button svg{width:18px;height:18px;flex-shrink:0;stroke:currentColor}
   .brand{display:flex;align-items:center;gap:10px;padding:6px 8px}
-  .logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(180deg,#1a1a1a,#000);border:1px solid #2a2a2a;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 6px 20px rgba(0,0,0,.4)}
-  .logo svg{width:18px;height:18px}
+  .logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#262626,#000);border:1px solid #333;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 6px 20px rgba(0,0,0,.4);position:relative;overflow:hidden}
+  .logo::before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.08),transparent 50%);pointer-events:none}
+  .logo svg{width:22px;height:22px;position:relative;z-index:1}
   .brand h1{font-size:16px;margin:0;letter-spacing:.2px;font-weight:700}
   .brand small{display:block;color:var(--muted);font-size:11px}
   .nav{display:flex;flex-direction:column;gap:4px;margin-top:8px}
@@ -185,13 +186,13 @@
 <div class="app">
   <!-- Sidebar -->
   <aside class="side">
-    <a href="/" class="brand" style="text-decoration:none;color:inherit" title="Back to homepage">
-      <span class="logo"><svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><g stroke="#fafafa" stroke-width="9" stroke-linecap="round"><line x1="14" y1="14" x2="50" y2="50"/><line x1="50" y1="14" x2="14" y2="50"/></g></svg></span>
+    <div class="brand" style="cursor:default">
+      <span class="logo"><svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs><linearGradient id="alx" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fff"/><stop offset="100%" stop-color="#a3a3a3"/></linearGradient></defs><g stroke="url(#alx)" stroke-width="9" stroke-linecap="round"><line x1="18" y1="18" x2="46" y2="46"/><line x1="46" y1="18" x2="18" y2="46"/></g><circle cx="49" cy="15" r="4" fill="#4ade80"/></svg></span>
       <div>
         <h1>XGrowth</h1>
-        <small>Marketing &amp; Personal Branding OS</small>
+        <small>Marketing OS for digital products</small>
       </div>
-    </a>
+    </div>
     <div class="nav" id="nav">
       <button data-view="dashboard" class="active">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
@@ -1496,10 +1497,10 @@ function signOut(){
   currentUser = null;
   cloudLoaded = false;
   localStorage.removeItem(USER_KEY);
-  fbAuth.signOut().catch(()=>{});
-  applyUser();
-  setSync('offline');
-  toast('Signed out');
+  fbAuth.signOut().catch(()=>{}).finally(()=>{
+    // Redirect to landing page after signout
+    window.location.href = '/';
+  });
 }
 
 /* React to Firebase auth state changes (page reloads, token refresh, etc.) */

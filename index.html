@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>XGrowth — The Marketing &amp; Personal Branding OS</title>
-<meta name="description" content="One operating system for your marketing and personal brand. AI-generated content, campaigns, and analytics across every platform — X, LinkedIn, Instagram, Threads, TikTok, and more." />
-<meta property="og:title" content="XGrowth — The Marketing &amp; Personal Branding OS" />
-<meta property="og:description" content="One OS for your marketing &amp; personal brand. AI content, campaigns, analytics across every platform." />
+<title>XGrowth — The Marketing OS for Digital Products</title>
+<meta name="description" content="The operating system for your digital product's marketing. AI-generated content, campaigns, and analytics across every platform — X, LinkedIn, Instagram, Threads, TikTok, and more." />
+<meta property="og:title" content="XGrowth — The Marketing OS for Digital Products" />
+<meta property="og:description" content="The operating system for your digital product's marketing. AI content, campaigns, and analytics across every platform." />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://www.xgrowth.uno" />
 <meta name="twitter:card" content="summary_large_image" />
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='b' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0%25' stop-color='%231a1a1a'/%3E%3Cstop offset='100%25' stop-color='%23000'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='url(%23b)'/%3E%3Cg stroke='%23fafafa' stroke-width='7' stroke-linecap='round'%3E%3Cline x1='19' y1='19' x2='45' y2='45'/%3E%3Cline x1='45' y1='19' x2='19' y2='45'/%3E%3C/g%3E%3C/svg%3E"/>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='b' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%23262626'/%3E%3Cstop offset='100%25' stop-color='%23000'/%3E%3C/linearGradient%3E%3ClinearGradient id='x' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0%25' stop-color='%23ffffff'/%3E%3Cstop offset='100%25' stop-color='%23a3a3a3'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23b)'/%3E%3Crect x='1' y='1' width='62' height='62' rx='15' fill='none' stroke='%23333333'/%3E%3Cg stroke='url(%23x)' stroke-width='9' stroke-linecap='round'%3E%3Cline x1='18' y1='18' x2='46' y2='46'/%3E%3Cline x1='46' y1='18' x2='18' y2='46'/%3E%3C/g%3E%3Ccircle cx='49' cy='15' r='4' fill='%234ade80'/%3E%3C/svg%3E"/>
 <style>
   :root{
     --bg:#000;--bg-2:#070707;--panel:#0d0d0d;--panel-2:#141414;
@@ -19,7 +19,8 @@
   }
   *{box-sizing:border-box}
   html{scroll-behavior:smooth;scroll-padding-top:80px}
-  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font:16px/1.6 -apple-system,BlinkMacSystemFont,"SF Pro Text","Inter",system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  body{margin:0;padding:0;background:var(--bg);color:var(--ink);font:16px/1.6 -apple-system,BlinkMacSystemFont,"SF Pro Text","Inter",system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:clip}
+  html{margin:0;padding:0}
   a{color:var(--ink);text-decoration:none}
   img{max-width:100%}
   /* Page bg with subtle radial glow + animated aurora blobs */
@@ -38,10 +39,10 @@
   nav.top.scrolled .row{height:56px}
   .brand{display:flex;align-items:center;gap:10px;transition:transform .2s}
   .brand:hover{transform:translateX(-1px)}
-  .logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(180deg,#1a1a1a,#000);border:1px solid #2a2a2a;display:inline-flex;align-items:center;justify-content:center;transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s,border-color .35s;flex-shrink:0;position:relative;overflow:hidden}
+  .logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#262626,#000);border:1px solid #333;display:inline-flex;align-items:center;justify-content:center;transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s,border-color .35s;flex-shrink:0;position:relative;overflow:hidden}
   .logo::before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.08),transparent 50%);pointer-events:none}
-  .logo svg{width:18px;height:18px;display:block;position:relative;z-index:1}
-  .brand:hover .logo{transform:rotate(8deg) scale(1.06);border-color:#3a3a3a;box-shadow:0 0 24px rgba(255,255,255,.12)}
+  .logo svg{width:22px;height:22px;display:block;position:relative;z-index:1}
+  .brand:hover .logo{transform:rotate(6deg) scale(1.06);border-color:#3a3a3a;box-shadow:0 0 24px rgba(74,222,128,.18)}
   .brand b{font-size:15px;letter-spacing:.2px}
   nav.top .links{display:flex;gap:6px;margin-left:30px;font-size:14px}
   nav.top .links a{color:var(--muted);padding:7px 12px;border-radius:8px;transition:color .2s, background .2s;position:relative}
@@ -107,57 +108,58 @@
   /* Dashboard preview mockup */
   .preview{margin:64px auto 0;max-width:1080px;background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);border-radius:18px;padding:14px;box-shadow:0 30px 80px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.04);transition:transform .5s cubic-bezier(.2,.8,.2,1), box-shadow .5s;will-change:transform}
   .preview:hover{transform:translateY(-6px) scale(1.005);box-shadow:0 40px 100px rgba(0,0,0,.6),0 0 60px rgba(255,255,255,.05),inset 0 1px 0 rgba(255,255,255,.06)}
-  /* Inline app structure inside preview */
-  .pv-app{display:grid;grid-template-columns:160px 1fr;background:#0a0a0a}
-  .pv-side{padding:12px 8px;border-right:1px solid var(--line);background:linear-gradient(180deg,#0a0a0a,#050505);display:flex;flex-direction:column;gap:6px;min-height:430px}
-  .pv-brand{display:flex;align-items:center;gap:8px;padding:6px 4px;margin-bottom:4px}
-  .pv-brand .logo{width:24px;height:24px;border-radius:6px}
-  .pv-brand .logo svg{width:14px;height:14px}
-  .pv-brand b{font-size:12px;color:var(--ink)}
-  .pv-nav-item{display:flex;align-items:center;gap:8px;padding:6px 8px;font-size:11px;color:var(--muted);border-radius:6px;border:1px solid transparent}
+  /* Inline app structure inside preview — matches real dashboard proportions */
+  .pv-app{display:grid;grid-template-columns:200px 1fr;background:#0a0a0a;min-height:600px}
+  .pv-side{padding:16px 12px;border-right:1px solid var(--line);background:linear-gradient(180deg,#0a0a0a,#050505);display:flex;flex-direction:column;gap:4px}
+  .pv-brand{display:flex;align-items:center;gap:9px;padding:6px 4px;margin-bottom:8px}
+  .pv-brand .logo{width:28px;height:28px;border-radius:7px}
+  .pv-brand .logo svg{width:16px;height:16px}
+  .pv-brand b{font-size:13px;color:var(--ink);font-weight:700}
+  .pv-nav-item{display:flex;align-items:center;gap:10px;padding:8px 10px;font-size:12px;color:var(--muted);border-radius:7px;border:1px solid transparent}
   .pv-nav-item.active{color:var(--ink);background:linear-gradient(180deg,#1c1c1c,#141414);border-color:var(--line)}
-  .pv-nav-item .ic{width:11px;height:11px;border-radius:2px;background:currentColor;opacity:.5;flex-shrink:0}
-  .pv-nav-item.active .ic{opacity:1}
-  .pv-side-bottom{margin-top:auto;border:1px solid var(--line);border-radius:8px;padding:8px;background:#0d0d0d;display:flex;align-items:center;gap:7px}
-  .pv-side-bottom .av{width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,#7a7a7a,#3a3a3a);flex-shrink:0}
-  .pv-side-bottom .who{font-size:10px;line-height:1.2;color:var(--ink);overflow:hidden}
-  .pv-side-bottom .who span{display:block;color:var(--muted);font-size:9px}
-  .pv-main{padding:14px}
-  .pv-topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
-  .pv-crumb{font-size:10px;color:var(--muted)}
-  .pv-pill-row{display:flex;gap:5px;flex-wrap:wrap}
-  .pv-pill{font-size:9px;padding:2px 7px;background:var(--chip);border:1px solid var(--line);border-radius:99px;color:var(--muted)}
+  .pv-nav-item .ic{width:13px;height:13px;border-radius:3px;background:currentColor;opacity:.4;flex-shrink:0}
+  .pv-nav-item.active .ic{opacity:.85}
+  .pv-side-bottom{margin-top:auto;border:1px solid var(--line);border-radius:9px;padding:10px;background:#0d0d0d;display:flex;align-items:center;gap:8px}
+  .pv-side-bottom .av{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#9a9a9a,#3a3a3a);flex-shrink:0}
+  .pv-side-bottom .who{font-size:11px;line-height:1.25;color:var(--ink);overflow:hidden;font-weight:600}
+  .pv-side-bottom .who span{display:block;color:#4ade80;font-size:9.5px;font-weight:500;display:flex;align-items:center;gap:5px;margin-top:2px}
+  .pv-side-bottom .who span::before{content:"";width:5px;height:5px;border-radius:50%;background:#4ade80;flex-shrink:0}
+  .pv-main{padding:18px}
+  .pv-topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+  .pv-crumb{font-size:11px;color:var(--muted)}
+  .pv-pill-row{display:flex;gap:6px;flex-wrap:wrap}
+  .pv-pill{font-size:10.5px;padding:3px 9px;background:var(--chip);border:1px solid var(--line);border-radius:99px;color:var(--muted)}
   .pv-pill b{color:var(--ink);font-weight:600}
-  .pv-section{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-  .pv-section h3{font-size:14px;margin:0;font-weight:700}
-  .pv-range{display:inline-flex;background:var(--chip);border:1px solid var(--line);border-radius:99px;padding:2px;gap:1px}
-  .pv-range span{padding:3px 8px;font-size:9px;color:var(--muted);border-radius:99px}
+  .pv-section{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+  .pv-section h3{font-size:17px;margin:0;font-weight:700;letter-spacing:-.3px}
+  .pv-range{display:inline-flex;background:var(--chip);border:1px solid var(--line);border-radius:99px;padding:3px;gap:2px}
+  .pv-range span{padding:4px 11px;font-size:10.5px;color:var(--muted);border-radius:99px;font-weight:600}
   .pv-range span.active{background:linear-gradient(180deg,#1c1c1c,#141414);color:var(--ink);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
-  .pv-kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:8px}
-  .pv-kpi{background:#0d0d0d;border:1px solid var(--line);border-radius:8px;padding:9px}
-  .pv-kpi h4{margin:0 0 4px;font-size:9px;color:var(--muted);font-weight:500;letter-spacing:.3px;text-transform:uppercase}
-  .pv-kpi .v{font-size:15px;font-weight:700}
-  .pv-kpi .d{font-size:9px;color:var(--good);margin-left:4px;font-weight:600}
+  .pv-kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:11px;margin-bottom:12px}
+  .pv-kpi{background:#0d0d0d;border:1px solid var(--line);border-radius:10px;padding:13px}
+  .pv-kpi h4{margin:0 0 6px;font-size:10.5px;color:var(--muted);font-weight:500;letter-spacing:.4px;text-transform:uppercase}
+  .pv-kpi .v{font-size:19px;font-weight:700;letter-spacing:-.4px}
+  .pv-kpi .d{font-size:10.5px;color:var(--good);margin-left:6px;font-weight:600}
   .pv-kpi .d.neg{color:#f87171}
-  .pv-kpi .spark{margin-top:4px;height:18px;display:flex;gap:1px;align-items:flex-end}
-  .pv-kpi .spark i{flex:1;background:linear-gradient(180deg,#e5e5e5,#525252);border-radius:1px}
-  .pv-row3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px}
-  .pv-card{background:#0d0d0d;border:1px solid var(--line);border-radius:8px;padding:10px}
-  .pv-card h4{margin:0 0 8px;font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.3px}
-  .pv-bars{display:flex;gap:2px;align-items:flex-end;height:60px}
-  .pv-bars i{flex:1;background:linear-gradient(180deg,#e5e5e5,#525252);border-radius:2px 2px 0 0}
+  .pv-kpi .spark{margin-top:8px;height:30px;display:flex;gap:2px;align-items:flex-end}
+  .pv-kpi .spark i{flex:1;background:linear-gradient(180deg,#e5e5e5,#525252);border-radius:2px}
+  .pv-row3{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin-bottom:12px}
+  .pv-card{background:#0d0d0d;border:1px solid var(--line);border-radius:10px;padding:14px}
+  .pv-card h4{margin:0 0 11px;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+  .pv-bars{display:flex;gap:3px;align-items:flex-end;height:100px}
+  .pv-bars i{flex:1;background:linear-gradient(180deg,#e5e5e5,#525252);border-radius:3px 3px 0 0}
   .pv-bars.green i{background:linear-gradient(180deg,#4ade80,#22c55e)}
-  .pv-funnel{display:flex;flex-direction:column;gap:5px}
-  .pv-funnel .b{height:14px;border-radius:4px;background:linear-gradient(90deg,#f5f5f5,#a3a3a3);color:#0a0a0a;font-size:8px;font-weight:700;display:flex;align-items:center;padding:0 6px}
+  .pv-funnel{display:flex;flex-direction:column;gap:7px}
+  .pv-funnel .b{height:18px;border-radius:5px;background:linear-gradient(90deg,#f5f5f5,#a3a3a3);color:#0a0a0a;font-size:9.5px;font-weight:700;display:flex;align-items:center;padding:0 8px}
   .pv-funnel .b.f2{background:linear-gradient(90deg,#d4d4d4,#7a7a7a);width:78%}
   .pv-funnel .b.f3{background:linear-gradient(90deg,#a3a3a3,#525252);width:55%}
   .pv-funnel .b.f4{background:linear-gradient(90deg,#737373,#3a3a3a);color:#ededed;width:32%}
-  .pv-quick{display:flex;flex-direction:column;gap:5px}
-  .pv-quick .qa{display:flex;align-items:center;gap:7px;padding:5px 7px;border:1px solid var(--line);border-radius:6px;background:#0a0a0a;font-size:10px;color:var(--ink)}
-  .pv-quick .qa .ic{width:18px;height:18px;border-radius:5px;background:var(--chip);border:1px solid var(--line);display:inline-flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0}
-  .pv-row2{display:grid;grid-template-columns:2fr 1fr;gap:8px}
+  .pv-quick{display:flex;flex-direction:column;gap:7px}
+  .pv-quick .qa{display:flex;align-items:center;gap:9px;padding:7px 9px;border:1px solid var(--line);border-radius:7px;background:#0a0a0a;font-size:11.5px;color:var(--ink);font-weight:500}
+  .pv-quick .qa .ic{width:22px;height:22px;border-radius:6px;background:var(--chip);border:1px solid var(--line);display:inline-flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
+  .pv-row2{display:grid;grid-template-columns:2fr 1fr;gap:11px}
   @media (max-width:880px){
-    .pv-app{grid-template-columns:1fr}
+    .pv-app{grid-template-columns:1fr;min-height:0}
     .pv-side{display:none}
     .pv-kpis{grid-template-columns:repeat(2,1fr)}
     .pv-row3,.pv-row2{grid-template-columns:1fr}
@@ -192,8 +194,13 @@
   .pv-funnel .b.f3{background:linear-gradient(90deg,#a3a3a3,#525252);width:55%}
   .pv-funnel .b.f4{background:linear-gradient(90deg,#737373,#3a3a3a);color:#ededed;width:32%}
   /* Section */
-  section.s{padding:80px 0;border-top:1px solid var(--line)}
-  section.s.dense{padding:60px 0}
+  section.s{padding:100px 0;position:relative}
+  section.s.dense{padding:70px 0}
+  /* Animated wave dividers between sections */
+  .wave-divider{position:relative;height:80px;overflow:hidden;margin:-1px 0}
+  .wave-divider svg{display:block;position:absolute;left:0;top:0;width:200%;height:100%;animation:wave-flow 18s linear infinite}
+  .wave-divider svg:nth-child(2){animation-duration:24s;animation-direction:reverse;opacity:.5}
+  @keyframes wave-flow{from{transform:translateX(0)}to{transform:translateX(-50%)}}
   h2.s-title{font-size:42px;line-height:1.1;letter-spacing:-1px;margin:0 0 14px;font-weight:800;text-align:center}
   p.s-sub{font-size:17px;color:var(--muted);max-width:620px;margin:0 auto 50px;text-align:center}
   .pain-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:30px}
@@ -201,8 +208,8 @@
   .pain:hover{transform:translateY(-4px);border-color:#3a3a3a;box-shadow:0 20px 40px rgba(0,0,0,.4)}
   .pain .icon{font-size:24px;margin-bottom:14px;display:inline-flex;width:46px;height:46px;border-radius:12px;background:var(--chip);border:1px solid var(--line);align-items:center;justify-content:center;transition:transform .3s cubic-bezier(.2,.8,.2,1),background .3s}
   .pain:hover .icon{transform:rotate(-6deg) scale(1.08);background:#1f1f1f}
-  .pain h3{margin:0 0 8px;font-size:17px}
-  .pain p{margin:0;color:var(--muted);font-size:14px}
+  .pain h3{margin:0 0 10px;font-size:20px;letter-spacing:-.2px}
+  .pain p{margin:0;color:var(--muted);font-size:16px;line-height:1.6}
   /* Features */
   .features{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:30px}
   .feat{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);border-radius:14px;padding:26px;transition:transform .35s cubic-bezier(.2,.8,.2,1),border-color .35s,box-shadow .35s;position:relative;overflow:hidden}
@@ -210,18 +217,18 @@
   .feat:hover{transform:translateY(-6px);border-color:transparent;box-shadow:0 24px 50px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.06)}
   .feat:hover::after{opacity:1}
   .feat .tag{display:inline-block;padding:3px 10px;background:var(--chip);border:1px solid var(--line);border-radius:999px;font-size:11px;color:var(--muted);margin-bottom:14px}
-  .feat h3{margin:0 0 8px;font-size:18px;letter-spacing:-.2px}
-  .feat p{margin:0 0 14px;color:var(--muted);font-size:14px;line-height:1.6}
-  .feat ul{margin:0;padding-left:18px;color:var(--muted);font-size:13px}
-  .feat ul li{margin:4px 0}
+  .feat h3{margin:0 0 10px;font-size:20px;letter-spacing:-.2px}
+  .feat p{margin:0 0 16px;color:var(--muted);font-size:16px;line-height:1.65}
+  .feat ul{margin:0;padding-left:18px;color:var(--muted);font-size:15px}
+  .feat ul li{margin:5px 0}
   /* How it works */
   .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:30px;counter-reset:step}
   .step{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);border-radius:14px;padding:28px;position:relative;counter-increment:step;transition:transform .3s cubic-bezier(.2,.8,.2,1),border-color .3s}
   .step:hover{transform:translateY(-3px);border-color:#3a3a3a}
   .step::before{content:"0" counter(step);position:absolute;top:18px;right:22px;font-size:38px;font-weight:800;color:#222;transition:color .3s}
   .step:hover::before{color:#444}
-  .step h3{margin:0 0 10px;font-size:17px}
-  .step p{margin:0;color:var(--muted);font-size:14px}
+  .step h3{margin:0 0 12px;font-size:20px;letter-spacing:-.2px}
+  .step p{margin:0;color:var(--muted);font-size:16px;line-height:1.6}
   /* Pricing */
   .price-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:30px;align-items:stretch}
   .price{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);border-radius:16px;padding:28px;display:flex;flex-direction:column;transition:transform .35s cubic-bezier(.2,.8,.2,1),border-color .35s,box-shadow .35s}
@@ -268,11 +275,11 @@
   .qa-body p a{color:var(--ink);text-decoration:underline;text-underline-offset:3px;text-decoration-color:#3a3a3a}
   .qa-body p a:hover{text-decoration-color:#ededed}
   /* Final CTA */
-  .final{text-align:center;padding:90px 22px;border-top:1px solid var(--line);background:radial-gradient(800px 400px at 50% -50%,rgba(255,255,255,.06),transparent 70%)}
+  .final{text-align:center;padding:100px 22px;background:radial-gradient(800px 400px at 50% -50%,rgba(255,255,255,.06),transparent 70%);position:relative}
   .final h2{font-size:48px;font-weight:800;letter-spacing:-1.2px;margin:0 0 14px;line-height:1.1}
   .final p{color:var(--muted);font-size:17px;max-width:520px;margin:0 auto 28px}
   /* Footer */
-  footer.foot{padding:80px 22px 30px;border-top:1px solid var(--line);color:var(--muted);font-size:14px;background:linear-gradient(180deg,transparent,rgba(0,0,0,.4))}
+  footer.foot{padding:80px 22px 30px;color:var(--muted);font-size:14px;background:linear-gradient(180deg,transparent,rgba(0,0,0,.4))}
   .foot-grid{display:grid;grid-template-columns:1.4fr repeat(3,1fr);gap:50px;max-width:1180px;margin:0 auto;padding:0 22px}
   .foot-brand{display:flex;flex-direction:column;gap:14px;max-width:340px}
   .foot-brand .brand{align-items:center}
@@ -320,7 +327,9 @@
     <a href="/" class="brand">
       <span class="logo">
         <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <g stroke="#fafafa" stroke-width="9" stroke-linecap="round"><line x1="14" y1="14" x2="50" y2="50"/><line x1="50" y1="14" x2="14" y2="50"/></g>
+          <defs><linearGradient id="lx" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fff"/><stop offset="100%" stop-color="#a3a3a3"/></linearGradient></defs>
+          <g stroke="url(#lx)" stroke-width="9" stroke-linecap="round"><line x1="18" y1="18" x2="46" y2="46"/><line x1="46" y1="18" x2="18" y2="46"/></g>
+          <circle cx="49" cy="15" r="4" fill="#4ade80"/>
         </svg>
       </span>
       <b>XGrowth</b>
@@ -353,9 +362,9 @@
 
 <!-- Hero -->
 <header class="hero wrap">
-  <div class="pill" data-reveal><span class="blink"></span> The Marketing &amp; Personal Branding OS · Free during beta</div>
-  <h1 class="hero-title" data-reveal data-delay="1">One OS for your<br/><span class="grad">marketing &amp; personal brand.</span></h1>
-  <p class="hero-sub" data-reveal data-delay="2">AI-generated content, campaigns, and analytics — across X, LinkedIn, Instagram, Threads, TikTok, and more. Built for creators, founders, marketers, and anyone serious about owning their audience.</p>
+  <div class="pill" data-reveal><span class="blink"></span> The Marketing OS for digital products · Free during beta</div>
+  <h1 class="hero-title" data-reveal data-delay="1">Ship features.<br/><span class="grad">We'll ship the marketing.</span></h1>
+  <p class="hero-sub" data-reveal data-delay="2">XGrowth is the operating system for your digital product's marketing. AI-generated content, multi-channel campaigns, and unified analytics — across X, LinkedIn, Instagram, Threads, TikTok, and more. Built for SaaS founders, indie hackers, and digital-product makers.</p>
   <div class="hero-cta" data-reveal data-delay="3">
     <a href="/app/?signin=1" class="btn primary lg">Get started — it's free <span class="arrow">→</span></a>
     <a href="#features" class="btn secondary lg">See what's inside</a>
@@ -373,7 +382,7 @@
         <!-- Sidebar -->
         <div class="pv-side">
           <div class="pv-brand">
-            <span class="logo"><svg viewBox="0 0 64 64"><g stroke="#fafafa" stroke-width="9" stroke-linecap="round"><line x1="14" y1="14" x2="50" y2="50"/><line x1="50" y1="14" x2="14" y2="50"/></g></svg></span>
+            <span class="logo"><svg viewBox="0 0 64 64"><defs><linearGradient id="lxm" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fff"/><stop offset="100%" stop-color="#a3a3a3"/></linearGradient></defs><g stroke="url(#lxm)" stroke-width="9" stroke-linecap="round"><line x1="18" y1="18" x2="46" y2="46"/><line x1="46" y1="18" x2="18" y2="46"/></g><circle cx="49" cy="15" r="4" fill="#4ade80"/></svg></span>
             <b>XGrowth</b>
           </div>
           <div class="pv-nav-item active"><span class="ic"></span> Dashboard</div>
@@ -454,45 +463,65 @@
   </div>
 </header>
 
+<!-- Wave divider -->
+<div class="wave-divider" aria-hidden="true">
+  <svg viewBox="0 0 2400 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0,40 C150,10 300,70 450,40 C600,10 750,70 900,40 C1050,10 1200,70 1350,40 C1500,10 1650,70 1800,40 C1950,10 2100,70 2250,40 C2325,25 2400,40 2400,40 L2400,80 L0,80 Z" fill="rgba(255,255,255,.025)"/>
+  </svg>
+  <svg viewBox="0 0 2400 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0,50 C200,20 400,80 600,50 C800,20 1000,80 1200,50 C1400,20 1600,80 1800,50 C2000,20 2200,80 2400,50 L2400,80 L0,80 Z" fill="rgba(255,255,255,.04)"/>
+  </svg>
+</div>
+
 <!-- Pain section -->
 <section class="s">
   <div class="wrap">
-    <h2 class="s-title" data-reveal>Marketing across every platform shouldn't feel like a second job.</h2>
-    <p class="s-sub" data-reveal data-delay="1">You want to grow your audience. But content, campaigns, and analytics are scattered across a dozen tools and tabs. Here's what most people quietly struggle with:</p>
+    <h2 class="s-title" data-reveal>Building the product is hard. Marketing it shouldn't be.</h2>
+    <p class="s-sub" data-reveal data-delay="1">You shipped a beautiful digital product. But getting it in front of users means juggling content, campaigns, and analytics across a dozen tools. Here's what slows most product makers down:</p>
     <div class="pain-grid" data-reveal-stagger>
       <div class="pain">
         <div class="icon">⏱</div>
         <h3>Blank-page paralysis</h3>
-        <p>You open a doc to write a post. 45 minutes later you have two bad sentences and seven tabs of "competitor research." The post never ships.</p>
+        <p>You sit down to write a launch post. 45 minutes later you have two bad sentences and seven tabs of competitor research. The post never ships.</p>
       </div>
       <div class="pain">
         <div class="icon">🔀</div>
         <h3>Every platform wants different content</h3>
-        <p>What works on X dies on LinkedIn. Threads needs a different voice. Instagram wants visuals. You can't keep up with five formats at once.</p>
+        <p>What works on X dies on LinkedIn. Threads needs a different voice. Instagram wants visuals. Five platforms, five formats, one founder. The math doesn't work.</p>
       </div>
       <div class="pain">
         <div class="icon">📊</div>
-        <h3>Analytics live in five dashboards</h3>
-        <p>You're toggling between native analytics on every platform, never seeing the full picture, never knowing which post types actually drive the result you want.</p>
+        <h3>No clear path from post to signup</h3>
+        <p>You're shipping content but the dashboard is foggy. You can't tell which post types drive trials, which channels send buyers, or what to ship next.</p>
       </div>
     </div>
   </div>
 </section>
 
+<!-- Wave divider -->
+<div class="wave-divider" aria-hidden="true">
+  <svg viewBox="0 0 2400 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0,40 C150,10 300,70 450,40 C600,10 750,70 900,40 C1050,10 1200,70 1350,40 C1500,10 1650,70 1800,40 C1950,10 2100,70 2250,40 C2325,25 2400,40 2400,40 L2400,80 L0,80 Z" fill="rgba(74,222,128,.04)"/>
+  </svg>
+  <svg viewBox="0 0 2400 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0,50 C200,20 400,80 600,50 C800,20 1000,80 1200,50 C1400,20 1600,80 1800,50 C2000,20 2200,80 2400,50 L2400,80 L0,80 Z" fill="rgba(255,255,255,.03)"/>
+  </svg>
+</div>
+
 <!-- Features -->
 <section class="s" id="features">
   <div class="wrap">
-    <h2 class="s-title" data-reveal>Six modules. One operating system.</h2>
-    <p class="s-sub" data-reveal data-delay="1">Everything you need to build your personal brand and run multi-channel marketing — in one dashboard, with cloud sync across all your devices.</p>
+    <h2 class="s-title" data-reveal>Six modules. One marketing OS.</h2>
+    <p class="s-sub" data-reveal data-delay="1">Everything you need to take a digital product to market — content, campaigns, analytics, and reporting. One dashboard. Cloud sync across all your devices.</p>
     <div class="features" data-reveal-stagger>
       <div class="feat">
-        <span class="tag">01 · Brand</span>
-        <h3>Personal Brand Kit</h3>
-        <p>One input → your full brand foundation: niche statement, buyer persona, optimized bios for every platform, and a 7-day content calendar tuned to your voice.</p>
+        <span class="tag">01 · Positioning</span>
+        <h3>Product Brand Kit</h3>
+        <p>One input → your full product brand foundation: positioning statement, ideal-customer profile, optimized bios for every platform, and a 7-day launch calendar.</p>
         <ul>
           <li>3 unique positioning angles</li>
           <li>Bios for X, LinkedIn, Instagram, Threads</li>
-          <li>21-post weekly content schedule</li>
+          <li>21-post weekly launch schedule</li>
         </ul>
       </div>
       <div class="feat">
@@ -549,6 +578,16 @@
   </div>
 </section>
 
+<!-- Wave divider -->
+<div class="wave-divider" aria-hidden="true">
+  <svg viewBox="0 0 2400 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0,40 C150,10 300,70 450,40 C600,10 750,70 900,40 C1050,10 1200,70 1350,40 C1500,10 1650,70 1800,40 C1950,10 2100,70 2250,40 C2325,25 2400,40 2400,40 L2400,80 L0,80 Z" fill="rgba(255,255,255,.025)"/>
+  </svg>
+  <svg viewBox="0 0 2400 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0,50 C200,20 400,80 600,50 C800,20 1000,80 1200,50 C1400,20 1600,80 1800,50 C2000,20 2200,80 2400,50 L2400,80 L0,80 Z" fill="rgba(74,222,128,.03)"/>
+  </svg>
+</div>
+
 <!-- How it works -->
 <section class="s" id="how">
   <div class="wrap">
@@ -571,6 +610,16 @@
   </div>
 </section>
 
+<!-- Wave divider -->
+<div class="wave-divider" aria-hidden="true">
+  <svg viewBox="0 0 2400 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0,40 C150,10 300,70 450,40 C600,10 750,70 900,40 C1050,10 1200,70 1350,40 C1500,10 1650,70 1800,40 C1950,10 2100,70 2250,40 C2325,25 2400,40 2400,40 L2400,80 L0,80 Z" fill="rgba(255,255,255,.025)"/>
+  </svg>
+  <svg viewBox="0 0 2400 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0,50 C200,20 400,80 600,50 C800,20 1000,80 1200,50 C1400,20 1600,80 1800,50 C2000,20 2200,80 2400,50 L2400,80 L0,80 Z" fill="rgba(255,255,255,.04)"/>
+  </svg>
+</div>
+
 <!-- Beta banner (replaces pricing) -->
 <section class="s dense" id="pricing">
   <div class="wrap">
@@ -586,6 +635,16 @@
   </div>
 </section>
 
+<!-- Wave divider -->
+<div class="wave-divider" aria-hidden="true">
+  <svg viewBox="0 0 2400 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0,40 C150,10 300,70 450,40 C600,10 750,70 900,40 C1050,10 1200,70 1350,40 C1500,10 1650,70 1800,40 C1950,10 2100,70 2250,40 C2325,25 2400,40 2400,40 L2400,80 L0,80 Z" fill="rgba(74,222,128,.04)"/>
+  </svg>
+  <svg viewBox="0 0 2400 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0,50 C200,20 400,80 600,50 C800,20 1000,80 1200,50 C1400,20 1600,80 1800,50 C2000,20 2200,80 2400,50 L2400,80 L0,80 Z" fill="rgba(255,255,255,.03)"/>
+  </svg>
+</div>
+
 <!-- FAQ -->
 <section class="s" id="faq">
   <div class="wrap">
@@ -595,7 +654,7 @@
         <button class="qa-head" type="button" aria-expanded="true">
           <span>Who is XGrowth for?</span><span class="qa-icon" aria-hidden="true">+</span>
         </button>
-        <div class="qa-body"><div class="qa-body-inner"><p>Anyone serious about building a personal brand or running their own marketing — creators, founders, marketers, coaches, freelancers, course-makers, agency owners. If you publish content on at least one social platform and want it to actually drive results, XGrowth is built for you.</p></div></div>
+        <div class="qa-body"><div class="qa-body-inner"><p>Makers of digital products — SaaS founders, indie hackers, AI tool builders, course creators, ebook authors, plugin/template sellers. If you ship a digital product and need to market it across multiple channels without hiring an agency, XGrowth is for you.</p></div></div>
       </div>
       <div class="qa">
         <button class="qa-head" type="button" aria-expanded="false">
@@ -607,7 +666,7 @@
         <button class="qa-head" type="button" aria-expanded="false">
           <span>Is this just ChatGPT with a prompt?</span><span class="qa-icon" aria-hidden="true">+</span>
         </button>
-        <div class="qa-body"><div class="qa-body-inner"><p>No. XGrowth is a structured operating system around content and growth: brand foundations, platform-specific hook formats, campaign blueprints, conversion-funnel analytics, and audit frameworks. ChatGPT gives you generic text. XGrowth gives you a workflow tuned to growth.</p></div></div>
+        <div class="qa-body"><div class="qa-body-inner"><p>No. XGrowth is a structured operating system around digital-product marketing: product positioning, platform-specific hook formats, launch playbooks, conversion-funnel analytics, and content audits. ChatGPT gives you generic text. XGrowth gives you a complete marketing workflow tuned to digital products.</p></div></div>
       </div>
       <div class="qa">
         <button class="qa-head" type="button" aria-expanded="false">
@@ -631,13 +690,13 @@
         <button class="qa-head" type="button" aria-expanded="false">
           <span>How is this different from Buffer / Hypefury / Notion?</span><span class="qa-icon" aria-hidden="true">+</span>
         </button>
-        <div class="qa-body"><div class="qa-body-inner"><p>Those are publishing schedulers or generic doc tools. They assume you've already written the content. XGrowth is the layer before publishing — generating the content in the first place, with brand frameworks, campaign playbooks, and audit tooling that schedulers don't touch. Pair us with a scheduler if you like.</p></div></div>
+        <div class="qa-body"><div class="qa-body-inner"><p>Those are publishing schedulers or generic doc tools. They assume you've already written the content. XGrowth is the layer before publishing — generating product-specific content, launch playbooks, and audit tooling that schedulers don't touch. Pair us with a scheduler if you like.</p></div></div>
       </div>
       <div class="qa">
         <button class="qa-head" type="button" aria-expanded="false">
           <span>I haven't found my niche yet. Can I still use it?</span><span class="qa-icon" aria-hidden="true">+</span>
         </button>
-        <div class="qa-body"><div class="qa-body-inner"><p>Yes — that's actually a great use case. Run the Personal Brand Kit with 3–5 angles you might pursue. You'll get content calendars for each one. Test which angle gets traction over 2 weeks. Then commit.</p></div></div>
+        <div class="qa-body"><div class="qa-body-inner"><p>Yes — that's actually a great use case. Run the Product Brand Kit with 3–5 positioning angles you're considering. You'll get a content calendar for each one. Test which angle gets traction over 2 weeks. Then commit.</p></div></div>
       </div>
     </div>
   </div>
@@ -662,7 +721,7 @@
         </span>
         <b>XGrowth</b>
       </a>
-      <p>The Marketing &amp; Personal Branding OS. AI-generated content, campaigns, and analytics across every platform.</p>
+      <p>The Marketing OS for digital products. AI-generated content, multi-channel campaigns, and unified analytics — built for SaaS founders and indie makers.</p>
     </div>
     <div class="foot-col">
       <h4>Product</h4>
