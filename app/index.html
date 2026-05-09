@@ -703,7 +703,9 @@ if(wantsSignin){
   u.searchParams.delete('signin');
   history.replaceState({}, '', u.toString());
 }
-// Process any pending redirect result from a Google sign-in flow
+// Process any pending redirect result from a Google sign-in flow.
+// IMPORTANT: track when this finishes so we don't redirect-to-landing too early.
+let redirectResultDone = false;
 fbAuth.getRedirectResult().then(res=>{
   if(res && res.user){
     toast(`Welcome, ${(res.user.displayName||'there').split(' ')[0]}`);
@@ -712,6 +714,13 @@ fbAuth.getRedirectResult().then(res=>{
   if(err && err.code && err.code !== 'auth/null-credential'){
     console.error('Redirect sign-in error', err);
     toast('Sign-in failed: ' + (err.message||err.code));
+  }
+}).finally(()=>{
+  redirectResultDone = true;
+  // If still not signed in after redirect result is in, run the gate decision now.
+  // (signInWithRedirect itself navigates the page so we won't reach this in that case.)
+  if(!fbAuth.currentUser){
+    runAuthGateLogic();
   }
 });
 const state = load() || {
@@ -1639,21 +1648,32 @@ fbAuth.onAuthStateChanged(user=>{
     document.body.classList.remove('authed');
     cloudLoaded = false;
     setSync('offline');
-    if(wantsSignin && !signinTriggered){
-      // Came from a marketing CTA, redirect immediately while showing "Redirecting" state
-      signinTriggered = true;
-      setAuthState('redirecting');
-      startGoogleSignIn(true).catch(err=>{
-        authGateError('Could not start sign-in: ' + (err.message||err.code));
-      });
+    // Only act on a confirmed signed-out state (after any pending redirect result has resolved).
+    if(redirectResultDone){
+      runAuthGateLogic();
     } else {
-      // User landed on /app/ without an active sign-in attempt and isn't authenticated.
-      // Most likely: they pressed back from Google's sign-in page. Bounce to landing
-      // so the browser back-button history stays sensible.
-      window.location.replace('/');
+      // Show the loading spinner while Firebase is still processing the redirect.
+      setAuthState('loading');
     }
   }
 });
+
+function runAuthGateLogic(){
+  if(fbAuth.currentUser) return; // signed in: nothing to do
+  if(wantsSignin && !signinTriggered){
+    // Came from a marketing CTA: trigger Google redirect while showing "Redirecting"
+    signinTriggered = true;
+    setAuthState('redirecting');
+    startGoogleSignIn(true).catch(err=>{
+      authGateError('Could not start sign-in: ' + (err.message||err.code));
+    });
+  } else {
+    // User landed on /app/ without an active sign-in attempt and isn't authenticated.
+    // Most likely: pressed back from Google's sign-in page, or visited /app/ directly.
+    // Bounce to the landing page for a clean back-button history.
+    window.location.replace('/');
+  }
+}
 
 /* ========= Init ========= */
 window.addEventListener('resize', ()=>{ renderKPIs(); renderBars(); renderVelocity(); });
