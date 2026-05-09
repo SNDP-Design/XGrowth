@@ -105,60 +105,71 @@
   .preview{margin:64px auto 0;max-width:1080px;background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);border-radius:18px;padding:14px;box-shadow:0 30px 80px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.04);transition:transform .5s cubic-bezier(.2,.8,.2,1), box-shadow .5s;will-change:transform}
   .preview:hover{transform:translateY(-6px) scale(1.005);box-shadow:0 40px 100px rgba(0,0,0,.6),0 0 60px rgba(255,255,255,.05),inset 0 1px 0 rgba(255,255,255,.06)}
   /* Inline app structure inside preview, matches real dashboard proportions */
-  .pv-app{display:grid;grid-template-columns:200px 1fr;background:#0a0a0a;min-height:600px}
-  .pv-side{padding:16px 12px;border-right:1px solid var(--line);background:linear-gradient(180deg,#0a0a0a,#050505);display:flex;flex-direction:column;gap:4px}
-  .pv-brand{display:flex;align-items:center;gap:9px;padding:6px 4px;margin-bottom:8px}
-  .pv-brand .logo{width:28px;height:28px;border-radius:7px}
-  .pv-brand .logo svg{width:16px;height:16px}
-  .pv-brand b{font-size:13px;color:var(--ink);font-weight:700}
-  .pv-nav-item{display:flex;align-items:center;gap:10px;padding:8px 10px;font-size:12px;color:var(--muted);border-radius:7px;border:1px solid transparent}
+  .pv-app{display:grid;grid-template-columns:220px 1fr;background:#0a0a0a;min-height:760px}
+  .pv-side{padding:20px 14px;border-right:1px solid var(--line);background:linear-gradient(180deg,#0a0a0a,#050505);display:flex;flex-direction:column;gap:5px}
+  .pv-brand{display:flex;align-items:center;gap:10px;padding:8px 4px;margin-bottom:12px}
+  .pv-brand .logo{width:30px;height:30px;border-radius:8px}
+  .pv-brand .logo svg{width:18px;height:18px}
+  .pv-brand b{font-size:14px;color:var(--ink);font-weight:700}
+  .pv-nav-item{display:flex;align-items:center;gap:11px;padding:9px 11px;font-size:12.5px;color:var(--muted);border-radius:8px;border:1px solid transparent}
   .pv-nav-item.active{color:var(--ink);background:linear-gradient(180deg,#1c1c1c,#141414);border-color:var(--line)}
-  .pv-nav-item .ic{width:13px;height:13px;border-radius:3px;background:currentColor;opacity:.4;flex-shrink:0}
+  .pv-nav-item .ic{width:14px;height:14px;border-radius:3px;background:currentColor;opacity:.4;flex-shrink:0}
   .pv-nav-item.active .ic{opacity:.85}
-  .pv-side-bottom{margin-top:auto;border:1px solid var(--line);border-radius:9px;padding:10px;background:#0d0d0d;display:flex;align-items:center;gap:8px}
-  .pv-side-bottom .av{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#9a9a9a,#3a3a3a);flex-shrink:0}
-  .pv-side-bottom .who{font-size:11px;line-height:1.25;color:var(--ink);overflow:hidden;font-weight:600}
-  .pv-side-bottom .who span{display:block;color:#4ade80;font-size:9.5px;font-weight:500;display:flex;align-items:center;gap:5px;margin-top:2px}
-  .pv-side-bottom .who span::before{content:"";width:5px;height:5px;border-radius:50%;background:#4ade80;flex-shrink:0}
-  .pv-main{padding:18px}
-  .pv-topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
-  .pv-crumb{font-size:11px;color:var(--muted)}
-  .pv-pill-row{display:flex;gap:6px;flex-wrap:wrap}
-  .pv-pill{font-size:10.5px;padding:3px 9px;background:var(--chip);border:1px solid var(--line);border-radius:99px;color:var(--muted)}
+  .pv-side-bottom{margin-top:auto;border:1px solid var(--line);border-radius:10px;padding:11px;background:#0d0d0d;display:flex;align-items:center;gap:9px}
+  .pv-side-bottom .av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#9a9a9a,#3a3a3a);flex-shrink:0}
+  .pv-side-bottom .who{font-size:12px;line-height:1.25;color:var(--ink);overflow:hidden;font-weight:600}
+  .pv-side-bottom .who span{display:block;color:#4ade80;font-size:10px;font-weight:500;display:flex;align-items:center;gap:5px;margin-top:3px}
+  .pv-side-bottom .who span::before{content:"";width:6px;height:6px;border-radius:50%;background:#4ade80;flex-shrink:0}
+  .pv-main{padding:22px;display:flex;flex-direction:column;gap:14px}
+  .pv-topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+  .pv-crumb{font-size:12px;color:var(--muted)}
+  .pv-pill-row{display:flex;gap:7px;flex-wrap:wrap}
+  .pv-pill{font-size:11px;padding:4px 10px;background:var(--chip);border:1px solid var(--line);border-radius:99px;color:var(--muted)}
   .pv-pill b{color:var(--ink);font-weight:600}
-  .pv-section{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
-  .pv-section h3{font-size:17px;margin:0;font-weight:700;letter-spacing:-.3px}
+  .pv-section{display:flex;justify-content:space-between;align-items:center}
+  .pv-section h3{font-size:19px;margin:0;font-weight:700;letter-spacing:-.4px}
   .pv-range{display:inline-flex;background:var(--chip);border:1px solid var(--line);border-radius:99px;padding:3px;gap:2px}
-  .pv-range span{padding:4px 11px;font-size:10.5px;color:var(--muted);border-radius:99px;font-weight:600}
+  .pv-range span{padding:5px 12px;font-size:11px;color:var(--muted);border-radius:99px;font-weight:600}
   .pv-range span.active{background:linear-gradient(180deg,#1c1c1c,#141414);color:var(--ink);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
-  .pv-kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:11px;margin-bottom:12px}
-  .pv-kpi{background:#0d0d0d;border:1px solid var(--line);border-radius:10px;padding:13px}
-  .pv-kpi h4{margin:0 0 6px;font-size:10.5px;color:var(--muted);font-weight:500;letter-spacing:.4px;text-transform:uppercase}
-  .pv-kpi .v{font-size:19px;font-weight:700;letter-spacing:-.4px}
-  .pv-kpi .d{font-size:10.5px;color:var(--good);margin-left:6px;font-weight:600}
+  .pv-kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+  .pv-kpi{background:#0d0d0d;border:1px solid var(--line);border-radius:11px;padding:16px}
+  .pv-kpi h4{margin:0 0 8px;font-size:11px;color:var(--muted);font-weight:500;letter-spacing:.4px;text-transform:uppercase}
+  .pv-kpi .v{font-size:23px;font-weight:700;letter-spacing:-.5px}
+  .pv-kpi .d{font-size:11px;color:var(--good);margin-left:7px;font-weight:600}
   .pv-kpi .d.neg{color:#f87171}
-  .pv-kpi .spark{margin-top:8px;height:30px;display:flex;gap:2px;align-items:flex-end}
+  .pv-kpi .spark{margin-top:12px;height:42px;display:flex;gap:2px;align-items:flex-end}
   .pv-kpi .spark i{flex:1;background:linear-gradient(180deg,#e5e5e5,#525252);border-radius:2px}
-  .pv-row3{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin-bottom:12px}
-  .pv-card{background:#0d0d0d;border:1px solid var(--line);border-radius:10px;padding:14px}
-  .pv-card h4{margin:0 0 11px;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
-  .pv-bars{display:flex;gap:3px;align-items:flex-end;height:100px}
+  .pv-row3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .pv-card{background:#0d0d0d;border:1px solid var(--line);border-radius:11px;padding:18px}
+  .pv-card h4{margin:0 0 14px;font-size:11.5px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+  .pv-bars{display:flex;gap:3px;align-items:flex-end;height:140px}
   .pv-bars i{flex:1;background:linear-gradient(180deg,#e5e5e5,#525252);border-radius:3px 3px 0 0}
   .pv-bars.green i{background:linear-gradient(180deg,#4ade80,#22c55e)}
-  .pv-funnel{display:flex;flex-direction:column;gap:7px}
-  .pv-funnel .b{height:18px;border-radius:5px;background:linear-gradient(90deg,#f5f5f5,#a3a3a3);color:#0a0a0a;font-size:9.5px;font-weight:700;display:flex;align-items:center;padding:0 8px}
+  .pv-funnel{display:flex;flex-direction:column;gap:10px}
+  .pv-funnel .b{height:24px;border-radius:6px;background:linear-gradient(90deg,#f5f5f5,#a3a3a3);color:#0a0a0a;font-size:10.5px;font-weight:700;display:flex;align-items:center;padding:0 10px}
   .pv-funnel .b.f2{background:linear-gradient(90deg,#d4d4d4,#7a7a7a);width:78%}
   .pv-funnel .b.f3{background:linear-gradient(90deg,#a3a3a3,#525252);width:55%}
   .pv-funnel .b.f4{background:linear-gradient(90deg,#737373,#3a3a3a);color:#ededed;width:32%}
-  .pv-quick{display:flex;flex-direction:column;gap:7px}
-  .pv-quick .qa{display:flex;align-items:center;gap:9px;padding:7px 9px;border:1px solid var(--line);border-radius:7px;background:#0a0a0a;font-size:11.5px;color:var(--ink);font-weight:500}
-  .pv-quick .qa .ic{width:22px;height:22px;border-radius:6px;background:var(--chip);border:1px solid var(--line);display:inline-flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
-  .pv-row2{display:grid;grid-template-columns:2fr 1fr;gap:11px}
+  .pv-quick{display:flex;flex-direction:column;gap:9px}
+  .pv-quick .qa{display:flex;align-items:center;gap:10px;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:#0a0a0a;font-size:12.5px;color:var(--ink);font-weight:500}
+  .pv-quick .qa .ic{width:26px;height:26px;border-radius:7px;background:var(--chip);border:1px solid var(--line);display:inline-flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+  .pv-row2{display:grid;grid-template-columns:2fr 1fr;gap:12px}
+  /* Posts table row */
+  .pv-table{display:flex;flex-direction:column;gap:8px}
+  .pv-table-head{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:10px;padding:0 4px 8px;border-bottom:1px solid var(--line);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;font-weight:600}
+  .pv-table-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:10px;padding:8px 4px;font-size:11.5px;color:var(--ink);align-items:center}
+  .pv-table-row + .pv-table-row{border-top:1px solid #1a1a1a}
+  .pv-table-row .post{color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+  .pv-table-row .num{color:var(--muted)}
+  .pv-table-row .pos{color:#4ade80;font-weight:600}
+  .pv-table-row .neg{color:#f87171;font-weight:600}
   @media (max-width:880px){
     .pv-app{grid-template-columns:1fr;min-height:0}
     .pv-side{display:none}
     .pv-kpis{grid-template-columns:repeat(2,1fr)}
     .pv-row3,.pv-row2{grid-template-columns:1fr}
+    .pv-table-head, .pv-table-row{grid-template-columns:2fr 1fr 1fr;font-size:11px}
+    .pv-table-head > *:nth-child(n+4), .pv-table-row > *:nth-child(n+4){display:none}
   }
   /* Animated mockup bars on load */
   .pv-bars i, .pv-kpi .spark i{transform-origin:bottom;transform:scaleY(0);animation:barIn .9s cubic-bezier(.2,.8,.2,1) forwards}
@@ -442,9 +453,42 @@
             </div>
             <div class="pv-card">
               <h4>Goal Progress</h4>
-              <div style="font-size:10px;color:var(--muted);margin-bottom:6px">followers · <b style="color:var(--ink)">1.9k / 10k</b></div>
-              <div style="height:6px;background:#1a1a1a;border:1px solid var(--line);border-radius:99px;overflow:hidden"><div style="height:100%;width:19%;background:linear-gradient(90deg,#e5e5e5,#737373)"></div></div>
-              <div style="font-size:9px;color:var(--muted);margin-top:4px">19%</div>
+              <div style="font-size:11.5px;color:var(--muted);margin-bottom:8px">followers · <b style="color:var(--ink);font-weight:600">1.9k / 10k</b></div>
+              <div style="height:8px;background:#1a1a1a;border:1px solid var(--line);border-radius:99px;overflow:hidden"><div style="height:100%;width:19%;background:linear-gradient(90deg,#e5e5e5,#737373)"></div></div>
+              <div style="font-size:10.5px;color:var(--muted);margin-top:6px">19% complete</div>
+              <div style="margin-top:14px;padding:11px;border:1px solid var(--line);border-radius:8px;background:linear-gradient(135deg,rgba(255,255,255,.05),rgba(255,255,255,.01))">
+                <div style="font-size:11px;font-weight:700;color:var(--ink)">Premium Audit · $49</div>
+                <div style="font-size:10.5px;color:var(--muted);margin-top:3px">Hand-tuned thread review</div>
+              </div>
+            </div>
+          </div>
+          <div class="pv-card">
+            <h4>Top Posts This Week</h4>
+            <div class="pv-table">
+              <div class="pv-table-head">
+                <span>Post</span><span>Impr</span><span>WoW</span><span>Likes</span><span>ER</span>
+              </div>
+              <div class="pv-table-row">
+                <span class="post">5 patterns I saw kill pre-seed SaaS at YC →</span>
+                <span class="num">18.4k</span>
+                <span class="pos">+29%</span>
+                <span class="num">412</span>
+                <span class="num">2.86%</span>
+              </div>
+              <div class="pv-table-row">
+                <span class="post">Most "growth" advice fails for solo founders.</span>
+                <span class="num">9.8k</span>
+                <span class="neg">-12%</span>
+                <span class="num">201</span>
+                <span class="num">2.58%</span>
+              </div>
+              <div class="pv-table-row">
+                <span class="post">I shipped 3 features in 24h. Here's the trick.</span>
+                <span class="num">7.2k</span>
+                <span class="pos">+24%</span>
+                <span class="num">156</span>
+                <span class="num">2.61%</span>
+              </div>
             </div>
           </div>
         </div>
