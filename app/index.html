@@ -26,7 +26,7 @@
     --chip:#161616;
   }
   *{box-sizing:border-box}
-  html,body{margin:0;padding:0;background:radial-gradient(1200px 600px at 80% -10%,#1a1a1a 0%,transparent 60%),radial-gradient(900px 500px at -10% 110%,#101010 0%,transparent 60%),var(--bg);color:var(--ink);font:16px/1.55 -apple-system,BlinkMacSystemFont,"SF Pro Text","Inter",system-ui,sans-serif}
+  html,body{margin:0;padding:0;background:radial-gradient(1200px 600px at 80% -10%,#1a1a1a 0%,transparent 60%),radial-gradient(900px 500px at -10% 110%,#101010 0%,transparent 60%),var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen,Ubuntu,Cantarell,sans-serif}
   a{color:var(--accent-2);text-decoration:none}
   button{font:inherit;cursor:pointer}
   .app{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
@@ -51,6 +51,8 @@
   /* Main */
   main{padding:24px 32px 60px;max-width:none;width:100%}
   .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+  .mobile-only{display:none}
+  @media (max-width:980px){ .mobile-only{display:flex} }
   .crumbs{color:var(--muted);font-size:12px}
   .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:var(--chip);border:1px solid var(--line);border-radius:999px;font-size:12px;color:var(--muted)}
   .pill b{color:var(--ink)}
@@ -104,7 +106,12 @@
   .user-chip .meta{flex:1;min-width:0}
   .user-chip .meta b{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .user-chip .meta span{color:var(--muted);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
-  .signout{background:transparent;border:1px solid var(--line);color:var(--muted);padding:6px 10px;border-radius:8px;font-size:11px}
+  .signout{background:transparent;border:1px solid var(--line);color:var(--muted);padding:6px 10px;border-radius:8px;font-size:11px;cursor:pointer}
+  /* Profile pills in sidebar */
+  .profile-pills{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+  .profile-pill{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 12px;background:#0d0d0d;border:1px solid var(--line);border-radius:10px;font-size:13px}
+  .profile-pill .lbl{color:var(--muted);font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:.4px}
+  .profile-pill b{color:var(--ink);font-size:13px;font-weight:600;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%}
   .sync{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);margin-top:6px}
   .sync .dot{width:7px;height:7px;border-radius:50%;background:var(--muted)}
   .sync.synced .dot{background:#4ade80}
@@ -138,15 +145,15 @@
   .kpi .l{color:var(--muted);font-size:12px;margin-top:2px}
   .delta.up{color:var(--good)} .delta.down{color:var(--bad)} .delta.flat{color:var(--muted)}
   .delta{font-size:12px;margin-left:6px}
-  /* Forms */
-  label{display:block;font-size:12px;color:var(--muted);margin:8px 0 6px}
-  input[type=text],input[type=number],select,textarea{width:100%;background:#0a0a0a;border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:10px 12px;outline:none}
+  /* Forms — 48px sizing for inputs and buttons */
+  label{display:block;font-size:13px;color:var(--muted);margin:10px 0 6px}
+  input[type=text],input[type=number],select{width:100%;height:48px;background:#0a0a0a;border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:0 14px;outline:none;font:16px/1.5 inherit}
+  textarea{width:100%;background:#0a0a0a;border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:14px;outline:none;font:16px/1.5 inherit;min-height:120px;resize:vertical}
   input:focus,select:focus,textarea:focus{border-color:#3a3a3a;box-shadow:0 0 0 3px rgba(255,255,255,.04)}
-  textarea{min-height:90px;resize:vertical}
-  .btn{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(180deg,#fafafa,#d4d4d4);border:0;color:#0a0a0a;padding:10px 14px;border-radius:10px;font-weight:600;box-shadow:0 8px 18px rgba(0,0,0,.5)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:48px;background:linear-gradient(180deg,#fafafa,#d4d4d4);border:0;color:#0a0a0a;padding:0 20px;border-radius:10px;font:600 16px/1 inherit;box-shadow:0 8px 18px rgba(0,0,0,.5);cursor:pointer}
   .btn:hover{background:linear-gradient(180deg,#fff,#e5e5e5)}
   .btn.secondary{background:transparent;border:1px solid var(--line);color:var(--ink);box-shadow:none}
-  .btn.ghost{background:transparent;color:var(--muted);box-shadow:none}
+  .btn.ghost{background:transparent;color:var(--muted);box-shadow:none;height:40px;padding:0 14px;font-size:14px}
   .row{display:flex;gap:10px;flex-wrap:wrap}
   .chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:var(--chip);border:1px solid var(--line);border-radius:999px;font-size:12px;color:var(--ink)}
   /* Output blocks */
@@ -244,11 +251,8 @@
   <!-- Sidebar -->
   <aside class="side">
     <div class="brand" style="cursor:default">
-      <span class="logo"><svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs><linearGradient id="alx" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fff"/><stop offset="100%" stop-color="#a3a3a3"/></linearGradient></defs><g stroke="url(#alx)" stroke-width="9" stroke-linecap="round"><line x1="18" y1="18" x2="46" y2="46"/><line x1="46" y1="18" x2="18" y2="46"/></g><circle cx="49" cy="15" r="4" fill="#4ade80"/></svg></span>
-      <div>
-        <h1>XGrowth</h1>
-        <small>Marketing OS for digital products</small>
-      </div>
+      <span class="logo"><svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><g fill="#fff"><path d="M14 16 L22 16 L50 48 L42 48 Z"/><path d="M50 16 L42 16 L14 48 L22 48 Z"/></g></svg></span>
+      <h1 style="font-size:18px;font-weight:700;letter-spacing:-.2px">XGrowth</h1>
     </div>
     <div class="nav" id="nav">
       <button data-view="dashboard" class="active">
@@ -292,29 +296,21 @@
         <div class="meta"><b id="uName">—</b><span id="uEmail">—</span></div>
         <button class="signout" onclick="signOut()">Sign out</button>
       </div>
-      <div id="syncStatus" class="sync"><span class="dot"></span><span id="syncLabel">Offline</span></div>
-    </div>
-    <div style="display:flex;gap:10px;font-size:12px;padding:4px 6px;color:var(--muted)">
-      <a href="/privacy/" target="_blank" rel="noopener" style="color:inherit">Privacy</a>
-      <span>·</span>
-      <a href="/terms/" target="_blank" rel="noopener" style="color:inherit">Terms</a>
+      <div class="profile-pills">
+        <div class="profile-pill"><span class="lbl">Niche</span><b id="nicheTag">—</b></div>
+        <div class="profile-pill"><span class="lbl">Audience</span><b id="audienceTag">—</b></div>
+        <div class="profile-pill"><span class="lbl">Stage</span><b id="stageTag">—</b></div>
+        <div class="profile-pill"><span class="lbl">Goal</span><b id="goalTag">—</b></div>
+      </div>
+      <button class="btn secondary" id="editProfile" style="width:100%;margin-top:10px">Edit profile</button>
     </div>
   </aside>
   <div class="scrim" id="scrim" onclick="toggleSide(false)"></div>
 
   <!-- Main -->
   <main>
-    <div class="topbar">
-      <div class="row" style="align-items:center;gap:8px">
-        <button class="menu-btn" onclick="toggleSide()" aria-label="Open menu">☰</button>
-        <div class="crumbs"><span id="crumb">Dashboard</span> · <span class="muted">Track what moves the needle</span></div>
-      </div>
-      <div class="row">
-        <span class="pill">Niche · <b id="nicheTag">—</b></span>
-        <span class="pill">Stage · <b id="stageTag">—</b></span>
-        <span class="pill">Goal · <b id="goalTag">—</b></span>
-        <button class="btn secondary" id="editProfile">Edit profile</button>
-      </div>
+    <div class="topbar mobile-only">
+      <button class="menu-btn" onclick="toggleSide()" aria-label="Open menu">☰</button>
     </div>
 
     <!-- DASHBOARD / ANALYTICS -->
@@ -793,7 +789,6 @@ nav.addEventListener('click', e=>{
   const v = b.dataset.view;
   document.querySelectorAll('main > section').forEach(s=>s.classList.add('hide'));
   document.querySelector(`section[data-view="${v}"]`).classList.remove('hide');
-  document.getElementById('crumb').textContent = b.textContent.trim();
 });
 
 /* ========= Welcome / Profile ========= */
@@ -835,6 +830,7 @@ function applyProfile(){
   document.getElementById('nicheTag').textContent = p.niche;
   document.getElementById('stageTag').textContent = p.stage;
   document.getElementById('goalTag').textContent  = p.goal;
+  const audEl = document.getElementById('audienceTag'); if(audEl) audEl.textContent = p.target || '—';
   const st = document.getElementById('sessionTag'); if(st) st.textContent = p.niche.split(' ')[0];
   renderAll();
 }
