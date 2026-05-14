@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>XGrowth, Marketing &amp; Personal Branding OS</title>
+<title>XGrowth · The Marketing OS for Digital Products</title>
 <link rel="icon" href="/assets/logo.svg" type="image/svg+xml"/>
 <link rel="apple-touch-icon" href="/assets/logo.png"/>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -210,6 +210,66 @@
   body:not(.authed) .app{display:none !important;visibility:hidden !important}
   body:not(.authed) .modal{display:none !important;visibility:hidden !important}
   body.authed .auth-gate{display:none !important}
+  /* Brand Kit module */
+  input[type=date]{width:100%;height:48px;background:#0a0a0a;border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:0 14px;outline:none;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.5;color-scheme:dark}
+  input[type=date]:focus{border-color:#3a3a3a;box-shadow:0 0 0 3px rgba(255,255,255,.04)}
+  .bk-tabs{display:flex;gap:6px;flex-wrap:wrap;background:#0a0a0a;border:1px solid var(--line);border-radius:12px;padding:6px;margin:14px 0}
+  .bk-tab{flex:1;min-width:120px;height:42px;background:transparent;border:0;color:var(--muted);font:600 14px system-ui,-apple-system,sans-serif;border-radius:8px;cursor:pointer;transition:.18s;padding:0 14px;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+  .bk-tab:hover{color:var(--ink);background:rgba(255,255,255,.03)}
+  .bk-tab.active{background:linear-gradient(180deg,#fafafa,#d4d4d4);color:#0a0a0a;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+  .bk-panel{display:none}
+  .bk-panel.active{display:block}
+  .bk-section{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:14px}
+  .bk-section h3{margin:0 0 12px;font-size:15px;letter-spacing:.2px;color:var(--ink)}
+  .bk-section h4{margin:14px 0 8px;font-size:13px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);font-weight:600}
+  .bk-section p{margin:0 0 10px;color:#cfcfcf;line-height:1.6;font-size:15px}
+  .bk-section ul{margin:0 0 10px;padding-left:20px;color:#cfcfcf}
+  .bk-section ul li{margin:4px 0;line-height:1.6}
+  .bk-quote{background:#0a0a0a;border-left:3px solid var(--ink);border-radius:0 10px 10px 0;padding:14px 16px;color:#ededed;font-size:16px;line-height:1.55;margin:8px 0 14px}
+  .bk-angle{background:#0a0a0a;border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:0 0 10px}
+  .bk-angle .bk-hook{font-size:15px;color:var(--ink);font-weight:600;margin:0 0 6px}
+  .bk-angle .bk-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .bk-chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ink);background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:4px 10px;letter-spacing:.2px}
+  .bk-chip.good{color:#86efac;border-color:rgba(74,222,128,.25);background:rgba(74,222,128,.08)}
+  .bk-chip.muted{color:var(--muted)}
+  .bk-icp-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+  @media (max-width:880px){.bk-icp-grid{grid-template-columns:1fr}}
+  .bk-bio{background:#0a0a0a;border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:0 0 10px;position:relative}
+  .bk-bio .bk-bio-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
+  .bk-bio .bk-bio-text{color:#ededed;font-size:15px;line-height:1.55;white-space:pre-wrap;word-break:break-word}
+  .bk-bio .bk-bio-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:8px}
+  .bk-platform{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--muted);letter-spacing:.2px;text-transform:uppercase}
+  .bk-count{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .bk-count.over{color:#f87171}
+  .bk-day{background:#0a0a0a;border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:0 0 10px}
+  .bk-day-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+  .bk-day-head h4{margin:0;font-size:14px;color:var(--ink);text-transform:none;letter-spacing:0}
+  .bk-day p{margin:6px 0;font-size:14px;color:#cfcfcf}
+  .bk-day .bk-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;font-weight:700;margin-right:6px}
+  .bk-post{display:grid;grid-template-columns:90px 1fr;gap:14px;align-items:start;background:#0a0a0a;border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:0 0 8px}
+  .bk-post .bk-time{font-size:12px;color:var(--ink);font-weight:600}
+  .bk-post .bk-time small{display:block;color:var(--muted);font-weight:500;margin-top:2px}
+  .bk-post .bk-cap{color:#ededed;font-size:14px;line-height:1.55;margin:0 0 6px;white-space:pre-wrap}
+  .bk-post .bk-foot{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+  .bk-ad{font-size:12px;color:var(--muted);margin-top:6px;padding-top:6px;border-top:1px dashed var(--line)}
+  .bk-ad strong{color:var(--ink);font-weight:600}
+  .bk-empty{background:#080808;border:1px dashed var(--line);border-radius:12px;padding:36px 22px;text-align:center;color:var(--muted)}
+  .bk-empty .bk-empty-title{color:var(--ink);font-size:16px;font-weight:600;margin-bottom:6px}
+  .bk-disabled{opacity:.5;cursor:not-allowed;pointer-events:none}
+  @media print{
+    body, body:not(.authed){background:#fff !important;color:#000 !important}
+    .side, .topbar, .auth-gate, .modal, #toast, .bk-tabs, .bk-tab, button, .copybar .btn, .scrim, footer, .qa, .pain, .features, .pricing, .hero, nav, header{display:none !important}
+    .app{display:block !important}
+    .main{padding:0 !important;margin:0 !important}
+    section[data-view]:not([data-view="brand"]){display:none !important}
+    section[data-view="brand"]{display:block !important}
+    .bk-panel{display:block !important;page-break-inside:avoid;margin-bottom:24px;border-top:1px solid #ddd;padding-top:16px}
+    .bk-panel::before{content:attr(data-bk-panel-label);display:block;font-size:18px;font-weight:700;margin-bottom:12px;color:#000;text-transform:capitalize}
+    .bk-section,.bk-angle,.bk-bio,.bk-day,.bk-post,.bk-quote,.bk-empty{background:#fff !important;border-color:#ddd !important;color:#000 !important;page-break-inside:avoid}
+    .bk-section h3,.bk-section h4,.bk-section p,.bk-section li,.bk-bio-text,.bk-cap,.bk-day p,.bk-quote,.bk-angle .bk-hook{color:#000 !important}
+    .bk-chip{background:#f3f3f3 !important;color:#000 !important;border-color:#ccc !important}
+    .bk-empty,.bk-empty *{display:none !important}
+  }
 </style>
 </head>
 <body>
@@ -261,7 +321,7 @@
       </button>
       <button data-view="brand">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        Personal Brand Kit
+        Brand Kit
       </button>
       <button data-view="content">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
@@ -441,36 +501,155 @@
 
     <!-- BRAND KIT -->
     <section data-view="brand" class="hide">
-      <h2 class="section">Personal Brand Kit</h2>
-      <p class="lede">Niche statement, buyer persona, X bio, profile suggestions, and 7-day calendar.</p>
-      <div class="grid cols-2">
-        <div class="card">
-          <h3>Inputs</h3>
-          <label>Founder name</label><input id="bName" type="text" placeholder="e.g., Alex Park" />
-          <label>One-liner about you</label><input id="bAbout" type="text" placeholder="ex-Stripe PM building AI for SMB ops" />
-          <label>Audience</label>
-          <select id="bAudience">
-            <option>Investors (pre-seed/seed)</option>
-            <option>SaaS founders</option>
-            <option>SMB operators</option>
-            <option>Indie hackers</option>
-          </select>
-          <label>Voice</label>
-          <select id="bVoice">
-            <option>Naval-style wisdom</option>
-            <option>Founder story / build-in-public</option>
-            <option>Contrarian takes</option>
-            <option>Tactical playbooks</option>
-          </select>
-          <div class="row" style="margin-top:12px">
-            <button class="btn" onclick="genBrand()">Generate Brand Kit</button>
-            <button class="btn secondary" onclick="clearOut('brandOut')">Clear</button>
+      <h2 class="section">Brand Kit</h2>
+      <p class="lede">One product brief in → complete kit out: positioning, ICP, optimized bios for X/LinkedIn/Instagram/Threads, a 7-day launch calendar, and a 21-post weekly schedule.</p>
+
+      <div class="card">
+        <h3>Product brief</h3>
+        <div class="grid cols-2">
+          <div>
+            <label>Product name</label>
+            <input id="bkName" type="text" placeholder="e.g., Lumen Analytics"/>
+          </div>
+          <div>
+            <label>Tagline (one line)</label>
+            <input id="bkTag" type="text" placeholder="e.g., Customer analytics for product-led startups"/>
           </div>
         </div>
-        <div class="card">
-          <div class="copybar"><h3>Output</h3><button class="btn ghost" onclick="copyOut('brandOut')">Copy</button></div>
-          <div class="output" id="brandOut">Fill in inputs and hit Generate. You'll get: niche statement, persona, 3 angles, X bio (≤160 chars), profile pic ideas, and a 7-day calendar.</div>
+        <label>Top 3 features (one per line)</label>
+        <textarea id="bkFeatures" placeholder="Real-time funnel breakdown&#10;Cohort retention out-of-the-box&#10;Slack alerts for churn signals"></textarea>
+        <div class="grid cols-3">
+          <div>
+            <label>Industry</label>
+            <input id="bkIndustry" type="text" placeholder="B2B SaaS"/>
+          </div>
+          <div>
+            <label>Company size target</label>
+            <select id="bkSize">
+              <option>Solo / 1-person</option>
+              <option>2–10</option>
+              <option selected>11–50</option>
+              <option>51–200</option>
+              <option>201+</option>
+            </select>
+          </div>
+          <div>
+            <label>Price range / month</label>
+            <input id="bkPrice" type="text" placeholder="$29 – $149"/>
+          </div>
         </div>
+        <div class="grid cols-2">
+          <div>
+            <label>Top competitors (comma-separated)</label>
+            <input id="bkCompetitors" type="text" placeholder="Mixpanel, Amplitude, June"/>
+          </div>
+          <div>
+            <label>Launch date</label>
+            <input id="bkLaunch" type="date"/>
+          </div>
+        </div>
+        <div class="grid cols-2">
+          <div>
+            <label>Tone / personality</label>
+            <select id="bkTone">
+              <option value="founder">Founder-first (warm, build-in-public)</option>
+              <option value="formal">Formal / enterprise</option>
+              <option value="playful">Playful / contrarian</option>
+            </select>
+          </div>
+          <div>
+            <label>Geography</label>
+            <input id="bkGeo" type="text" placeholder="North America"/>
+          </div>
+        </div>
+        <div class="row" style="margin-top:14px">
+          <button class="btn" onclick="genBrandKit()">Generate Brand Kit</button>
+          <button class="btn secondary" onclick="resetBrandKit()">Clear</button>
+        </div>
+      </div>
+
+      <div class="bk-tabs" id="bkTabs" style="display:none">
+        <button type="button" class="bk-tab active" data-bk-tab="positioning">Positioning</button>
+        <button type="button" class="bk-tab" data-bk-tab="icp">ICP</button>
+        <button type="button" class="bk-tab" data-bk-tab="bios">Bios</button>
+        <button type="button" class="bk-tab" data-bk-tab="day7">7-day calendar</button>
+        <button type="button" class="bk-tab" data-bk-tab="post21">21-post schedule</button>
+        <button type="button" class="bk-tab" data-bk-tab="exports">Exports</button>
+      </div>
+
+      <div id="bkResults" style="display:none">
+        <div class="bk-panel active" data-bk-panel="positioning" data-bk-panel-label="Positioning">
+          <div class="bk-section">
+            <div class="copybar"><h3>Primary positioning statement</h3><button class="btn ghost" onclick="copyBKNode('bkPosStmt')">Copy</button></div>
+            <div id="bkPosStmt"></div>
+          </div>
+          <div class="bk-section">
+            <div class="copybar"><h3>Three positioning angles</h3><button class="btn ghost" onclick="copyBKNode('bkPosAngles')">Copy all</button></div>
+            <div id="bkPosAngles"></div>
+          </div>
+          <div class="row">
+            <button type="button" class="btn secondary" onclick="genBrandKit()">Regenerate</button>
+          </div>
+        </div>
+
+        <div class="bk-panel" data-bk-panel="icp" data-bk-panel-label="Ideal Customer Profile">
+          <div class="bk-section">
+            <div class="copybar"><h3>Ideal Customer Profile</h3><button class="btn ghost" onclick="copyBKNode('bkICP')">Copy</button></div>
+            <div id="bkICP"></div>
+          </div>
+        </div>
+
+        <div class="bk-panel" data-bk-panel="bios" data-bk-panel-label="Optimized Bios">
+          <div class="bk-section">
+            <div class="copybar"><h3>Platform bios (3 variants each)</h3><button class="btn ghost" onclick="copyBKNode('bkBios')">Copy all</button></div>
+            <p class="muted" style="margin:0 0 12px;font-size:13px">Character counts shown per platform limit. Tap "Copy" on any bio to use it.</p>
+            <div id="bkBios"></div>
+          </div>
+        </div>
+
+        <div class="bk-panel" data-bk-panel="day7" data-bk-panel-label="7-Day Launch Calendar">
+          <div class="bk-section">
+            <div class="copybar"><h3>7-day launch calendar</h3><button class="btn ghost" onclick="copyBKNode('bkDay7')">Copy</button></div>
+            <div id="bkDay7"></div>
+          </div>
+        </div>
+
+        <div class="bk-panel" data-bk-panel="post21" data-bk-panel-label="21-Post Schedule">
+          <div class="bk-section">
+            <div class="copybar"><h3>21-post weekly launch schedule</h3><button class="btn ghost" onclick="copyBKNode('bkPost21')">Copy</button></div>
+            <p class="muted" style="margin:0 0 12px;font-size:13px">3 posts × 7 days. Each row includes caption, hashtags, CTA, and an ad-variant headline.</p>
+            <div id="bkPost21"></div>
+          </div>
+        </div>
+
+        <div class="bk-panel" data-bk-panel="exports" data-bk-panel-label="Exports">
+          <div class="bk-section">
+            <h3>Download or push</h3>
+            <p>Take your kit anywhere. Markdown is great for Notion or docs; CSV imports cleanly into Google Sheets or a scheduling tool.</p>
+            <div class="row" style="margin-top:8px;gap:10px">
+              <button class="btn" onclick="exportBKMarkdown()">Download Markdown (.md)</button>
+              <button class="btn secondary" onclick="exportBKCsv()">Download 21-post CSV</button>
+              <button class="btn secondary" onclick="window.print()">Print / Save as PDF</button>
+              <button class="btn secondary" onclick="copyBKAll()">Copy full kit (Markdown)</button>
+            </div>
+          </div>
+          <div class="bk-section">
+            <h3>Push to your tools</h3>
+            <p class="muted" style="margin:0 0 10px">These connect via OAuth and a small backend service — coming soon.</p>
+            <div class="row" style="gap:10px">
+              <button class="btn secondary bk-disabled" title="Coming soon">Push to Google Calendar</button>
+              <button class="btn secondary bk-disabled" title="Coming soon">Push to Buffer</button>
+              <button class="btn secondary bk-disabled" title="Coming soon">Push to Hootsuite</button>
+              <button class="btn secondary bk-disabled" title="Coming soon">Export to Figma</button>
+              <button class="btn secondary bk-disabled" title="Coming soon">Notion API</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bk-empty" id="bkEmpty">
+        <div class="bk-empty-title">Your kit will appear here</div>
+        Fill the brief above and hit <strong>Generate Brand Kit</strong>. You'll get positioning, ICP, bios for 4 platforms, a 7-day launch calendar, and a 21-post schedule.
       </div>
     </section>
 
@@ -1133,51 +1312,438 @@ $('addPost').onclick = ()=>{
 /* ========= Generators (template-based, no external API) ========= */
 function p(){ return state.profile || {niche:'AI SaaS', stage:'Pre-seed', target:'Both', goal:'10k followers'}; }
 
-function genBrand(){
-  const prof=p();
-  const name = val('bName')||'You';
-  const about= val('bAbout')||`${prof.stage} founder building in ${prof.niche}`;
-  const aud  = val('bAudience');
-  const voice= val('bVoice');
-  const niche = prof.niche;
-  const out = `## Niche Statement
-I help ${aud.toLowerCase()} win at ${niche} by shipping ${voice.toLowerCase()} every week.
+/* =========================================================
+   BRAND KIT — Product Brand Kit generator
+   ========================================================= */
+let _bkLastKit = null;
 
-## Buyer Persona
-- Who: ${aud}
-- Pain: too much noise, too little time; wants tactical proof, not theory
-- Trigger: sees a thread that maps to a problem they had this week
-- Objection: "another AI/SaaS bro" → defuse with specifics + numbers
+function bkEsc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-## 3 Unique Angles
-1. Build-in-public receipts: weekly metric dumps from ${niche}
-2. Contrarian playbook: why ${prof.stage} founders should ignore most "growth" advice
-3. Founder→${aud.split(' ')[0]} translator: turn ops/tech into 1-tweet insights
+function readBKInputs(){
+  const featuresRaw = ($('bkFeatures')?.value || '').split('\n').map(s=>s.trim()).filter(Boolean);
+  const competitors = val('bkCompetitors').split(',').map(s=>s.trim()).filter(Boolean);
+  const launchDate = val('bkLaunch');
+  let launchD = launchDate ? new Date(launchDate + 'T00:00') : null;
+  if(!launchD || isNaN(launchD)) launchD = new Date();
+  return {
+    name: val('bkName') || 'Your Product',
+    tag: val('bkTag') || 'The simplest way to ship better marketing',
+    features: featuresRaw.length ? featuresRaw.slice(0,3) : ['Fast onboarding','Useful by default','Works with your stack'],
+    industry: val('bkIndustry') || 'B2B SaaS',
+    size: val('bkSize') || '11–50',
+    price: val('bkPrice') || '$29 – $149',
+    competitors: competitors.length ? competitors : ['Incumbent A','Incumbent B'],
+    geo: val('bkGeo') || 'North America',
+    tone: $('bkTone')?.value || 'founder',
+    launch: launchD
+  };
+}
 
-## X Bio (≤160 chars)
-${name} · ${about}. ${niche}. Tactics > theory. ${prof.goal.split(',')[0]} → DM open. 🇺🇸
+function bkFmtDate(d){
+  return d.toLocaleDateString(undefined, { weekday:'short', month:'short', day:'numeric' });
+}
+function bkAddDays(d, n){ const x = new Date(d); x.setDate(x.getDate()+n); return x; }
 
-## Profile Suggestions
-- PFP: clean headshot, warm light, neutral bg (no logos)
-- Banner: 1 outcome screenshot + your one-liner in 64pt
-- Pinned: best thread of last 30 days + CTA to your offer
+function bkToneLabel(t){
+  if(t==='formal') return 'Formal / enterprise';
+  if(t==='playful') return 'Playful / contrarian';
+  return 'Founder-first';
+}
 
-## 7-Day Calendar (3 posts/day)
-Mon, Hook tweet (story) · Reply sprint (10 founders) · Insight thread (5 tweets)
-Tue, Contrarian take · Poll on niche pain · Build-in-public update
-Wed, Listicle (5 lessons) · Founder Q reply · Long thread (8–10 tweets)
-Thu, Quote a customer · Quick tip · Niche meme/visual
-Fri, Win recap · Friday founder thread · Weekend AMA prompt
-Sat, Evergreen long-form · Soft CTA · Reply to viral post in niche
-Sun, Reflection thread · Small tactical tip · Tease next week
+/* ---------------- Positioning ---------------- */
+function bkPositioning(b){
+  const cat = `${b.industry} ${(b.tag.split(' ').slice(0,2).join(' ')||'platform').toLowerCase()}`;
+  const need = `${b.tag.toLowerCase().replace(/\.$/,'')}`;
+  const benefit = b.features[0].toLowerCase();
+  const diff = b.features.slice(1).join(' + ').toLowerCase() || 'a focused, opinionated workflow';
+  const stmt = `For ${b.industry} teams (${b.size}) who ${need}, ${b.name} is a ${b.industry.toLowerCase()} platform that ${benefit} because ${diff}.`;
+  const expansion = `${b.name} is built for ${b.industry.toLowerCase()} operators who are tired of stitching together ${b.competitors.slice(0,2).join(' and ')} just to answer simple questions. With ${b.features.join(', ').toLowerCase()}, teams ship insight in days, not quarters — at ${b.price}/month, not ${b.industry.toLowerCase()}-enterprise pricing.`;
+  return { stmt, expansion };
+}
+function bkAngles(b){
+  const f = b.features;
+  return [
+    {
+      hook: `The ${b.competitors[0]} alternative that doesn't make you a data engineer.`,
+      evidence: `${f[0]} works on day one. No SQL, no schema design, no 90-day rollout.`,
+      use: 'Homepage hero'
+    },
+    {
+      hook: `Built for ${b.size} ${b.industry.toLowerCase()} teams — priced for ${b.size} ${b.industry.toLowerCase()} teams.`,
+      evidence: `${b.price}/month. Same depth, none of the enterprise tax.`,
+      use: 'Paid ad / pricing page'
+    },
+    {
+      hook: `${b.features[1] || 'Cohort retention out-of-the-box'} — without a 6-month integration.`,
+      evidence: `${b.name} ships ${b.features.slice(1).join(' + ').toLowerCase() || 'opinionated defaults'} so your team is answering "is it working?" by the end of week one.`,
+      use: 'Founder pitch / sales deck'
+    }
+  ];
+}
 
-## Next Steps
-- Lock the bio. Pin a thread. Reply to 10 in-niche founders today.
+/* ---------------- ICP ---------------- */
+function bkICP(b){
+  const titles = (b.industry.match(/saas|software/i))
+    ? ['Head of Growth','Head of Product','Founder / CEO','Lead Product Designer','Senior PMM']
+    : ['Head of Marketing','Director of Demand Gen','Founder / CEO','VP Sales','RevOps Lead'];
+  const pains = [
+    `Drowning in spreadsheets stitched between ${b.competitors[0]} and ${b.competitors[1]||'three other tools'}.`,
+    'Can\'t answer "what changed last week and why?" without a Slack-thread investigation.',
+    'Onboarding new analytics tools takes weeks; the team gives up before insight.',
+    `Pricing of incumbents (${b.competitors[0]}) starts at 5–10× ${b.name}'s plan once you hit real volume.`,
+    'Reports get exported to PDF and forwarded — nobody actually reads them.'
+  ];
+  const gains = [
+    `${b.features[0]} on day one, no setup tax.`,
+    'Shared answers, not exported PDFs — the team sees the same numbers.',
+    `${b.features[1]||'Cohort retention'} without a data-engineer hire.`,
+    `Predictable cost (${b.price}/month) instead of usage-based surprises.`,
+    'A clear weekly story to take to the leadership review.'
+  ];
+  const triggers = [
+    'Just closed a seed/A round and is being asked for a "real reporting layer."',
+    `Renewal date approaching for ${b.competitors[0]} or a similar incumbent.`,
+    'Hired a new Head of Growth / Marketing in the last 60 days.',
+    `Recently exceeded ${b.size} headcount and ad-hoc reports are breaking down.`,
+    'Posted on LinkedIn about "wish we had better analytics" in the last 30 days.'
+  ];
+  return { titles, pains, gains, triggers,
+    demographic: `Titles: ${titles.join(', ')}. Geography: ${b.geo}. English-speaking primary.`,
+    firmographic: `Industry: ${b.industry}. Size: ${b.size}. Funded (pre-seed → Series B) or bootstrapped with paying customers. Cloud-first stack.`,
+    psychographic: `Builder-types who pick tools by reading docs, not booking demos. Trust signals: open changelog, public roadmap, founder on X/LinkedIn. Allergic to "schedule a call" CTAs as the only entry point.`
+  };
+}
 
-## Upgrade?
-- Premium Audit ($49): I review your last 30 posts + rebuild the calendar.`;
-  $('brandOut').textContent = out;
+/* ---------------- Bios ---------------- */
+function bkBios(b){
+  const T = b.tone;
+  const head = (T==='formal') ? `${b.name} — ${b.tag}.` : (T==='playful') ? `${b.name}: ${b.tag}. 😎` : `${b.name} → ${b.tag}.`;
+  const f0 = b.features[0] || 'fast setup';
+  const f1 = b.features[1] || 'opinionated defaults';
+  const f2 = b.features[2] || 'first-class team workflows';
+  const ctaX = T==='formal' ? 'Start free →' : T==='playful' ? 'Try it. No "book a demo." →' : 'DMs open. Try free →';
+  const ctaIG = T==='formal' ? 'Link in bio →' : T==='playful' ? 'You came here for the link → tap it.' : 'Built in public. Link below ↓';
+
+  const X = [
+    `${head} ${f0}. ${ctaX}`,
+    `${b.name} · ${b.industry} for ${b.size} teams · ${f0} + ${f1}. ${ctaX}`,
+    `Building ${b.name} — ${b.tag.toLowerCase()}. Less ${b.competitors[0]}, more ${f0.toLowerCase()}. ${ctaX}`
+  ];
+  const LI = [
+    { headline: `${b.name} — ${b.tag}`, body: `${f0.charAt(0).toUpperCase()+f0.slice(1)}. ${f1}. ${f2}. Built for ${b.industry} teams (${b.size}). ${b.price}/month.` },
+    { headline: `Co-founder & CEO at ${b.name} · ${b.tag}`, body: `We help ${b.industry} teams ship ${f0.toLowerCase()} without 90-day rollouts. If you're evaluating ${b.competitors[0]}, talk to us first.` },
+    { headline: `${b.industry} platform for ${b.size} teams — without the enterprise tax`, body: `${b.name}: ${b.features.join(' · ').toLowerCase()}. Starts at ${b.price.split('–')[0].trim() || '$29'}/mo.` }
+  ];
+  const IG = [
+    `${b.name} 🚀 ${b.tag} · ${ctaIG}`,
+    `${b.tag} ${T==='playful'?'(without the boring parts)':'· built for '+b.industry+' teams'}. ${ctaIG}`,
+    `${b.name} · ${f0} · ${f1} ${ctaIG}`
+  ];
+  const TH = [
+    `${b.name} — ${b.tag}.`,
+    `${b.industry} for builders. ${f0}. ${b.price}/mo.`,
+    `Building ${b.name} in public. ${b.tag}.`
+  ];
+  return { X, LI, IG, TH };
+}
+
+/* ---------------- 7-Day Launch Calendar ---------------- */
+function bkDay7(b){
+  const L = b.launch;
+  const days = [
+    { d: bkAddDays(L,-6), title: 'Tease', objective: 'Plant curiosity in your audience.', assets: 'Teaser image (1 cryptic line + brand mark)', copy: `Something new is coming for ${b.industry} teams. ${T7Hint(b)}`, email: `Subject: "Quiet pre-announcement" · Preview: "${b.name} is opening in 7 days — early-access list inside."`, kpi: 'Teaser email open rate > 35%; profile visits +25% vs baseline.' },
+    { d: bkAddDays(L,-5), title: 'Pain proof',  objective: 'Validate the problem out loud.', assets: 'Quote card with a real customer/early-tester pain point', copy: `"${b.competitors[0]} is overkill, spreadsheets are underkill." — a ${b.industry} founder, last week.`, email: '', kpi: 'Reposts > 5; replies citing similar pain > 10.' },
+    { d: bkAddDays(L,-4), title: 'Differentiator', objective: 'Frame how you are different.', assets: 'Side-by-side: incumbent vs ' + b.name, copy: `${b.name} vs ${b.competitors[0]} — 3 differences that matter in week one.`, email: '', kpi: 'Click-through to comparison page > 4%.' },
+    { d: bkAddDays(L,-3), title: 'Behind the build', objective: 'Show the human story.', assets: 'Founder selfie + 30s loom of the product', copy: `Why we built ${b.name}: a 90-second story.`, email: `Subject: "Why we built ${b.name}" · Preview: "A short note from the team — and what's coming Monday."`, kpi: 'Reply rate > 3%; video views > 1k.' },
+    { d: bkAddDays(L,-2), title: 'Social proof', objective: 'Borrow trust.', assets: 'Carousel: 3 early-tester quotes + a 1-screenshot before/after', copy: `What ${b.industry} teams said in beta — three quotes, one screenshot, zero spin.`, email: '', kpi: 'Saves/bookmarks > 40.' },
+    { d: bkAddDays(L,-1), title: 'Final tease', objective: 'Lock in launch-day attention.', assets: 'Countdown post (24h timer)', copy: `Tomorrow: ${b.name} opens. ${b.price}/month. No "book a demo."`, email: `Subject: "Tomorrow." · Preview: "${b.name} opens at 9am PT. Be ready."`, kpi: 'List growth +20% in the last 24h.' },
+    { d: L,                title: 'Launch day', objective: 'Make it impossible to miss.', assets: 'Hero post + 60s product walkthrough + founder thread + paid ad live', copy: `Today: ${b.name} opens. ${b.tag}. ${b.features.join(' · ')}. ${b.price}/mo.`, email: `Subject: "${b.name} is live." · Preview: "10-minute setup. ${b.features[0]} on day one. Start free."`, kpi: 'Signups > 100; conversion to active > 30%; press/inbound mentions > 5.' }
+  ];
+  return days;
+}
+function T7Hint(b){
+  if(b.tone==='formal') return 'Details Monday.';
+  if(b.tone==='playful') return 'No demos. No "talk to sales." Just the thing. Monday.';
+  return 'Quiet drop Monday. Open list ↓';
+}
+
+/* ---------------- 21-Post Schedule ---------------- */
+function bkPost21(b){
+  const hashtags = (extra='')=>{
+    const h = b.industry.replace(/\s+/g,'');
+    const base = ['#'+h, '#startups', '#productlaunch'];
+    if(extra) base.push('#'+extra.replace(/\s+/g,''));
+    return base.slice(0,4);
+  };
+  const slots = [
+    { time: 'AM', window: '8–10am local' },
+    { time: 'Noon', window: '12–1pm local' },
+    { time: 'PM', window: '6–8pm local' }
+  ];
+  const themes = [
+    [
+      { type:'Graphic', cap: `${b.name} is here. ${b.tag}.\nWhat changes for ${b.industry} teams ↓`, cta: 'Try free →', ad: `${b.name}: ${b.tag}. Start in 10 minutes.` },
+      { type:'Testimonial card', cap: `"Replaced ${b.competitors[0]} in a weekend." — early customer.`, cta: 'Read the case →', ad: `Why ${b.industry} teams are switching from ${b.competitors[0]} to ${b.name}.` },
+      { type:'Founder selfie + 60s video', cap: `Why we built ${b.name}. A 60-second story from the team.`, cta: 'Watch the story →', ad: `Built by ${b.industry} operators, for ${b.industry} operators.` }
+    ],
+    [
+      { type:'Carousel', cap: `${b.features[0]} — without a data engineer.\n5 slides of how it works.`, cta: 'See it live →', ad: `${b.features[0]} in 10 minutes. No setup tax.` },
+      { type:'Short video', cap: `${b.name} vs ${b.competitors[0]}: same questions, very different answers.`, cta: 'Compare →', ad: `${b.name} vs ${b.competitors[0]} — the honest comparison.` },
+      { type:'Quote graphic', cap: `"Tools should answer questions, not generate more." — a thing we believe.`, cta: 'Try free →', ad: `${b.name}: the ${b.industry} platform built around answers.` }
+    ],
+    [
+      { type:'Tutorial GIF', cap: `Set up ${b.features[1]||'cohort retention'} in under 5 minutes.\nDay-3 demo ↓`, cta: 'Set it up →', ad: `${b.features[1]||'Cohort retention'} on day one. No PRDs required.` },
+      { type:'Customer story', cap: `How a ${b.size} ${b.industry.toLowerCase()} team ships weekly reviews in 15 minutes — using ${b.name}.`, cta: 'Read the playbook →', ad: `From 4 hours to 15 minutes: the ${b.industry} weekly review, ${b.name}-powered.` },
+      { type:'Community Q&A', cap: `Tell us — what's the one ${b.industry.toLowerCase()} metric you check first every Monday?`, cta: 'Reply below ↓', ad: `Built for the metrics ${b.industry} teams actually check.` }
+    ],
+    [
+      { type:'Mini case study', cap: `${b.name} in week one: 3 dashboards every ${b.industry.toLowerCase()} team should ship first.`, cta: 'Get the templates →', ad: `Three ${b.industry} dashboards — free with ${b.name}.` },
+      { type:'Loom walkthrough', cap: `${b.features[2]||b.features[0]} in action. 90 seconds.`, cta: 'Watch →', ad: `${b.features[2]||b.features[0]} — the demo in 90 seconds.` },
+      { type:'Contrarian take', cap: `Hot take: most ${b.industry.toLowerCase()} teams don't need ${b.competitors[0]}. They need 3 dashboards and a habit.`, cta: 'Argue with us ↓', ad: `${b.name}: the ${b.industry} stack you'd actually use.` }
+    ],
+    [
+      { type:'Carousel', cap: `5 questions ${b.name} answers that ${b.competitors[0]} makes you build from scratch.`, cta: 'See the list →', ad: `${b.name}: ${b.industry} answers, not infrastructure.` },
+      { type:'Numbers post', cap: `${b.industry} teams using ${b.name}:\n• Setup: 12 min median\n• First dashboard: same day\n• Replaces: ${b.competitors.slice(0,2).join(' + ')}`, cta: 'Try free →', ad: `${b.name} by the numbers — and what it replaces.` },
+      { type:'Friday recap', cap: `Week in ${b.name}: 3 things shipped, 1 customer story, 1 thing we got wrong.`, cta: 'Get the changelog →', ad: `${b.name} ships every week. Public changelog →` }
+    ],
+    [
+      { type:'Long-form essay', cap: `Why ${b.industry} teams (${b.size}) deserve a tool priced for them — not for the Fortune 500.`, cta: 'Read the essay →', ad: `${b.name}: ${b.industry} pricing for ${b.industry} teams.` },
+      { type:'Reply / quote tweet', cap: `Replying to a viral post about "${b.industry} reporting is broken." Yep. That's why we built ${b.name}.`, cta: 'See the thread →', ad: `${b.industry} reporting, fixed. Try ${b.name} free.` },
+      { type:'Behind-the-scenes', cap: `Saturday at ${b.name}: a quick roadmap doodle and the bug we're hunting this weekend.`, cta: 'Follow along →', ad: `${b.name}: built in the open.` }
+    ],
+    [
+      { type:'Reflection', cap: `Sunday note: what one ${b.industry.toLowerCase()} metric we're obsessed with this week and why.`, cta: 'Read →', ad: `${b.name}: the metric-obsessed ${b.industry} platform.` },
+      { type:'Quick tip', cap: `Tip: rename your first ${b.name} dashboard "Monday review." You'll open it more.`, cta: 'Steal the template →', ad: `${b.name}: the dashboard your Monday meeting actually opens.` },
+      { type:'Tease next week', cap: `Next week in ${b.name}: a new view we've been hiding. Drops Tuesday.`, cta: 'Get the alert →', ad: `Something new ships in ${b.name} on Tuesday. Get the alert.` }
+    ]
+  ];
+  const out = [];
+  for(let day=0; day<7; day++){
+    for(let s=0; s<3; s++){
+      const slot = slots[s]; const t = themes[day][s];
+      const d = bkAddDays(b.launch, day);
+      out.push({
+        day: day+1, date: d, time: slot.time, window: slot.window,
+        type: t.type, caption: t.cap, hashtags: hashtags(d.toLocaleString('en',{weekday:'long'})),
+        cta: t.cta, ad: t.ad
+      });
+    }
+  }
+  return out;
+}
+
+/* ---------------- Render ---------------- */
+function renderBKPositioning(b, p){
+  $('bkPosStmt').innerHTML = `
+    <div class="bk-quote">${bkEsc(p.stmt)}</div>
+    <p>${bkEsc(p.expansion)}</p>
+    <div class="bk-meta" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+      <span class="bk-chip">Template: For [X] who [Y], [P] is a [C] that [B] because [D]</span>
+      <span class="bk-chip muted">Tone: ${bkEsc(bkToneLabel(b.tone))}</span>
+    </div>`;
+  const angles = bkAngles(b);
+  $('bkPosAngles').innerHTML = angles.map((a,i)=>`
+    <div class="bk-angle">
+      <p class="bk-hook">${i+1}. ${bkEsc(a.hook)}</p>
+      <p style="margin:0;color:#cfcfcf;font-size:14px">${bkEsc(a.evidence)}</p>
+      <div class="bk-meta"><span class="bk-chip good">Best use: ${bkEsc(a.use)}</span></div>
+    </div>`).join('');
+}
+
+function renderBKICP(b){
+  const icp = bkICP(b);
+  $('bkICP').innerHTML = `
+    <div class="bk-icp-grid">
+      <div><h4>Demographic</h4><p>${bkEsc(icp.demographic)}</p></div>
+      <div><h4>Firmographic</h4><p>${bkEsc(icp.firmographic)}</p></div>
+      <div><h4>Psychographic</h4><p>${bkEsc(icp.psychographic)}</p></div>
+      <div><h4>Marketing channels</h4><p>Founder-led X &amp; LinkedIn, dev communities (Hacker News, Indie Hackers), niche newsletters in ${bkEsc(b.industry)}, paid retargeting on competitor terms.</p></div>
+    </div>
+    <h4>Top 5 pains</h4>
+    <ul>${icp.pains.map(x=>`<li>${bkEsc(x)}</li>`).join('')}</ul>
+    <h4>Top 5 gains</h4>
+    <ul>${icp.gains.map(x=>`<li>${bkEsc(x)}</li>`).join('')}</ul>
+    <h4>Buying triggers</h4>
+    <ul>${icp.triggers.map(x=>`<li>${bkEsc(x)}</li>`).join('')}</ul>`;
+}
+
+function renderBKBios(b){
+  const bios = bkBios(b);
+  const card = (platform, limit, text, idx) => {
+    const len = text.length;
+    const over = len > limit;
+    return `<div class="bk-bio">
+      <div class="bk-bio-head">
+        <span class="bk-platform">${platform} · v${idx+1}</span>
+        <button class="btn ghost" data-bk-copy="${bkEsc(text)}" onclick="bkCopyText(this)">Copy</button>
+      </div>
+      <div class="bk-bio-text">${bkEsc(text)}</div>
+      <div class="bk-bio-foot">
+        <span class="bk-count ${over?'over':''}">${len}/${limit} chars</span>
+        ${over ? '<span class="bk-chip" style="color:#f87171;border-color:#7f1d1d;background:rgba(248,113,113,.08)">Over limit</span>' : '<span class="bk-chip good">Within limit</span>'}
+      </div>
+    </div>`;
+  };
+  const liCard = (li, idx) => {
+    const headLen = li.headline.length, bodyLen = li.body.length;
+    const headLim = 220, bodyLim = 600;
+    const headOver = headLen > headLim, bodyOver = bodyLen > bodyLim;
+    const blob = `${li.headline}\n\n${li.body}`;
+    return `<div class="bk-bio">
+      <div class="bk-bio-head">
+        <span class="bk-platform">LinkedIn · v${idx+1}</span>
+        <button class="btn ghost" data-bk-copy="${bkEsc(blob)}" onclick="bkCopyText(this)">Copy</button>
+      </div>
+      <div class="bk-bio-text"><strong>${bkEsc(li.headline)}</strong>\n\n${bkEsc(li.body)}</div>
+      <div class="bk-bio-foot">
+        <span class="bk-count ${headOver?'over':''}">Headline ${headLen}/${headLim}</span>
+        <span class="bk-count ${bodyOver?'over':''}">About ${bodyLen}/${bodyLim}</span>
+      </div>
+    </div>`;
+  };
+  $('bkBios').innerHTML = `
+    <h4>X (≤160 chars)</h4>${bios.X.map((t,i)=>card('X / Twitter',160,t,i)).join('')}
+    <h4>LinkedIn (headline + about)</h4>${bios.LI.map((t,i)=>liCard(t,i)).join('')}
+    <h4>Instagram (≤150 chars + link CTA)</h4>${bios.IG.map((t,i)=>card('Instagram',150,t,i)).join('')}
+    <h4>Threads (short brand voice)</h4>${bios.TH.map((t,i)=>card('Threads',500,t,i)).join('')}`;
+}
+
+function renderBKDay7(b){
+  const days = bkDay7(b);
+  $('bkDay7').innerHTML = days.map((d,i)=>`
+    <div class="bk-day">
+      <div class="bk-day-head">
+        <h4>Day ${i+1} · ${bkFmtDate(d.d)} — ${bkEsc(d.title)}</h4>
+        <span class="bk-chip ${i===6?'good':''}">${i===6?'Launch day':'Pre-launch'}</span>
+      </div>
+      <p><span class="bk-label">Objective</span> ${bkEsc(d.objective)}</p>
+      <p><span class="bk-label">Assets</span> ${bkEsc(d.assets)}</p>
+      <p><span class="bk-label">Copy</span> ${bkEsc(d.copy)}</p>
+      ${d.email ? `<p><span class="bk-label">Email</span> ${bkEsc(d.email)}</p>`:''}
+      <p><span class="bk-label">KPI</span> ${bkEsc(d.kpi)}</p>
+    </div>`).join('');
+}
+
+function renderBKPost21(b){
+  const posts = bkPost21(b);
+  $('bkPost21').innerHTML = posts.map(p=>`
+    <div class="bk-post">
+      <div class="bk-time">
+        Day ${p.day} · ${p.time}
+        <small>${bkFmtDate(p.date)}</small>
+        <small>${bkEsc(p.window)}</small>
+      </div>
+      <div>
+        <p class="bk-cap">${bkEsc(p.caption)}</p>
+        <div class="bk-foot">
+          <span class="bk-chip">${bkEsc(p.type)}</span>
+          <span class="bk-chip good">CTA: ${bkEsc(p.cta)}</span>
+          ${p.hashtags.map(h=>`<span class="bk-chip muted">${bkEsc(h)}</span>`).join('')}
+        </div>
+        <div class="bk-ad"><strong>Ad variant:</strong> ${bkEsc(p.ad)}</div>
+      </div>
+    </div>`).join('');
+}
+
+function genBrandKit(){
+  const b = readBKInputs();
+  const positioning = bkPositioning(b);
+  _bkLastKit = {
+    brief: b,
+    positioning,
+    angles: bkAngles(b),
+    icp: bkICP(b),
+    bios: bkBios(b),
+    day7: bkDay7(b),
+    post21: bkPost21(b)
+  };
+  renderBKPositioning(b, positioning);
+  renderBKICP(b);
+  renderBKBios(b);
+  renderBKDay7(b);
+  renderBKPost21(b);
+  $('bkResults').style.display = 'block';
+  $('bkTabs').style.display = 'flex';
+  $('bkEmpty').style.display = 'none';
+  switchBKTab('positioning');
   toast('Brand kit ready');
+}
+
+function resetBrandKit(){
+  ['bkName','bkTag','bkFeatures','bkIndustry','bkPrice','bkCompetitors','bkLaunch','bkGeo'].forEach(id=>{ const el = $(id); if(el) el.value=''; });
+  if($('bkSize')) $('bkSize').selectedIndex = 2;
+  if($('bkTone')) $('bkTone').selectedIndex = 0;
+  $('bkResults').style.display = 'none';
+  $('bkTabs').style.display = 'none';
+  $('bkEmpty').style.display = 'block';
+  _bkLastKit = null;
+  toast('Cleared');
+}
+
+function switchBKTab(tab){
+  document.querySelectorAll('.bk-tab').forEach(b=>b.classList.toggle('active', b.dataset.bkTab===tab));
+  document.querySelectorAll('.bk-panel').forEach(p=>p.classList.toggle('active', p.dataset.bkPanel===tab));
+}
+document.addEventListener('click', (e)=>{
+  const t = e.target.closest('.bk-tab'); if(!t) return;
+  switchBKTab(t.dataset.bkTab);
+});
+
+function copyBKNode(id){
+  const el = $(id); if(!el) return;
+  navigator.clipboard.writeText(el.innerText).then(()=>toast('Copied'));
+}
+function bkCopyText(btn){
+  const text = btn?.dataset?.bkCopy || '';
+  if(!text){ toast('Nothing to copy'); return; }
+  navigator.clipboard.writeText(text).then(()=>toast('Copied'));
+}
+
+/* ---------------- Exports ---------------- */
+function bkAsMarkdown(){
+  if(!_bkLastKit) return '';
+  const k = _bkLastKit, b = k.brief;
+  const dt = (d)=>d.toISOString().slice(0,10);
+  let md = '';
+  md += `# ${b.name} — Brand Kit\n\n`;
+  md += `_Generated ${new Date().toISOString().slice(0,10)} · Tone: ${bkToneLabel(b.tone)}_\n\n`;
+  md += `**Tagline:** ${b.tag}\n\n**Industry:** ${b.industry} · **Size:** ${b.size} · **Price:** ${b.price} · **Geo:** ${b.geo} · **Launch:** ${dt(b.launch)}\n\n`;
+  md += `**Top 3 features:** ${b.features.join(' · ')}\n\n**Competitors:** ${b.competitors.join(', ')}\n\n---\n\n`;
+  md += `## Positioning\n\n> ${k.positioning.stmt}\n\n${k.positioning.expansion}\n\n### Three positioning angles\n\n`;
+  k.angles.forEach((a,i)=>{ md += `${i+1}. **${a.hook}**\n   - Evidence: ${a.evidence}\n   - Best use: ${a.use}\n\n`; });
+  md += `---\n\n## Ideal Customer Profile\n\n- **Demographic:** ${k.icp.demographic}\n- **Firmographic:** ${k.icp.firmographic}\n- **Psychographic:** ${k.icp.psychographic}\n\n### Top pains\n${k.icp.pains.map(x=>'- '+x).join('\n')}\n\n### Top gains\n${k.icp.gains.map(x=>'- '+x).join('\n')}\n\n### Buying triggers\n${k.icp.triggers.map(x=>'- '+x).join('\n')}\n\n---\n\n`;
+  md += `## Optimized bios\n\n### X / Twitter (≤160)\n${k.bios.X.map((t,i)=>`**v${i+1} (${t.length}/160):** ${t}`).join('\n\n')}\n\n### LinkedIn\n${k.bios.LI.map((t,i)=>`**v${i+1}**\n_Headline:_ ${t.headline}\n_About:_ ${t.body}`).join('\n\n')}\n\n### Instagram (≤150)\n${k.bios.IG.map((t,i)=>`**v${i+1} (${t.length}/150):** ${t}`).join('\n\n')}\n\n### Threads\n${k.bios.TH.map((t,i)=>`**v${i+1}:** ${t}`).join('\n\n')}\n\n---\n\n`;
+  md += `## 7-day launch calendar\n\n`;
+  k.day7.forEach((d,i)=>{
+    md += `### Day ${i+1} · ${dt(d.d)} — ${d.title}\n- **Objective:** ${d.objective}\n- **Assets:** ${d.assets}\n- **Copy:** ${d.copy}\n${d.email?`- **Email:** ${d.email}\n`:''}- **KPI:** ${d.kpi}\n\n`;
+  });
+  md += `---\n\n## 21-post schedule\n\n`;
+  k.post21.forEach(p=>{
+    md += `**Day ${p.day} · ${p.time} (${p.window}) · ${dt(p.date)}**\n_${p.type}_\n${p.caption}\nCTA: ${p.cta}\nHashtags: ${p.hashtags.join(' ')}\nAd variant: ${p.ad}\n\n`;
+  });
+  return md;
+}
+function exportBKMarkdown(){
+  if(!_bkLastKit){ toast('Generate a kit first'); return; }
+  const md = bkAsMarkdown();
+  download(new Blob([md], {type:'text/markdown'}), `${_bkLastKit.brief.name.toLowerCase().replace(/\s+/g,'-')}-brand-kit.md`);
+}
+function exportBKCsv(){
+  if(!_bkLastKit){ toast('Generate a kit first'); return; }
+  const dt = d => d.toISOString().slice(0,10);
+  const rows = [['Day','Date','Time slot','Window','Asset type','Caption','Hashtags','CTA','Ad variant']];
+  _bkLastKit.post21.forEach(p=>{
+    rows.push([p.day, dt(p.date), p.time, p.window, p.type, p.caption.replace(/\n/g,' / '), p.hashtags.join(' '), p.cta, p.ad]);
+  });
+  const csv = rows.map(r=>r.map(c=>{
+    const s = String(c==null?'':c);
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
+  }).join(',')).join('\n');
+  download(new Blob([csv],{type:'text/csv'}), `${_bkLastKit.brief.name.toLowerCase().replace(/\s+/g,'-')}-21-posts.csv`);
+}
+function copyBKAll(){
+  if(!_bkLastKit){ toast('Generate a kit first'); return; }
+  navigator.clipboard.writeText(bkAsMarkdown()).then(()=>toast('Full kit copied'));
 }
 
 function genContent(){
@@ -1603,9 +2169,6 @@ function applyUser(){
     $('uEmail').textContent = currentUser.email;
     $('uAvatar').src = currentUser.picture || '';
     const st2 = $('sessionTag'); if(st2) st2.textContent = currentUser.name.split(' ')[0];
-    // Pre-fill brand kit name field if present and empty
-    const bn = document.getElementById('bName');
-    if(bn && !bn.value) bn.value = currentUser.name;
   }else{
     $('loginBox').style.display = 'block';
     $('userBox').style.display = 'none';
