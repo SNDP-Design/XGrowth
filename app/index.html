@@ -661,7 +661,7 @@
       </div>
     </div>
     <div class="row" style="margin-top:14px;justify-content:flex-end">
-      <button class="btn ghost" onclick="closeWelcome(true)">Skip</button>
+      <button class="btn secondary" onclick="closeWelcome(true)">Skip</button>
       <button class="btn" onclick="saveProfile()">Save & Continue</button>
     </div>
   </div>
@@ -793,6 +793,24 @@ nav.addEventListener('click', e=>{
 
 /* ========= Welcome / Profile ========= */
 function openWelcome(){ document.getElementById('welcome').classList.add('show'); }
+// Close any open modal when the user taps the dark overlay outside the box.
+document.querySelectorAll('.modal').forEach(m=>{
+  m.addEventListener('click', (e)=>{
+    if(e.target === m){
+      if(m.id === 'welcome') closeWelcome(true);
+      else m.classList.remove('show');
+    }
+  });
+});
+// Also close on Escape
+document.addEventListener('keydown', (e)=>{
+  if(e.key === 'Escape'){
+    document.querySelectorAll('.modal.show').forEach(m=>{
+      if(m.id === 'welcome') closeWelcome(true);
+      else m.classList.remove('show');
+    });
+  }
+});
 function closeWelcome(skip){
   document.getElementById('welcome').classList.remove('show');
   if(skip && !state.profile){
