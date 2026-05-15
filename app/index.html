@@ -211,38 +211,40 @@
   body:not(.authed) .modal{display:none !important;visibility:hidden !important}
   body.authed .auth-gate{display:none !important}
   /* Content Engine module */
-  .ce-chips{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 0}
-  .ce-chip{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:999px;background:var(--chip);border:1px solid var(--line);color:var(--muted);font:600 13px system-ui,-apple-system,sans-serif;cursor:pointer;transition:.18s;user-select:none}
-  .ce-chip:hover{color:var(--ink);border-color:#3a3a3a}
-  .ce-chip.active{background:linear-gradient(180deg,#fafafa,#d4d4d4);color:#0a0a0a;border-color:#fafafa;box-shadow:0 4px 12px rgba(0,0,0,.4)}
-  .ce-platforms{display:flex;gap:6px;flex-wrap:wrap;background:#0a0a0a;border:1px solid var(--line);border-radius:12px;padding:6px;margin:14px 0}
-  .ce-ptab{flex:1;min-width:110px;height:42px;background:transparent;border:0;color:var(--muted);font:600 14px system-ui,-apple-system,sans-serif;border-radius:8px;cursor:pointer;transition:.18s;padding:0 14px;display:inline-flex;align-items:center;justify-content:center;gap:8px}
-  .ce-ptab:hover{color:var(--ink);background:rgba(255,255,255,.03)}
-  .ce-ptab.active{background:linear-gradient(180deg,#fafafa,#d4d4d4);color:#0a0a0a;box-shadow:0 4px 12px rgba(0,0,0,.4)}
-  .ce-panel{display:none}
-  .ce-panel.active{display:block}
-  .ce-block{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:14px}
-  .ce-block h3{margin:0 0 10px;font-size:15px}
-  .ce-block h4{margin:14px 0 8px;font-size:13px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);font-weight:600}
-  .ce-block p{margin:0 0 10px;color:#cfcfcf;line-height:1.6;font-size:15px}
-  .ce-post{background:#0a0a0a;border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:0 0 10px;position:relative}
-  .ce-post .ce-post-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
-  .ce-post .ce-post-text{color:#ededed;font-size:15px;line-height:1.6;white-space:pre-wrap;word-break:break-word;margin:0}
-  .ce-post .ce-post-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
-  .ce-label{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted)}
+  .ce-step{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-bottom:14px}
+  .ce-step-head{display:flex;align-items:center;gap:12px;margin:0 0 6px;flex-wrap:wrap}
+  .ce-step-head h3{margin:0;font-size:17px;letter-spacing:-.2px}
+  .ce-step-head > .btn{margin-left:auto}
+  .ce-step-num{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:linear-gradient(180deg,#fafafa,#d4d4d4);color:#0a0a0a;font-size:13px;font-weight:700;flex-shrink:0}
+  .ce-trends{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:8px}
+  @media (max-width:880px){.ce-trends{grid-template-columns:1fr}}
+  .ce-trend{background:#0a0a0a;border:1px solid var(--line);border-radius:12px;padding:16px 18px;cursor:pointer;transition:transform .2s cubic-bezier(.2,.8,.2,1),border-color .2s,background .2s;display:flex;flex-direction:column;gap:10px;text-align:left;font:inherit;color:inherit}
+  .ce-trend:hover{border-color:#3a3a3a;transform:translateY(-2px);background:#0d0d0d}
+  .ce-trend h4{margin:0;font-size:15px;color:var(--ink);font-weight:600;line-height:1.4}
+  .ce-trend p{margin:0;color:#cfcfcf;font-size:13px;line-height:1.55}
+  .ce-trend .ce-trend-foot{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:8px;padding-top:10px;border-top:1px solid var(--line)}
+  .ce-trend .ce-tag{display:inline-flex;font-size:11px;color:var(--muted);background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:3px 9px}
+  .ce-trend .ce-pick{font-size:12px;font-weight:600;color:var(--ink);display:inline-flex;align-items:center;gap:6px;transition:transform .2s}
+  .ce-trend:hover .ce-pick{transform:translateX(2px)}
+  .ce-trend-context{background:#0a0a0a;border:1px solid var(--line);border-left:3px solid var(--ink);border-radius:0 12px 12px 0;padding:12px 16px;margin:8px 0 16px}
+  .ce-trend-context h4{margin:0 0 4px;font-size:14px;color:var(--ink);font-weight:600}
+  .ce-trend-context p{margin:0;font-size:13px;color:var(--muted);line-height:1.5}
+  .ce-posts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+  @media (max-width:980px){.ce-posts{grid-template-columns:1fr}}
+  .ce-post{background:#0a0a0a;border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:12px}
+  .ce-post-head{display:flex;align-items:center;gap:8px}
+  .ce-post-platform{font-size:13px;font-weight:700;letter-spacing:.2px;display:inline-flex;align-items:center;gap:8px;color:var(--ink)}
+  .ce-post-platform svg{width:18px;height:18px}
+  .ce-post-text{color:#ededed;font-size:15px;line-height:1.6;white-space:pre-wrap;word-break:break-word;margin:0;flex:1}
+  .ce-post-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;padding-top:10px;border-top:1px solid var(--line);flex-wrap:wrap}
   .ce-count{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
   .ce-count.over{color:#f87171}
-  .ce-tags{display:flex;flex-wrap:wrap;gap:6px}
-  .ce-tag{display:inline-flex;font-size:12px;color:var(--muted);background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:3px 10px}
-  .ce-empty{background:#080808;border:1px dashed var(--line);border-radius:12px;padding:36px 22px;text-align:center;color:var(--muted)}
-  .ce-empty .ce-empty-title{color:var(--ink);font-size:16px;font-weight:600;margin-bottom:6px}
-  .ce-reformat{background:linear-gradient(180deg,#0f1820,#0a0f15);border:1px solid #1e2a35;border-radius:14px;padding:16px 18px;margin:14px 0;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-  .ce-reformat .ce-info{flex:1;min-width:220px}
-  .ce-reformat .ce-info h4{margin:0 0 4px;font-size:14px;color:var(--ink);text-transform:none;letter-spacing:0}
-  .ce-reformat .ce-info p{margin:0;font-size:13px;color:var(--muted);line-height:1.5}
-  .ce-reformat .row{margin:0;gap:8px}
-  .ce-thread-tweet{position:relative;padding-left:34px}
-  .ce-thread-tweet::before{content:attr(data-i);position:absolute;left:0;top:14px;width:24px;height:24px;border-radius:50%;background:#0f1820;border:1px solid #1e2a35;color:var(--ink);font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+  .ce-post-actions{display:flex;gap:8px;flex-wrap:wrap}
+  .ce-post-actions .btn{height:38px;padding:0 14px;font-size:13px}
+  .ce-post-actions .btn.publish{background:linear-gradient(180deg,#fafafa,#d4d4d4);color:#0a0a0a;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+  .ce-post-actions .btn.publish:hover{background:linear-gradient(180deg,#fff,#e5e5e5)}
+  .ce-loading{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.2);border-top-color:var(--ink);border-radius:50%;animation:ce-spin .8s linear infinite;vertical-align:-2px;margin-right:8px}
+  @keyframes ce-spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -471,93 +473,37 @@
     <!-- CONTENT ENGINE -->
     <section data-view="content" class="hide">
       <h2 class="section">Content Engine</h2>
-      <p class="lede">One topic in → platform-tuned posts out. LinkedIn long-form and X tweets + thread. Style Tags drive the tone.</p>
+      <p class="lede">Industry → trends → posts. Pick a trend that matches your voice, generate LinkedIn and X posts, and publish in one click.</p>
 
-      <div class="card">
-        <h3>Industry &amp; audience</h3>
-        <div class="grid cols-3">
-          <div>
-            <label>Industry</label>
-            <input id="ceIndustry" type="text" placeholder="AI · Retail · Hospitality · SaaS"/>
-          </div>
-          <div>
-            <label>Target audience</label>
-            <input id="ceAudience" type="text" placeholder="Pre-seed SaaS founders"/>
-          </div>
-          <div>
-            <label>Core goal</label>
-            <select id="ceGoal">
-              <option>Followers</option>
-              <option>Investor DMs</option>
-              <option>Newsletter signups</option>
-              <option>Demo bookings</option>
-              <option>Brand awareness</option>
-            </select>
-          </div>
-        </div>
-
-        <label>Master topic / core idea</label>
-        <textarea id="ceTopic" placeholder="e.g., Why most pre-seed SaaS dies before PMF — 5 patterns I saw at YC"></textarea>
-
-        <label>Trend input <span class="muted" style="font-size:12px">(optional · paste URLs or quotes: news, X threads, LinkedIn posts you want to riff on)</span></label>
-        <textarea id="ceTrend" placeholder="https://news.ycombinator.com/item?id=&#10;or paste a quote you want to respond to..."></textarea>
-
-        <label>Style tags <span class="muted" style="font-size:12px">(pick 1–3)</span></label>
-        <div class="ce-chips" id="ceStyleChips">
-          <button type="button" class="ce-chip" data-ce-style="storytelling">#Storytelling</button>
-          <button type="button" class="ce-chip" data-ce-style="humorous">#Humorous</button>
-          <button type="button" class="ce-chip" data-ce-style="emotional">#Emotional</button>
-          <button type="button" class="ce-chip" data-ce-style="technical">#Technical</button>
-          <button type="button" class="ce-chip" data-ce-style="professional">#Professional</button>
-          <button type="button" class="ce-chip" data-ce-style="contrarian">#Contrarian</button>
-          <button type="button" class="ce-chip" data-ce-style="listicle">#Listicle</button>
-          <button type="button" class="ce-chip" data-ce-style="question">#Question</button>
-        </div>
-
-        <label style="margin-top:14px">Platforms</label>
-        <div class="ce-chips" id="cePlatformChips">
-          <button type="button" class="ce-chip active" data-ce-platform="linkedin">LinkedIn</button>
-          <button type="button" class="ce-chip active" data-ce-platform="x">X / Twitter</button>
-        </div>
-
-        <div class="row" style="margin-top:14px">
-          <button class="btn" onclick="genContent()">Generate</button>
-          <button class="btn secondary" onclick="resetContent()">Clear</button>
+      <!-- Step 1: Industry -->
+      <div class="ce-step">
+        <div class="ce-step-head"><span class="ce-step-num">1</span><h3>What's your industry?</h3></div>
+        <p class="muted" style="margin:0 0 14px;font-size:14px">We'll surface what's trending right now for founders and operators in that space.</p>
+        <div class="row" style="gap:10px;align-items:stretch">
+          <input id="ceIndustry" type="text" placeholder="e.g., AI · SaaS · Retail · Fintech · Healthcare · Marketing" style="flex:1;min-width:240px"/>
+          <button class="btn" onclick="ceSearchTrends()">Search trends →</button>
         </div>
       </div>
 
-      <div class="ce-platforms" id="cePlatTabs" style="display:none">
-        <button type="button" class="ce-ptab active" data-ce-tab="linkedin">LinkedIn</button>
-        <button type="button" class="ce-ptab" data-ce-tab="x">X / Twitter</button>
+      <!-- Step 2: Trends list -->
+      <div class="ce-step" id="ceStep2" style="display:none">
+        <div class="ce-step-head">
+          <span class="ce-step-num">2</span>
+          <h3 id="ceTrendsTitle">Trending now</h3>
+        </div>
+        <p class="muted" style="margin:0 0 14px;font-size:14px">Pick the angle that fits your voice. Each becomes a LinkedIn long-form and an X post.</p>
+        <div class="ce-trends" id="ceTrends"></div>
       </div>
 
-      <div id="ceResults" style="display:none">
-        <div class="ce-panel active" data-ce-panel="linkedin">
-          <div class="ce-block">
-            <div class="copybar"><h3>LinkedIn long-form</h3><button class="btn ghost" onclick="copyCENode('ceLinkedIn')">Copy</button></div>
-            <div id="ceLinkedIn"></div>
-          </div>
-          <div class="ce-reformat">
-            <div class="ce-info">
-              <h4>Reformat this long-form post</h4>
-              <p>Turn the LinkedIn essay into a 5-tweet X thread — same idea, repackaged.</p>
-            </div>
-            <div class="row">
-              <button class="btn secondary" onclick="ceReformat('thread')">→ X thread</button>
-            </div>
-          </div>
+      <!-- Step 3: Generated posts -->
+      <div class="ce-step" id="ceStep3" style="display:none">
+        <div class="ce-step-head">
+          <span class="ce-step-num">3</span>
+          <h3>Your posts</h3>
+          <button type="button" class="btn ghost" onclick="cePickAnother()">← Pick another trend</button>
         </div>
-        <div class="ce-panel" data-ce-panel="x">
-          <div class="ce-block">
-            <div class="copybar"><h3>X / Twitter pack</h3><button class="btn ghost" onclick="copyCENode('ceX')">Copy all</button></div>
-            <div id="ceX"></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="ce-empty" id="ceEmpty">
-        <div class="ce-empty-title">Your platform-tuned posts will appear here</div>
-        Fill the brief above and hit <strong>Generate</strong>. You'll get a LinkedIn long-form post and an X tweet pack + thread — each tuned to your selected Style Tags.
+        <div class="ce-trend-context" id="ceTrendContext"></div>
+        <div class="ce-posts" id="ceGenerated"></div>
       </div>
     </section>
 
@@ -1185,263 +1131,235 @@ $('addPost').onclick = ()=>{
 function p(){ return state.profile || {niche:'AI SaaS', stage:'Pre-seed', target:'Both', goal:'10k followers'}; }
 
 /* =========================================================
-   CONTENT ENGINE — Multi-platform generator
+   CONTENT ENGINE — Industry → trends → posts → publish
    ========================================================= */
-let _ceLastPack = null;
+function ceEsc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-function ceEsc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-const CE_STYLE_TONES = {
-  storytelling: { opener:'scene', closer:'reveal', voice:'narrative, sensory, in-scene' },
-  humorous:     { opener:'punchline', closer:'callback', voice:'self-deprecating, dry, snappy' },
-  emotional:    { opener:'feeling', closer:'invitation', voice:'warm, vulnerable, first-person' },
-  technical:    { opener:'spec', closer:'tradeoff', voice:'precise, numbers, named patterns' },
-  professional: { opener:'thesis', closer:'recommendation', voice:'measured, third-person, no slang' },
-  contrarian:   { opener:'hot-take', closer:'caveat', voice:'sharp opening, defends with receipts' },
-  listicle:     { opener:'count', closer:'recap', voice:'scannable, numbered, parallel structure' },
-  question:     { opener:'question', closer:'open-ended', voice:'invites reply, low-ego' }
+const CE_TREND_BANK = {
+  ai: [
+    { tag:'Models',     title:"Open-source LLMs are closing the gap on Anthropic and OpenAI", angle:"Llama 4 + Mistral results show parity on specific tasks. Teams are routing 30–40% of traffic to open models for cost." },
+    { tag:'Tooling',    title:"Eval infrastructure is the new dev-tools gold rush",            angle:"Braintrust, Langfuse, Helicone — every serious AI team is either buying or building one in-house." },
+    { tag:'Product',    title:"AI agents are eating the SaaS UI layer",                        angle:"Customers are asking for chat-first interfaces instead of dashboards. The 'configure-it-yourself' era is fading fast." },
+    { tag:'GTM',        title:"Enterprise AI procurement is collapsing to 30-day pilots",      angle:"Long sales cycles are dying. Show-it-now wins more deals than 6-week decks ever did." },
+    { tag:'Hiring',     title:"AI-native engineers expect 2–3× their last salary",             angle:"Founders are choosing between fewer senior hires or building a leverage-heavy stack. Both work — picking one matters." },
+    { tag:'Caution',    title:"Fine-tuning is quietly back, post-RAG fatigue",                 angle:"RAG hit its limits on narrow domains. Specialized small models are winning where context retrieval was failing." }
+  ],
+  saas: [
+    { tag:'Pricing',    title:"Usage-based pricing is now table stakes — flat per-seat is losing deals", angle:"Hybrid models (base + usage) are winning RFPs that pure subscription would lose this year." },
+    { tag:'PLG',        title:"PLG plateaus around $5M ARR — what's after self-serve?",         angle:"Teams that nailed product-led acquisition are now hiring their first outbound reps. The playbook is shifting." },
+    { tag:'Market',     title:"Vertical SaaS keeps minting unicorns quietly",                   angle:"Industry-specific tools are outpacing horizontal players in ACV and retention. The 'TAM has to be huge' thesis is fading." },
+    { tag:'Strategy',   title:"Bundling is back — single SKU, multiple products",               angle:"After unbundling fatigue, customers want one bill, one login, one vendor relationship. Watch for consolidation plays." },
+    { tag:'AI',         title:"AI features inside SaaS aren't moving renewals yet",             angle:"Adoption is high. Retention impact is mixed. Early data suggests it's the wrong moat to bet on." },
+    { tag:'CX',         title:"Onboarding is the new pricing page",                             angle:"First 10 minutes decide LTV more than any landing-page tweak. Yet onboarding is still underinvested at most companies." }
+  ],
+  retail: [
+    { tag:'Channels',   title:"DTC brand consolidation is accelerating",                        angle:"Tighter ad performance is forcing solo brands into PE roll-ups. Independent operators have a 12-month window to scale or sell." },
+    { tag:'Behavior',   title:"Live-shopping is finally taking off in the US",                  angle:"What worked in China for 5 years is now hitting US conversion benchmarks. The early movers are getting outsized reach." },
+    { tag:'Pricing',    title:"Subscription fatigue is hitting CPG brands hardest",             angle:"Churn on monthly box products is at 5-year highs. The 'subscribe & save' model needs a refresh." },
+    { tag:'Margins',    title:"Returns are eating 30% of e-comm margin — solving this is gold", angle:"Try-before-you-buy, AI sizing, and packaging redesigns are showing measurable margin wins." },
+    { tag:'Brand',      title:"In-person pop-ups out-converting paid social",                   angle:"DTC-first brands are renting physical space again. CAC is lower than Meta ads for many categories." },
+    { tag:'Tech',       title:"AI-driven product photography is replacing studio shoots",       angle:"Brands are saving 60–80% on photo costs and shipping new SKUs to site in days, not weeks." }
+  ],
+  fintech: [
+    { tag:'Regulation', title:"BaaS shake-up: banking partners are getting selective",          angle:"Synapse-era fallout means smaller fintechs need to prove compliance maturity before partnering. Sponsor banks are slow-rolling new accounts." },
+    { tag:'Product',    title:"Embedded finance is moving from feature to category",            angle:"Vertical SaaS players are launching their own cards, accounts, and credit lines. The build-vs-buy moment is now." },
+    { tag:'AI',         title:"Underwriting on bank-statement data is eating FICO for SMB",     angle:"For SMB lending especially, alternative data is outperforming traditional credit bureau scoring on default rates." },
+    { tag:'B2B',        title:"Treasury management is the next obvious SaaS wedge",             angle:"Mid-market CFOs are stitching together 5+ tools for cash management. One unified play could win this fast." },
+    { tag:'UX',         title:"Consumer banking apps are removing features, not adding",        angle:"After years of feature creep, the new wave is 'three buttons and a balance.' Simplicity is winning." },
+    { tag:'Compliance', title:"KYC/KYB automation is the unsexy moat that's actually working",  angle:"Onboarding flows that take 2 minutes instead of 2 days are converting 3× better." }
+  ],
+  healthcare: [
+    { tag:'AI',         title:"AI scribes are now baseline expectation, not differentiator",    angle:"Clinicians who used to be skeptical are now asking why one isn't running by default. Adoption curve is steeper than EHRs ever were." },
+    { tag:'Provider',   title:"Independent practices are consolidating faster than ever",       angle:"Solo and small-group practices are joining MSOs or selling to PE. Tech needs to serve the buyer, not the legacy seller." },
+    { tag:'Payment',    title:"Direct-pay and cash-only practices are growing 25% YoY",         angle:"Patients fed up with insurance friction are paying out-of-pocket for primary care and specialty. New billing models needed." },
+    { tag:'B2B',        title:"Payers are buying tech, not licensing it anymore",               angle:"UnitedHealth, Cigna, and the Blues are acquiring point solutions instead of subscribing. Exit math has changed." },
+    { tag:'Patient',    title:"Patient-facing tools are losing to clinician-facing tools",      angle:"The ROI proof is faster when you save a clinician 30 minutes a day than when you save a patient a phone call." },
+    { tag:'Cost',       title:"Telehealth-only companies are becoming hybrid by necessity",     angle:"Pure-virtual specialty care is losing reimbursement battles. The winners now run brick-and-mortar + virtual." }
+  ],
+  marketing: [
+    { tag:'Channels',   title:"Paid social CACs are up 40% YoY — organic is back in fashion",   angle:"Founders are rebuilding distribution muscles they outsourced to Meta. Newsletter and SEO budgets are climbing." },
+    { tag:'AI',         title:"Generative AI is flooding LinkedIn — original posts now stand out", angle:"The bar for what counts as a 'thought leader' post has dropped, which means actual original takes get disproportionate reach." },
+    { tag:'Format',     title:"Long-form is winning again, even on short-form platforms",       angle:"X threads, 90-second TikToks, and 1500-word LinkedIn essays are outperforming punchy hot takes." },
+    { tag:'Attribution',title:"Self-reported attribution is replacing pixel tracking",          angle:"With iOS privacy + cookieless browsers, 'how did you hear about us?' is back as a primary signal." },
+    { tag:'Pricing',    title:"Agencies are switching from retainers to performance fees",     angle:"Clients want skin in the game. Hybrid models (base + win share) are out-converting traditional billing." },
+    { tag:'Founders',   title:"Founder-led content is outperforming brand-led content 5–10×",   angle:"Audiences trust people, not logos. Even bigger companies are putting CEOs and engineers on camera." }
+  ],
+  ecommerce: [
+    { tag:'Channels',   title:"TikTok Shop is no longer experimental — it's a category leader", angle:"Brands hitting $1M+/mo on TikTok Shop are running playbooks Amazon sellers ran in 2018. The window is closing." },
+    { tag:'Margin',     title:"Free shipping thresholds are quietly dying",                     angle:"Customers expect free regardless. Brands are building it into product price instead of as a 'reward.'" },
+    { tag:'Tech',       title:"Shopify apps are eating Magento — and now Shopify Plus's lunch",  angle:"Apps that were 'nice to have' are now critical infrastructure. The mid-market is upgrading their stack quietly." },
+    { tag:'AI',         title:"Personalized product feeds are converting 2–3× the static grid", angle:"Algorithmic merchandising is mainstream. If your category page is still chronological, you're leaving money on the table." },
+    { tag:'Retention',  title:"Loyalty programs are losing to memberships",                     angle:"'Earn points' is yesterday. 'Pay $X/yr for member perks' is converting better and locking in repeat purchase." },
+    { tag:'Returns',    title:"Charging for returns is becoming acceptable — and margin-positive", angle:"Customers are surprisingly tolerant when reasons are clear. Return abuse is down, margins are up." }
+  ],
+  realestate: [
+    { tag:'Market',     title:"NAR settlement aftermath: buyer-agent commissions are negotiable", angle:"The 6% standard is gone. Agents who can clearly articulate value are charging more, not less. Most can't." },
+    { tag:'Tech',       title:"AI-generated listing photos and 3D tours are now baseline",       angle:"Listings without them are getting 40% fewer views. The cost of producing them dropped 10× this year." },
+    { tag:'Investors',  title:"Single-family rentals are quietly outperforming multi-family",    angle:"Institutional money that flooded multi-family in 2021–22 is rotating to SFR. Smaller operators have an opening." },
+    { tag:'Behavior',   title:"Showings are getting longer — buyers are commitment-shy",         angle:"Average time-to-decision has stretched from 3 weeks to 8 weeks in many markets. Tools to nurture warm leads are critical." },
+    { tag:'Pricing',    title:"Iterative price reductions are losing to one big strategic cut",  angle:"Three small reductions over 60 days underperform a single big cut on week 3. Sellers are slow to update." },
+    { tag:'Brokerage',  title:"Indie brokerages are growing 3× faster than national franchises", angle:"Top agents are leaving Compass, Coldwell, RE/MAX for boutique brands or going solo. Tech infra is closing the gap." }
+  ]
 };
 
-function readCEInputs(){
-  const styles = Array.from(document.querySelectorAll('#ceStyleChips .ce-chip.active')).map(b=>b.dataset.ceStyle);
-  const platforms = Array.from(document.querySelectorAll('#cePlatformChips .ce-chip.active')).map(b=>b.dataset.cePlatform);
-  return {
-    industry: val('ceIndustry') || 'B2B SaaS',
-    audience: val('ceAudience') || 'founders and operators',
-    goal:     val('ceGoal') || 'Followers',
-    topic:    val('ceTopic') || 'How small teams ship faster than big ones',
-    trend:    val('ceTrend'),
-    styles:   styles.length ? styles : ['storytelling'],
-    platforms: platforms.length ? platforms : ['linkedin','x']
-  };
-}
+const CE_TREND_GENERIC = [
+  { tag:'Distribution', title:"Founder-led content is outperforming brand-led content 5–10×",   angle:"Audiences trust people, not logos. The case for a founder behind the keyboard, not behind the brand." },
+  { tag:'Channels',     title:"Newsletter-as-CRM is replacing top-of-funnel ads",                angle:"Owned audience beats rented audience. The 12-month math is now obvious to most operators." },
+  { tag:'Cadence',      title:"Weekly shipping beats quarterly planning",                         angle:"Teams running 2-week experiment cycles are out-learning teams running 6-month roadmaps. The compounding is real." },
+  { tag:'AI',           title:"Generative AI is flooding feeds — original takes now stand out",  angle:"The signal-to-noise ratio is collapsing. Specific stories with receipts are getting disproportionate reach." },
+  { tag:'Pricing',      title:"Bundling is back — single SKU, multiple products",                angle:"After unbundling fatigue, customers want one bill, one login, one relationship. Watch for consolidation plays." },
+  { tag:'Hiring',       title:"Small teams are out-shipping bigger ones — and getting noticed",  angle:"4-person teams hitting $1M ARR are now common stories. Leverage > headcount as the founder skill of the year." }
+];
 
-function ceCta(goal){
-  if(goal==='Investor DMs') return 'DM "deck" if you want to see ours.';
-  if(goal==='Newsletter signups') return 'Free weekly playbook — link in bio.';
-  if(goal==='Demo bookings') return 'Book a 15-min demo — link in bio.';
-  if(goal==='Brand awareness') return 'Repost if this hit. Follow for more.';
-  return 'Follow for the rest of the playbook.';
-}
+let _ceCurrent = { industry:'', trends:[], pickedTrend:null, posts:null };
 
-function ceToneSummary(styles){
-  return styles.map(s=>'#'+s.charAt(0).toUpperCase()+s.slice(1)).join(' ');
-}
-
-function ceHook(b){
-  const s = b.styles[0];
-  const t = b.topic.replace(/\.$/,'');
-  if(s==='storytelling') return `Two years ago, I was wrong about ${t.toLowerCase()}. Here's what changed.`;
-  if(s==='humorous')     return `I made every mistake on the "${t}" list. So you don't have to. Probably.`;
-  if(s==='emotional')    return `Nobody warned me how lonely ${t.toLowerCase()} would feel. Here's what got me through.`;
-  if(s==='technical')    return `${t}: 5 measurable patterns from ${b.industry} teams that compounded.`;
-  if(s==='professional') return `A short note on ${t.toLowerCase()} — and what ${b.industry} leaders should actually do next.`;
-  if(s==='contrarian')   return `Unpopular take: ${t.toLowerCase()} is mostly noise. Here's the signal.`;
-  if(s==='listicle')     return `5 things I wish I knew about ${t.toLowerCase()} before I started.`;
-  if(s==='question')     return `Honest question for ${b.audience}: what's actually working for ${t.toLowerCase()} right now?`;
-  return `${t}, in 60 seconds.`;
-}
-
-function ceBullets(b){
-  const t = b.topic.toLowerCase().replace(/\.$/,'');
-  return [
-    `1. Most ${b.industry} teams skip the boring step. It's the one that compounds.`,
-    `2. Track one number per week. Not five. Definitely not fifteen.`,
-    `3. Talk to ${b.audience} on the days you don't feel like it. That's the data.`,
-    `4. Ship the version you're slightly embarrassed by. Then talk about it.`,
-    `5. Repeat for 12 weeks. Almost nobody does. That's the moat.`
-  ];
-}
-
-function ceTrendNote(b){
-  if(!b.trend) return '';
-  // Detect first URL, otherwise use first 120 chars as a quote
-  const url = (b.trend.match(/https?:\/\/\S+/)||[])[0];
-  if(url){
-    return `\n\n(Riffing on this: ${url})`;
+function ceFindTrends(industry){
+  const i = (industry||'').toLowerCase().replace(/[^a-z]/g,'');
+  for(const key of Object.keys(CE_TREND_BANK)){
+    if(i.includes(key)) return { key, trends: CE_TREND_BANK[key] };
   }
-  const quote = b.trend.split('\n')[0].slice(0,120);
-  return `\n\nFor context: "${quote}${b.trend.length>120?'…':''}"`;
+  if(i.includes('startup')||i.includes('b2b')) return { key:'saas', trends: CE_TREND_BANK.saas };
+  if(i.includes('shop')||i.includes('dtc')||i.includes('brand')) return { key:'ecommerce', trends: CE_TREND_BANK.ecommerce };
+  if(i.includes('agency')||i.includes('growth')||i.includes('seo')||i.includes('ads')) return { key:'marketing', trends: CE_TREND_BANK.marketing };
+  if(i.includes('health')||i.includes('clinic')||i.includes('medical')) return { key:'healthcare', trends: CE_TREND_BANK.healthcare };
+  if(i.includes('finance')||i.includes('bank')||i.includes('lending')||i.includes('credit')) return { key:'fintech', trends: CE_TREND_BANK.fintech };
+  if(i.includes('property')||i.includes('housing')||i.includes('real')) return { key:'realestate', trends: CE_TREND_BANK.realestate };
+  return { key:null, trends: CE_TREND_GENERIC };
 }
 
-/* ---------------- LinkedIn (long-form, ≤ 3000 chars) ---------------- */
-function ceLinkedIn(b){
-  const cta = ceCta(b.goal);
-  const hook = ceHook(b);
-  const bullets = ceBullets(b);
-  const stylesNote = b.styles.length>1 ? ` (Tone mix: ${ceToneSummary(b.styles)})` : '';
-  const body = `${hook}\n\nThree years building in ${b.industry}, and the one thing I'd tell ${b.audience} on day one is this:\n\nThe people who win are not the smartest in the room. They are the ones who ship a small, embarrassing version on Monday — and talk about it on Tuesday.\n\nHere's the playbook${stylesNote}:\n\n${bullets.join('\n')}\n\nThe reason this works: shipping creates the conversation. The conversation creates the data. The data updates the plan.\n\nMost founders try to plan their way to clarity. You can't. You ship your way there.${ceTrendNote(b)}\n\n${cta}\n\n#${b.industry.replace(/\s+/g,'')} #buildinpublic #startups`;
-  const altHooks = [
-    `Here's the truth no one wants to put on a LinkedIn carousel about ${b.topic.toLowerCase()}:`,
-    `If I had to start over in ${b.industry} tomorrow, ${b.topic.toLowerCase()} is the first thing I'd change.`,
-    `${b.audience} ask me this every week. So here's the long answer.`
-  ];
-  return { body, altHooks };
+function ceSearchTrends(){
+  const industry = val('ceIndustry');
+  if(!industry){ toast('Type an industry first'); $('ceIndustry')?.focus(); return; }
+  const btn = document.querySelector('[onclick="ceSearchTrends()"]');
+  const origLabel = btn ? btn.innerHTML : '';
+  if(btn){ btn.disabled = true; btn.innerHTML = '<span class="ce-loading"></span>Searching trends'; }
+  setTimeout(()=>{
+    const { trends } = ceFindTrends(industry);
+    _ceCurrent.industry = industry;
+    _ceCurrent.trends = trends.map((t,i)=>({...t, id:i}));
+    _ceCurrent.pickedTrend = null;
+    _ceCurrent.posts = null;
+    $('ceTrendsTitle').textContent = `Trending now in ${industry}`;
+    $('ceTrends').innerHTML = _ceCurrent.trends.map(t=>`
+      <button type="button" class="ce-trend" onclick="cePickTrend(${t.id})">
+        <h4>${ceEsc(t.title)}</h4>
+        <p>${ceEsc(t.angle)}</p>
+        <div class="ce-trend-foot">
+          <span class="ce-tag">${ceEsc(t.tag)}</span>
+          <span class="ce-pick">Generate posts →</span>
+        </div>
+      </button>`).join('');
+    $('ceStep2').style.display = 'block';
+    $('ceStep3').style.display = 'none';
+    if(btn){ btn.disabled = false; btn.innerHTML = origLabel; }
+    $('ceStep2').scrollIntoView({behavior:'smooth', block:'start'});
+  }, 420);
 }
 
-/* ---------------- X / Twitter (tweets ≤ 280, thread, replies) ---------------- */
-function ceX(b){
-  const cta = ceCta(b.goal);
-  const t = b.topic.replace(/\.$/,'');
-  const tweets = [
-    `${ceHook(b)}\n\nA short thread ↓`,
-    `Most ${b.industry} teams plan their way to clarity. You can't. You ship your way there.`,
-    `One number per week. Not five. Definitely not fifteen.`,
-    `Talk to ${b.audience} on the days you don't feel like it. That's the data.`,
-    `Ship the version you're slightly embarrassed by. Then talk about it. Repeat for 12 weeks. Almost nobody does.\n\n${cta}`
-  ];
-  // 5-tweet thread that uses the structure of "Hook → Stake → Insight → Counter → CTA"
-  const thread = [
-    { i:1, text: `${ceHook(b)}\n\n(Thread ↓)` },
-    { i:2, text: `The stake: ${b.audience} can't out-plan a faster-shipping competitor. Speed of feedback > size of plan.` },
-    { i:3, text: `Insight: pick one metric a week. Move it. Or kill it. Either is information.` },
-    { i:4, text: `Counter: "but we need alignment." Alignment without a moving number is a status meeting. Ship → look → adjust.` },
-    { i:5, text: `Recap:\n• one metric / week\n• one shipped thing / week\n• one customer call / week\n\nDo this for 12 weeks. ${cta}` }
-  ];
-  const replies = [
-    `Same here. The week we cut our metrics from 8 → 1 was the week things actually moved.`,
-    `Counter: in ${b.industry} specifically, the opposite can be true early. We've found ${t.toLowerCase()} matters less than the cadence of customer conversations.`,
-    `This. Most teams skip "talk about it on Tuesday" and wonder why nothing compounds.`,
-    `Adding to this — pairing the weekly ship with a 10-min Loom doubled our reply rate from ${b.audience}.`
-  ];
-  return { tweets, thread, replies };
+function cePickTrend(id){
+  const t = _ceCurrent.trends.find(x=>x.id===id);
+  if(!t) return;
+  _ceCurrent.pickedTrend = t;
+  _ceCurrent.posts = {
+    linkedin: ceGenLinkedIn(_ceCurrent.industry, t),
+    x: ceGenX(_ceCurrent.industry, t)
+  };
+  $('ceTrendContext').innerHTML = `<h4>${ceEsc(t.title)}</h4><p>${ceEsc(t.angle)}</p>`;
+  $('ceGenerated').innerHTML = ceRenderPosts();
+  $('ceStep3').style.display = 'block';
+  $('ceStep3').scrollIntoView({behavior:'smooth', block:'start'});
 }
 
-/* ---------------- Render ---------------- */
-function ceCharCount(text, limit){
-  const len = text.length;
-  return `<span class="ce-count ${len>limit?'over':''}">${len}/${limit}</span>`;
+function cePickAnother(){
+  $('ceStep3').style.display = 'none';
+  $('ceStep2').scrollIntoView({behavior:'smooth', block:'start'});
 }
 
-function renderCELinkedIn(b){
-  const li = ceLinkedIn(b);
-  const limit = 3000;
-  $('ceLinkedIn').innerHTML = `
+function ceGenLinkedIn(industry, t){
+  return `${t.title}
+
+Here's what I'm seeing in ${industry} this week:
+
+${t.angle}
+
+A few patterns worth naming:
+
+1. The teams getting ahead are running 2-week experiments, not 6-month roadmaps.
+2. Customer calls beat competitor decks. Every time.
+3. Ship the version you're slightly embarrassed by — then talk about it.
+
+If this resonates, what are you seeing on your end? I want to know.
+
+#${industry.replace(/\s+/g,'')} #buildinpublic`;
+}
+
+function ceGenX(industry, t){
+  return `${t.title}\n\n${t.angle}\n\nWhat's working for you right now?`;
+}
+
+function ceRenderPosts(){
+  const li = _ceCurrent.posts.linkedin;
+  const x = _ceCurrent.posts.x;
+  return `
     <div class="ce-post">
       <div class="ce-post-head">
-        <span class="ce-label">LinkedIn post</span>
-        <button class="btn ghost" data-ce-copy="${ceEsc(li.body)}" onclick="ceCopyAttr(this)">Copy</button>
+        <span class="ce-post-platform"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14zM8.5 17V10h-2v7h2zm-1-7.9a1.1 1.1 0 1 0 0-2.2 1.1 1.1 0 0 0 0 2.2zM18 17v-3.9c0-2.1-1.1-3.1-2.6-3.1-1.2 0-1.7.7-2 1.2V10h-2v7h2v-4c0-1 .2-2 1.4-2s1.2 1.1 1.2 2v4H18z"/></svg> LinkedIn</span>
       </div>
-      <p class="ce-post-text">${ceEsc(li.body)}</p>
+      <p class="ce-post-text">${ceEsc(li)}</p>
       <div class="ce-post-foot">
-        <div class="ce-tags">${b.styles.map(s=>`<span class="ce-tag">#${ceEsc(s)}</span>`).join('')}</div>
-        ${ceCharCount(li.body, limit)}
+        <span class="ce-count ${li.length>3000?'over':''}">${li.length}/3000</span>
+        <div class="ce-post-actions">
+          <button class="btn ghost" data-ce-copy="${ceEsc(li)}" onclick="ceCopyAttr(this)">Copy</button>
+          <button class="btn publish" onclick="cePostLinkedIn()">Post on LinkedIn ↗</button>
+        </div>
       </div>
     </div>
-    <h4>Alternate hooks</h4>
-    ${li.altHooks.map(h=>`<div class="ce-post"><p class="ce-post-text">${ceEsc(h)}</p><div class="ce-post-foot"><span class="ce-label">Hook</span><button class="btn ghost" data-ce-copy="${ceEsc(h)}" onclick="ceCopyAttr(this)">Copy</button></div></div>`).join('')}
-  `;
+    <div class="ce-post">
+      <div class="ce-post-head">
+        <span class="ce-post-platform"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2H21.5l-7.36 8.41L23 22h-6.84l-5.21-6.81L4.91 22H1.65l7.86-8.98L1.5 2h6.99l4.71 6.23L18.244 2z"/></svg> X / Twitter</span>
+      </div>
+      <p class="ce-post-text">${ceEsc(x)}</p>
+      <div class="ce-post-foot">
+        <span class="ce-count ${x.length>280?'over':''}">${x.length}/280</span>
+        <div class="ce-post-actions">
+          <button class="btn ghost" data-ce-copy="${ceEsc(x)}" onclick="ceCopyAttr(this)">Copy</button>
+          <button class="btn publish" onclick="cePostX()">Post on X ↗</button>
+        </div>
+      </div>
+    </div>`;
 }
 
-function renderCEX(b){
-  const x = ceX(b);
-  const tweetCard = (t, idx)=>`<div class="ce-post"><div class="ce-post-head"><span class="ce-label">Tweet ${idx+1}</span><button class="btn ghost" data-ce-copy="${ceEsc(t)}" onclick="ceCopyAttr(this)">Copy</button></div><p class="ce-post-text">${ceEsc(t)}</p><div class="ce-post-foot"><span class="ce-label">Standalone</span>${ceCharCount(t,280)}</div></div>`;
-  const threadCard = (t)=>`<div class="ce-post ce-thread-tweet" data-i="${t.i}"><div class="ce-post-head"><span class="ce-label">Thread ${t.i}/5</span><button class="btn ghost" data-ce-copy="${ceEsc(t.text)}" onclick="ceCopyAttr(this)">Copy</button></div><p class="ce-post-text">${ceEsc(t.text)}</p><div class="ce-post-foot"><span class="ce-label">Thread tweet</span>${ceCharCount(t.text,280)}</div></div>`;
-  $('ceX').innerHTML = `
-    <h4>Standalone tweets</h4>
-    ${x.tweets.map(tweetCard).join('')}
-    <h4>5-tweet thread</h4>
-    ${x.thread.map(threadCard).join('')}
-    <h4>Reply templates</h4>
-    ${x.replies.map((r,i)=>`<div class="ce-post"><div class="ce-post-head"><span class="ce-label">Reply ${i+1}</span><button class="btn ghost" data-ce-copy="${ceEsc(r)}" onclick="ceCopyAttr(this)">Copy</button></div><p class="ce-post-text">${ceEsc(r)}</p></div>`).join('')}
-  `;
-}
-
-/* ---------------- Main entry ---------------- */
-function genContent(){
-  const b = readCEInputs();
-  _ceLastPack = {
-    brief: b,
-    linkedin: ceLinkedIn(b),
-    x: ceX(b)
-  };
-  renderCELinkedIn(b);
-  renderCEX(b);
-  $('cePlatTabs').style.display = 'flex';
-  $('ceResults').style.display = 'block';
-  $('ceEmpty').style.display = 'none';
-  // Default tab = first selected platform, else linkedin
-  const firstPlatform = b.platforms.find(p=>['linkedin','x'].includes(p)) || 'linkedin';
-  switchCETab(firstPlatform);
-  toast('Content pack ready');
-}
-
-function resetContent(){
-  ['ceIndustry','ceAudience','ceTopic','ceTrend'].forEach(id=>{ const el=$(id); if(el) el.value=''; });
-  if($('ceGoal')) $('ceGoal').selectedIndex = 0;
-  document.querySelectorAll('#ceStyleChips .ce-chip').forEach(c=>c.classList.remove('active'));
-  document.querySelectorAll('#cePlatformChips .ce-chip').forEach(c=>c.classList.add('active'));
-  $('cePlatTabs').style.display = 'none';
-  $('ceResults').style.display = 'none';
-  $('ceEmpty').style.display = 'block';
-  _ceLastPack = null;
-  toast('Cleared');
-}
-
-function switchCETab(tab){
-  document.querySelectorAll('.ce-ptab').forEach(b=>b.classList.toggle('active', b.dataset.ceTab===tab));
-  document.querySelectorAll('.ce-panel').forEach(p=>p.classList.toggle('active', p.dataset.cePanel===tab));
-}
-
-function copyCENode(id){
-  const el = $(id); if(!el) return;
-  navigator.clipboard.writeText(el.innerText).then(()=>toast('Copied'));
-}
 function ceCopyAttr(btn){
   const text = btn?.dataset?.ceCopy || '';
   if(!text) return;
   navigator.clipboard.writeText(text).then(()=>toast('Copied'));
 }
 
-/* ---------------- Reformat (LinkedIn → X thread) ---------------- */
-function ceReformat(target){
-  if(!_ceLastPack){ toast('Generate first'); return; }
-  const b = _ceLastPack.brief;
-  if(target==='thread'){
-    // Take the linkedin body, split into ~5 chunks, retitle as a thread
-    const text = _ceLastPack.linkedin.body.replace(/\n#\S+.*$/gm,'').replace(/\n{2,}/g,'\n\n').trim();
-    const chunks = text.split(/\n\n+/).filter(Boolean);
-    const thread = [];
-    for(let i=0;i<5;i++){
-      const piece = chunks[i] || chunks[chunks.length-1];
-      let t = piece.replace(/\n/g,' ').slice(0,260);
-      if(i===0) t = `${ceHook(b)}\n\n${t}`;
-      if(i===4) t = `${t}\n\n${ceCta(b.goal)}`;
-      thread.push({ i:i+1, text: t.slice(0,280) });
-    }
-    _ceLastPack.x.thread = thread;
-    renderCEX(b);
-    switchCETab('x');
-    toast('Reformatted to X thread');
-    return;
-  }
+function cePostLinkedIn(){
+  if(!_ceCurrent.posts) return;
+  const text = _ceCurrent.posts.linkedin;
+  // LinkedIn has no official text-prefill endpoint, so copy first → user pastes if shareActive query doesn't auto-fill.
+  navigator.clipboard.writeText(text).then(()=>{
+    toast('Copied — paste into LinkedIn');
+    window.open('https://www.linkedin.com/feed/?shareActive=true&text=' + encodeURIComponent(text.slice(0,1300)), '_blank', 'noopener,noreferrer');
+  }).catch(()=>{
+    window.open('https://www.linkedin.com/feed/', '_blank', 'noopener,noreferrer');
+  });
 }
 
-/* ---------------- Chip + tab click handling ---------------- */
-document.addEventListener('click', (e)=>{
-  const styleChip = e.target.closest('#ceStyleChips .ce-chip');
-  if(styleChip){
-    // Enforce max 3 active style tags
-    const active = document.querySelectorAll('#ceStyleChips .ce-chip.active');
-    if(!styleChip.classList.contains('active') && active.length>=3){
-      toast('Max 3 style tags');
-      return;
-    }
-    styleChip.classList.toggle('active');
-    return;
+function cePostX(){
+  if(!_ceCurrent.posts) return;
+  const text = _ceCurrent.posts.x.slice(0,280);
+  // Twitter intent reliably pre-fills compose.
+  window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(text), '_blank', 'noopener,noreferrer');
+}
+
+// Enter-to-search on the industry input
+document.addEventListener('keydown', (e)=>{
+  if(e.key==='Enter' && document.activeElement && document.activeElement.id==='ceIndustry'){
+    e.preventDefault();
+    ceSearchTrends();
   }
-  const platChip = e.target.closest('#cePlatformChips .ce-chip');
-  if(platChip){
-    platChip.classList.toggle('active');
-    // Don't allow zero platforms
-    if(document.querySelectorAll('#cePlatformChips .ce-chip.active').length===0){
-      platChip.classList.add('active');
-      toast('Pick at least one platform');
-    }
-    return;
-  }
-  const ptab = e.target.closest('.ce-ptab');
-  if(ptab){ switchCETab(ptab.dataset.ceTab); return; }
 });
 
 function genCampaign(){
