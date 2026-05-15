@@ -234,13 +234,6 @@
   .ce-count.over{color:#f87171}
   .ce-tags{display:flex;flex-wrap:wrap;gap:6px}
   .ce-tag{display:inline-flex;font-size:12px;color:var(--muted);background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:3px 10px}
-  .ce-visual-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:8px}
-  @media (max-width:980px){.ce-visual-grid{grid-template-columns:1fr}}
-  .ce-visual{background:#0a0a0a;border:1px solid var(--line);border-radius:12px;padding:14px 16px}
-  .ce-visual h5{margin:0 0 6px;font-size:13px;color:var(--ink)}
-  .ce-visual p{margin:0 0 8px;color:#cfcfcf;font-size:13px;line-height:1.5}
-  .ce-visual .ce-search{font-size:11px;color:var(--muted)}
-  .ce-visual .ce-search code{background:var(--chip);border:1px solid var(--line);padding:1px 6px;border-radius:5px;color:var(--ink);font-size:11px}
   .ce-empty{background:#080808;border:1px dashed var(--line);border-radius:12px;padding:36px 22px;text-align:center;color:var(--muted)}
   .ce-empty .ce-empty-title{color:var(--ink);font-size:16px;font-weight:600;margin-bottom:6px}
   .ce-reformat{background:linear-gradient(180deg,#0f1820,#0a0f15);border:1px solid #1e2a35;border-radius:14px;padding:16px 18px;margin:14px 0;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
@@ -478,7 +471,7 @@
     <!-- CONTENT ENGINE -->
     <section data-view="content" class="hide">
       <h2 class="section">Content Engine</h2>
-      <p class="lede">One topic in → platform-tuned posts out. LinkedIn long-form, X tweets &amp; thread, Instagram caption, TikTok script. Style Tags drive the tone.</p>
+      <p class="lede">One topic in → platform-tuned posts out. LinkedIn long-form and X tweets + thread. Style Tags drive the tone.</p>
 
       <div class="card">
         <h3>Industry &amp; audience</h3>
@@ -525,8 +518,6 @@
         <div class="ce-chips" id="cePlatformChips">
           <button type="button" class="ce-chip active" data-ce-platform="linkedin">LinkedIn</button>
           <button type="button" class="ce-chip active" data-ce-platform="x">X / Twitter</button>
-          <button type="button" class="ce-chip active" data-ce-platform="instagram">Instagram</button>
-          <button type="button" class="ce-chip active" data-ce-platform="tiktok">TikTok</button>
         </div>
 
         <div class="row" style="margin-top:14px">
@@ -538,9 +529,6 @@
       <div class="ce-platforms" id="cePlatTabs" style="display:none">
         <button type="button" class="ce-ptab active" data-ce-tab="linkedin">LinkedIn</button>
         <button type="button" class="ce-ptab" data-ce-tab="x">X / Twitter</button>
-        <button type="button" class="ce-ptab" data-ce-tab="instagram">Instagram</button>
-        <button type="button" class="ce-ptab" data-ce-tab="tiktok">TikTok</button>
-        <button type="button" class="ce-ptab" data-ce-tab="visuals">Visual ideas</button>
       </div>
 
       <div id="ceResults" style="display:none">
@@ -552,11 +540,10 @@
           <div class="ce-reformat">
             <div class="ce-info">
               <h4>Reformat this long-form post</h4>
-              <p>Turn the LinkedIn essay into a 5-tweet X thread or a 60-second TikTok script — same idea, different package.</p>
+              <p>Turn the LinkedIn essay into a 5-tweet X thread — same idea, repackaged.</p>
             </div>
             <div class="row">
               <button class="btn secondary" onclick="ceReformat('thread')">→ X thread</button>
-              <button class="btn secondary" onclick="ceReformat('tiktok')">→ TikTok script</button>
             </div>
           </div>
         </div>
@@ -566,30 +553,11 @@
             <div id="ceX"></div>
           </div>
         </div>
-        <div class="ce-panel" data-ce-panel="instagram">
-          <div class="ce-block">
-            <div class="copybar"><h3>Instagram caption</h3><button class="btn ghost" onclick="copyCENode('ceIG')">Copy</button></div>
-            <div id="ceIG"></div>
-          </div>
-        </div>
-        <div class="ce-panel" data-ce-panel="tiktok">
-          <div class="ce-block">
-            <div class="copybar"><h3>TikTok script</h3><button class="btn ghost" onclick="copyCENode('ceTT')">Copy</button></div>
-            <div id="ceTT"></div>
-          </div>
-        </div>
-        <div class="ce-panel" data-ce-panel="visuals">
-          <div class="ce-block">
-            <h3>Visual ideas</h3>
-            <p class="muted" style="margin:0 0 12px;font-size:13px">Shoot list + search prompts for royalty-free stock. Direct Pexels / Pixabay search coming when the API proxy ships.</p>
-            <div class="ce-visual-grid" id="ceVisuals"></div>
-          </div>
-        </div>
       </div>
 
       <div class="ce-empty" id="ceEmpty">
         <div class="ce-empty-title">Your platform-tuned posts will appear here</div>
-        Fill the brief above and hit <strong>Generate</strong>. You'll get a LinkedIn long-form, an X tweet pack + thread, an Instagram caption, a TikTok script, and visual ideas — each tuned to your selected Style Tags.
+        Fill the brief above and hit <strong>Generate</strong>. You'll get a LinkedIn long-form post and an X tweet pack + thread — each tuned to your selected Style Tags.
       </div>
     </section>
 
@@ -1244,7 +1212,7 @@ function readCEInputs(){
     topic:    val('ceTopic') || 'How small teams ship faster than big ones',
     trend:    val('ceTrend'),
     styles:   styles.length ? styles : ['storytelling'],
-    platforms: platforms.length ? platforms : ['linkedin','x','instagram','tiktok']
+    platforms: platforms.length ? platforms : ['linkedin','x']
   };
 }
 
@@ -1339,57 +1307,6 @@ function ceX(b){
   return { tweets, thread, replies };
 }
 
-/* ---------------- Instagram (caption ≤ 2200, with hashtags + alt) ---------------- */
-function ceInstagram(b){
-  const cta = ceCta(b.goal).replace(/—/g,'•');
-  const lines = [
-    ceHook(b),
-    '',
-    `Building in ${b.industry} taught me something boring and useful:`,
-    '',
-    'You don\'t plan your way to clarity. You ship your way there.',
-    '',
-    'Pick one number. Move it. Talk about it.',
-    '',
-    `Repeat for 12 weeks. Almost nobody does. That's the whole thing.`,
-    '',
-    cta
-  ];
-  const caption = lines.join('\n');
-  const hashtags = [
-    '#'+b.industry.replace(/\s+/g,'').toLowerCase(),
-    '#buildinpublic', '#startuplife', '#founderlife', '#productledgrowth',
-    '#earlystage', '#marketingtips', '#'+(b.audience.split(' ')[0]||'startups').toLowerCase()
-  ];
-  const alt = `Plain dark background with the words "${ceHook(b).slice(0,60)}" in a clean sans-serif. ${b.industry} aesthetic — minimal, no stock imagery.`;
-  return { caption, hashtags, alt };
-}
-
-/* ---------------- TikTok (script for ~60s with on-screen text) ---------------- */
-function ceTikTok(b){
-  const cta = ceCta(b.goal);
-  const beats = [
-    { sec: '0–3s', label:'Hook', voiceover: ceHook(b), onscreen: ceHook(b).slice(0,40), broll: 'Direct-to-camera, looking slightly off-center, natural light.' },
-    { sec: '3–10s', label:'Context', voiceover: `I've spent the last few years in ${b.industry}, mostly making the wrong call about ${b.topic.toLowerCase()}.`, onscreen: 'Mostly wrong.', broll: 'Cut to laptop close-up or Slack notification.' },
-    { sec: '10–25s', label:'Insight', voiceover: `Here's the thing nobody puts in the LinkedIn carousels: you don't plan your way to clarity. You ship your way there. One number a week. Move it or kill it.`, onscreen: 'Ship → look → adjust.', broll: 'Whiteboard scribble of "1 metric / week".' },
-    { sec: '25–45s', label:'Receipt', voiceover: `Twelve weeks of that, and we 3×\'d the only number that mattered to ${b.audience}. Not because we got smarter. Because we got faster at finding out we were wrong.`, onscreen: '12 weeks · 3×', broll: 'Chart going up, in your product.' },
-    { sec: '45–55s', label:'Hook-back', voiceover: `Most ${b.industry} teams don't do this. They run a 6-week planning cycle and ship once. That's one data point. We ran 12.`, onscreen: '12 data points > 1.', broll: 'Quick calendar wipe.' },
-    { sec: '55–60s', label:'CTA', voiceover: cta, onscreen: cta, broll: 'Direct-to-camera, smile, point to caption.' }
-  ];
-  const caption = `${ceHook(b)} (60s) #${b.industry.replace(/\s+/g,'')} #startup #foundervibes`;
-  return { beats, caption };
-}
-
-/* ---------------- Visual ideas ---------------- */
-function ceVisuals(b){
-  return [
-    { title: 'Founder portrait', desc: `Natural light, looking slightly off-camera, neutral background. Use as the LinkedIn header image and as the TikTok thumbnail.`, search: `founder portrait ${b.industry}` },
-    { title: 'Whiteboard / sketch', desc: `Photo of a real whiteboard with one number circled. Conveys "we're figuring it out" — perfect for the X thread.`, search: `whiteboard strategy ${b.industry}` },
-    { title: 'Product-in-context', desc: `Laptop or phone screen showing your product mid-flow. Slight angle, ambient lighting, not a clean marketing render.`, search: `laptop dashboard ${b.industry}` },
-    { title: 'Team / customer moment', desc: `Two people mid-conversation, one pointing at a screen. Use for the LinkedIn long-form opener (anchors "talk to your audience").`, search: `team collaboration ${b.industry}` }
-  ];
-}
-
 /* ---------------- Render ---------------- */
 function ceCharCount(text, limit){
   const len = text.length;
@@ -1430,69 +1347,21 @@ function renderCEX(b){
   `;
 }
 
-function renderCEIG(b){
-  const ig = ceInstagram(b);
-  $('ceIG').innerHTML = `
-    <div class="ce-post">
-      <div class="ce-post-head">
-        <span class="ce-label">Caption</span>
-        <button class="btn ghost" data-ce-copy="${ceEsc(ig.caption + '\n\n' + ig.hashtags.join(' '))}" onclick="ceCopyAttr(this)">Copy caption + tags</button>
-      </div>
-      <p class="ce-post-text">${ceEsc(ig.caption)}</p>
-      <div class="ce-post-foot">
-        <div class="ce-tags">${ig.hashtags.map(h=>`<span class="ce-tag">${ceEsc(h)}</span>`).join('')}</div>
-        ${ceCharCount(ig.caption, 2200)}
-      </div>
-    </div>
-    <h4>Alt text for the visual</h4>
-    <div class="ce-post"><p class="ce-post-text">${ceEsc(ig.alt)}</p></div>
-  `;
-}
-
-function renderCETikTok(b){
-  const tt = ceTikTok(b);
-  const beat = (b)=>`<div class="ce-post">
-    <div class="ce-post-head"><span class="ce-label">${ceEsc(b.sec)} · ${ceEsc(b.label)}</span></div>
-    <p class="ce-post-text"><strong>VO:</strong> ${ceEsc(b.voiceover)}\n<strong>On-screen:</strong> ${ceEsc(b.onscreen)}\n<strong>Visual:</strong> ${ceEsc(b.broll)}</p>
-  </div>`;
-  $('ceTT').innerHTML = `
-    ${tt.beats.map(beat).join('')}
-    <h4>Caption for the post</h4>
-    <div class="ce-post"><p class="ce-post-text">${ceEsc(tt.caption)}</p><div class="ce-post-foot"><span class="ce-label">TikTok caption</span>${ceCharCount(tt.caption,2200)}</div></div>
-  `;
-}
-
-function renderCEVisuals(b){
-  const v = ceVisuals(b);
-  $('ceVisuals').innerHTML = v.map(c=>`
-    <div class="ce-visual">
-      <h5>${ceEsc(c.title)}</h5>
-      <p>${ceEsc(c.desc)}</p>
-      <div class="ce-search">Pexels search: <code>${ceEsc(c.search)}</code></div>
-    </div>`).join('');
-}
-
 /* ---------------- Main entry ---------------- */
 function genContent(){
   const b = readCEInputs();
   _ceLastPack = {
     brief: b,
     linkedin: ceLinkedIn(b),
-    x: ceX(b),
-    instagram: ceInstagram(b),
-    tiktok: ceTikTok(b),
-    visuals: ceVisuals(b)
+    x: ceX(b)
   };
   renderCELinkedIn(b);
   renderCEX(b);
-  renderCEIG(b);
-  renderCETikTok(b);
-  renderCEVisuals(b);
   $('cePlatTabs').style.display = 'flex';
   $('ceResults').style.display = 'block';
   $('ceEmpty').style.display = 'none';
   // Default tab = first selected platform, else linkedin
-  const firstPlatform = b.platforms.find(p=>['linkedin','x','instagram','tiktok'].includes(p)) || 'linkedin';
+  const firstPlatform = b.platforms.find(p=>['linkedin','x'].includes(p)) || 'linkedin';
   switchCETab(firstPlatform);
   toast('Content pack ready');
 }
@@ -1524,7 +1393,7 @@ function ceCopyAttr(btn){
   navigator.clipboard.writeText(text).then(()=>toast('Copied'));
 }
 
-/* ---------------- Reformat (LinkedIn → X thread / TikTok) ---------------- */
+/* ---------------- Reformat (LinkedIn → X thread) ---------------- */
 function ceReformat(target){
   if(!_ceLastPack){ toast('Generate first'); return; }
   const b = _ceLastPack.brief;
@@ -1544,19 +1413,6 @@ function ceReformat(target){
     renderCEX(b);
     switchCETab('x');
     toast('Reformatted to X thread');
-    return;
-  }
-  if(target==='tiktok'){
-    // Regenerate the TikTok script with explicit reference to LinkedIn body's bullet points
-    const bullets = ceBullets(b);
-    const beats = ceTikTok(b).beats;
-    // Inject the LinkedIn lesson into the Insight beat
-    beats[2].voiceover = `${bullets[0].replace(/^\d+\.\s*/,'')} ${bullets[1].replace(/^\d+\.\s*/,'')} That's it. The rest is consistency.`;
-    beats[2].onscreen = 'Boring. Consistent. Done.';
-    _ceLastPack.tiktok.beats = beats;
-    renderCETikTok(b);
-    switchCETab('tiktok');
-    toast('Reformatted to TikTok script');
     return;
   }
 }
