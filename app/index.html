@@ -503,7 +503,7 @@
               <span class="ce-step-num">2</span>
               <h3 id="ceTrendsTitle">Latest news</h3>
             </div>
-            <p class="muted" style="margin:0 0 14px;font-size:14px">10 articles on your topic. Pick one — your post appears on the right.</p>
+            <p class="muted" id="ceTrendsHelper" style="margin:0 0 14px;font-size:14px">10 articles on your topic. Pick one — your post appears on the right.</p>
             <div class="ce-trends" id="ceTrends"></div>
           </div>
         </div>
@@ -1269,18 +1269,77 @@ const CE_TREND_GENERIC = [
 
 let _ceCurrent = { industry:'', trends:[], pickedTrend:null, posts:null };
 
+// Specific product / topic names → bucket. Checked AFTER exact bank-key match so
+// "ai" still wins as an exact match, but "claude code" routes to the AI bank.
+const CE_TOPIC_KEYWORDS = {
+  // AI products & terms
+  'claude':'ai', 'anthropic':'ai', 'openai':'ai', 'gpt':'ai', 'chatgpt':'ai', 'gemini':'ai',
+  'mistral':'ai', 'llama':'ai', 'llm':'ai', 'llms':'ai', 'agent':'ai', 'agents':'ai',
+  'cursor':'ai', 'copilot':'ai', 'perplexity':'ai', 'midjourney':'ai', 'dalle':'ai',
+  'machinelearning':'ai', 'deeplearning':'ai', 'generativeai':'ai', 'foundationmodel':'ai',
+  'transformer':'ai', 'rag':'ai', 'finetuning':'ai', 'embeddings':'ai', 'vectordb':'ai',
+  'huggingface':'ai', 'replicate':'ai', 'langchain':'ai', 'llamaindex':'ai', 'cody':'ai',
+  // SaaS products / generic
+  'notion':'saas', 'linear':'saas', 'airtable':'saas', 'slack':'saas', 'figma':'saas',
+  'monday':'saas', 'hubspot':'saas', 'salesforce':'saas', 'zoom':'saas', 'asana':'saas',
+  'miro':'saas', 'productivity':'saas', 'collaboration':'saas', 'verticalsaas':'saas',
+  'horizontalsaas':'saas', 'b2bsoftware':'saas', 'software':'saas',
+  // Fintech
+  'stripe':'fintech', 'plaid':'fintech', 'square':'fintech', 'paypal':'fintech',
+  'venmo':'fintech', 'robinhood':'fintech', 'coinbase':'fintech', 'crypto':'fintech',
+  'cryptocurrency':'fintech', 'blockchain':'fintech', 'defi':'fintech', 'web3':'fintech',
+  'mercury':'fintech', 'brex':'fintech', 'ramp':'fintech', 'chime':'fintech',
+  'klarna':'fintech', 'affirm':'fintech', 'neobank':'fintech', 'insurtech':'fintech',
+  'embeddedfinance':'fintech', 'baas':'fintech',
+  // Healthcare
+  'telehealth':'healthcare', 'telemedicine':'healthcare', 'pharma':'healthcare',
+  'biotech':'healthcare', 'digitalhealth':'healthcare', 'oscar':'healthcare',
+  'hims':'healthcare', 'glp':'healthcare', 'ehr':'healthcare', 'epic':'healthcare',
+  // Marketing
+  'advertising':'marketing', 'paidads':'marketing', 'performance':'marketing',
+  'contentmarketing':'marketing', 'organicgrowth':'marketing', 'newsletter':'marketing',
+  'substack':'marketing', 'beehiiv':'marketing', 'convertkit':'marketing', 'mailchimp':'marketing',
+  // E-commerce
+  'shopify':'ecommerce', 'woocommerce':'ecommerce', 'bigcommerce':'ecommerce',
+  'etsy':'ecommerce', 'amazonseller':'ecommerce', 'tiktokshop':'ecommerce',
+  'temu':'ecommerce', 'shein':'ecommerce', 'onlinestore':'ecommerce',
+  // Real estate
+  'zillow':'realestate', 'redfin':'realestate', 'opendoor':'realestate', 'compass':'realestate',
+  'housing':'realestate', 'mortgage':'realestate', 'rentals':'realestate',
+  'airbnb':'realestate', 'vrbo':'realestate',
+  // Retail
+  'walmart':'retail', 'costco':'retail', 'target':'retail', 'kroger':'retail',
+  'grocery':'retail', 'bigbox':'retail'
+};
+
+// Human-readable bucket labels for disclosure text
+const CE_BUCKET_LABEL = {
+  ai:'AI', saas:'SaaS', retail:'Retail', fintech:'Fintech',
+  healthcare:'Healthcare', marketing:'Marketing', ecommerce:'E-commerce', realestate:'Real Estate'
+};
+
 function ceFindTrends(industry){
   const i = (industry||'').toLowerCase().replace(/[^a-z]/g,'');
+  // 1. Exact bank key match (e.g., "ai", "saas", "fintech")
   for(const key of Object.keys(CE_TREND_BANK)){
-    if(i.includes(key)) return { key, trends: CE_TREND_BANK[key] };
+    if(i.includes(key)) return { key, trends: CE_TREND_BANK[key], match:'exact' };
   }
-  if(i.includes('startup')||i.includes('b2b')) return { key:'saas', trends: CE_TREND_BANK.saas };
-  if(i.includes('shop')||i.includes('dtc')||i.includes('brand')) return { key:'ecommerce', trends: CE_TREND_BANK.ecommerce };
-  if(i.includes('agency')||i.includes('growth')||i.includes('seo')||i.includes('ads')) return { key:'marketing', trends: CE_TREND_BANK.marketing };
-  if(i.includes('health')||i.includes('clinic')||i.includes('medical')) return { key:'healthcare', trends: CE_TREND_BANK.healthcare };
-  if(i.includes('finance')||i.includes('bank')||i.includes('lending')||i.includes('credit')) return { key:'fintech', trends: CE_TREND_BANK.fintech };
-  if(i.includes('property')||i.includes('housing')||i.includes('real')) return { key:'realestate', trends: CE_TREND_BANK.realestate };
-  return { key:null, trends: CE_TREND_GENERIC };
+  // 2. Product / keyword map
+  for(const keyword of Object.keys(CE_TOPIC_KEYWORDS)){
+    if(i.includes(keyword)){
+      const bucket = CE_TOPIC_KEYWORDS[keyword];
+      return { key: bucket, trends: CE_TREND_BANK[bucket], match:'mapped' };
+    }
+  }
+  // 3. Broad synonym fallbacks
+  if(i.includes('startup')||i.includes('b2b')) return { key:'saas', trends: CE_TREND_BANK.saas, match:'mapped' };
+  if(i.includes('shop')||i.includes('dtc')||i.includes('brand')) return { key:'ecommerce', trends: CE_TREND_BANK.ecommerce, match:'mapped' };
+  if(i.includes('agency')||i.includes('growth')||i.includes('seo')||i.includes('ads')) return { key:'marketing', trends: CE_TREND_BANK.marketing, match:'mapped' };
+  if(i.includes('health')||i.includes('clinic')||i.includes('medical')) return { key:'healthcare', trends: CE_TREND_BANK.healthcare, match:'mapped' };
+  if(i.includes('finance')||i.includes('bank')||i.includes('lending')||i.includes('credit')) return { key:'fintech', trends: CE_TREND_BANK.fintech, match:'mapped' };
+  if(i.includes('property')||i.includes('housing')||i.includes('real')) return { key:'realestate', trends: CE_TREND_BANK.realestate, match:'mapped' };
+  // 4. Nothing matched — return generic with a clear flag
+  return { key:null, trends: CE_TREND_GENERIC, match:'generic' };
 }
 
 function ceSearchTrends(){
@@ -1290,12 +1349,24 @@ function ceSearchTrends(){
   const origLabel = btn ? btn.innerHTML : '';
   if(btn){ btn.disabled = true; btn.innerHTML = '<span class="ce-loading"></span>Searching news'; }
   setTimeout(()=>{
-    const { trends } = ceFindTrends(industry);
+    const result = ceFindTrends(industry);
     _ceCurrent.industry = industry;
-    _ceCurrent.trends = trends.map((t,i)=>({...t, id:i}));
+    _ceCurrent.trends = result.trends.map((t,i)=>({...t, id:i}));
     _ceCurrent.pickedTrend = null;
     _ceCurrent.posts = null;
-    $('ceTrendsTitle').textContent = `Latest news on ${ceCapIndustry(industry)}`;
+    const topicCap = ceCapIndustry(industry);
+    $('ceTrendsTitle').textContent = `Latest news on ${topicCap}`;
+    // Helper text reflects how well we matched the topic.
+    const helper = $('ceTrendsHelper');
+    if(helper){
+      if(result.match === 'exact'){
+        helper.textContent = `10 articles on your topic. Pick one — your post appears on the right.`;
+      } else if(result.match === 'mapped'){
+        helper.textContent = `Showing ${CE_BUCKET_LABEL[result.key]} news — the closest curated category to "${topicCap}". Pick one to turn it into a post.`;
+      } else {
+        helper.textContent = `We don't have curated news for "${topicCap}" yet — showing general startup angles. Try: ${Object.values(CE_BUCKET_LABEL).join(', ')}.`;
+      }
+    }
     $('ceTrends').innerHTML = _ceCurrent.trends.map(t=>`
       <button type="button" class="ce-trend" onclick="cePickTrend(${t.id})">
         <div class="ce-trend-meta">
