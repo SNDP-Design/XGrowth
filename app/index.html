@@ -210,6 +210,46 @@
   body:not(.authed) .app{display:none !important;visibility:hidden !important}
   body:not(.authed) .modal{display:none !important;visibility:hidden !important}
   body.authed .auth-gate{display:none !important}
+  /* Content Engine module */
+  .ce-chips{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 0}
+  .ce-chip{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:999px;background:var(--chip);border:1px solid var(--line);color:var(--muted);font:600 13px system-ui,-apple-system,sans-serif;cursor:pointer;transition:.18s;user-select:none}
+  .ce-chip:hover{color:var(--ink);border-color:#3a3a3a}
+  .ce-chip.active{background:linear-gradient(180deg,#fafafa,#d4d4d4);color:#0a0a0a;border-color:#fafafa;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+  .ce-platforms{display:flex;gap:6px;flex-wrap:wrap;background:#0a0a0a;border:1px solid var(--line);border-radius:12px;padding:6px;margin:14px 0}
+  .ce-ptab{flex:1;min-width:110px;height:42px;background:transparent;border:0;color:var(--muted);font:600 14px system-ui,-apple-system,sans-serif;border-radius:8px;cursor:pointer;transition:.18s;padding:0 14px;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+  .ce-ptab:hover{color:var(--ink);background:rgba(255,255,255,.03)}
+  .ce-ptab.active{background:linear-gradient(180deg,#fafafa,#d4d4d4);color:#0a0a0a;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+  .ce-panel{display:none}
+  .ce-panel.active{display:block}
+  .ce-block{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:14px}
+  .ce-block h3{margin:0 0 10px;font-size:15px}
+  .ce-block h4{margin:14px 0 8px;font-size:13px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);font-weight:600}
+  .ce-block p{margin:0 0 10px;color:#cfcfcf;line-height:1.6;font-size:15px}
+  .ce-post{background:#0a0a0a;border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:0 0 10px;position:relative}
+  .ce-post .ce-post-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
+  .ce-post .ce-post-text{color:#ededed;font-size:15px;line-height:1.6;white-space:pre-wrap;word-break:break-word;margin:0}
+  .ce-post .ce-post-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
+  .ce-label{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted)}
+  .ce-count{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .ce-count.over{color:#f87171}
+  .ce-tags{display:flex;flex-wrap:wrap;gap:6px}
+  .ce-tag{display:inline-flex;font-size:12px;color:var(--muted);background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:3px 10px}
+  .ce-visual-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:8px}
+  @media (max-width:980px){.ce-visual-grid{grid-template-columns:1fr}}
+  .ce-visual{background:#0a0a0a;border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .ce-visual h5{margin:0 0 6px;font-size:13px;color:var(--ink)}
+  .ce-visual p{margin:0 0 8px;color:#cfcfcf;font-size:13px;line-height:1.5}
+  .ce-visual .ce-search{font-size:11px;color:var(--muted)}
+  .ce-visual .ce-search code{background:var(--chip);border:1px solid var(--line);padding:1px 6px;border-radius:5px;color:var(--ink);font-size:11px}
+  .ce-empty{background:#080808;border:1px dashed var(--line);border-radius:12px;padding:36px 22px;text-align:center;color:var(--muted)}
+  .ce-empty .ce-empty-title{color:var(--ink);font-size:16px;font-weight:600;margin-bottom:6px}
+  .ce-reformat{background:linear-gradient(180deg,#0f1820,#0a0f15);border:1px solid #1e2a35;border-radius:14px;padding:16px 18px;margin:14px 0;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .ce-reformat .ce-info{flex:1;min-width:220px}
+  .ce-reformat .ce-info h4{margin:0 0 4px;font-size:14px;color:var(--ink);text-transform:none;letter-spacing:0}
+  .ce-reformat .ce-info p{margin:0;font-size:13px;color:var(--muted);line-height:1.5}
+  .ce-reformat .row{margin:0;gap:8px}
+  .ce-thread-tweet{position:relative;padding-left:34px}
+  .ce-thread-tweet::before{content:attr(data-i);position:absolute;left:0;top:14px;width:24px;height:24px;border-radius:50%;background:#0f1820;border:1px solid #1e2a35;color:var(--ink);font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
 </style>
 </head>
 <body>
@@ -261,7 +301,7 @@
       </button>
       <button data-view="content">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
-        X Content Engine
+        Content Engine
       </button>
       <button data-view="campaign">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
@@ -437,37 +477,119 @@
 
     <!-- CONTENT ENGINE -->
     <section data-view="content" class="hide">
-      <h2 class="section">X Content Engine</h2>
-      <p class="lede">10 tweet variations, 3 full threads, reply templates, optimized for hooks, CTAs, and engagement.</p>
-      <div class="grid cols-2">
-        <div class="card">
-          <h3>Inputs</h3>
-          <label>Core idea or bookmark</label>
-          <textarea id="cIdea" placeholder="e.g., Why most pre-seed SaaS dies before PMF, 5 patterns I saw at YC"></textarea>
-          <label>Style</label>
-          <select id="cStyle">
-            <option>Naval wisdom</option>
-            <option>Founder story</option>
-            <option>Contrarian</option>
-            <option>Listicle / numbered</option>
-            <option>Question / poll</option>
-          </select>
-          <label>Goal of post</label>
-          <select id="cGoal">
-            <option>Followers</option>
-            <option>Investor DMs</option>
-            <option>Newsletter signups</option>
-            <option>Demo bookings</option>
-          </select>
-          <div class="row" style="margin-top:12px">
-            <button class="btn" onclick="genContent()">Generate Pack</button>
-            <button class="btn secondary" onclick="clearOut('contentOut')">Clear</button>
+      <h2 class="section">Content Engine</h2>
+      <p class="lede">One topic in → platform-tuned posts out. LinkedIn long-form, X tweets &amp; thread, Instagram caption, TikTok script. Style Tags drive the tone.</p>
+
+      <div class="card">
+        <h3>Industry &amp; audience</h3>
+        <div class="grid cols-3">
+          <div>
+            <label>Industry</label>
+            <input id="ceIndustry" type="text" placeholder="AI · Retail · Hospitality · SaaS"/>
+          </div>
+          <div>
+            <label>Target audience</label>
+            <input id="ceAudience" type="text" placeholder="Pre-seed SaaS founders"/>
+          </div>
+          <div>
+            <label>Core goal</label>
+            <select id="ceGoal">
+              <option>Followers</option>
+              <option>Investor DMs</option>
+              <option>Newsletter signups</option>
+              <option>Demo bookings</option>
+              <option>Brand awareness</option>
+            </select>
           </div>
         </div>
-        <div class="card">
-          <div class="copybar"><h3>Output</h3><button class="btn ghost" onclick="copyOut('contentOut')">Copy</button></div>
-          <div class="output" id="contentOut">Drop your idea on the left and hit Generate.</div>
+
+        <label>Master topic / core idea</label>
+        <textarea id="ceTopic" placeholder="e.g., Why most pre-seed SaaS dies before PMF — 5 patterns I saw at YC"></textarea>
+
+        <label>Trend input <span class="muted" style="font-size:12px">(optional · paste URLs or quotes: news, X threads, LinkedIn posts you want to riff on)</span></label>
+        <textarea id="ceTrend" placeholder="https://news.ycombinator.com/item?id=&#10;or paste a quote you want to respond to..."></textarea>
+
+        <label>Style tags <span class="muted" style="font-size:12px">(pick 1–3)</span></label>
+        <div class="ce-chips" id="ceStyleChips">
+          <button type="button" class="ce-chip" data-ce-style="storytelling">#Storytelling</button>
+          <button type="button" class="ce-chip" data-ce-style="humorous">#Humorous</button>
+          <button type="button" class="ce-chip" data-ce-style="emotional">#Emotional</button>
+          <button type="button" class="ce-chip" data-ce-style="technical">#Technical</button>
+          <button type="button" class="ce-chip" data-ce-style="professional">#Professional</button>
+          <button type="button" class="ce-chip" data-ce-style="contrarian">#Contrarian</button>
+          <button type="button" class="ce-chip" data-ce-style="listicle">#Listicle</button>
+          <button type="button" class="ce-chip" data-ce-style="question">#Question</button>
         </div>
+
+        <label style="margin-top:14px">Platforms</label>
+        <div class="ce-chips" id="cePlatformChips">
+          <button type="button" class="ce-chip active" data-ce-platform="linkedin">LinkedIn</button>
+          <button type="button" class="ce-chip active" data-ce-platform="x">X / Twitter</button>
+          <button type="button" class="ce-chip active" data-ce-platform="instagram">Instagram</button>
+          <button type="button" class="ce-chip active" data-ce-platform="tiktok">TikTok</button>
+        </div>
+
+        <div class="row" style="margin-top:14px">
+          <button class="btn" onclick="genContent()">Generate</button>
+          <button class="btn secondary" onclick="resetContent()">Clear</button>
+        </div>
+      </div>
+
+      <div class="ce-platforms" id="cePlatTabs" style="display:none">
+        <button type="button" class="ce-ptab active" data-ce-tab="linkedin">LinkedIn</button>
+        <button type="button" class="ce-ptab" data-ce-tab="x">X / Twitter</button>
+        <button type="button" class="ce-ptab" data-ce-tab="instagram">Instagram</button>
+        <button type="button" class="ce-ptab" data-ce-tab="tiktok">TikTok</button>
+        <button type="button" class="ce-ptab" data-ce-tab="visuals">Visual ideas</button>
+      </div>
+
+      <div id="ceResults" style="display:none">
+        <div class="ce-panel active" data-ce-panel="linkedin">
+          <div class="ce-block">
+            <div class="copybar"><h3>LinkedIn long-form</h3><button class="btn ghost" onclick="copyCENode('ceLinkedIn')">Copy</button></div>
+            <div id="ceLinkedIn"></div>
+          </div>
+          <div class="ce-reformat">
+            <div class="ce-info">
+              <h4>Reformat this long-form post</h4>
+              <p>Turn the LinkedIn essay into a 5-tweet X thread or a 60-second TikTok script — same idea, different package.</p>
+            </div>
+            <div class="row">
+              <button class="btn secondary" onclick="ceReformat('thread')">→ X thread</button>
+              <button class="btn secondary" onclick="ceReformat('tiktok')">→ TikTok script</button>
+            </div>
+          </div>
+        </div>
+        <div class="ce-panel" data-ce-panel="x">
+          <div class="ce-block">
+            <div class="copybar"><h3>X / Twitter pack</h3><button class="btn ghost" onclick="copyCENode('ceX')">Copy all</button></div>
+            <div id="ceX"></div>
+          </div>
+        </div>
+        <div class="ce-panel" data-ce-panel="instagram">
+          <div class="ce-block">
+            <div class="copybar"><h3>Instagram caption</h3><button class="btn ghost" onclick="copyCENode('ceIG')">Copy</button></div>
+            <div id="ceIG"></div>
+          </div>
+        </div>
+        <div class="ce-panel" data-ce-panel="tiktok">
+          <div class="ce-block">
+            <div class="copybar"><h3>TikTok script</h3><button class="btn ghost" onclick="copyCENode('ceTT')">Copy</button></div>
+            <div id="ceTT"></div>
+          </div>
+        </div>
+        <div class="ce-panel" data-ce-panel="visuals">
+          <div class="ce-block">
+            <h3>Visual ideas</h3>
+            <p class="muted" style="margin:0 0 12px;font-size:13px">Shoot list + search prompts for royalty-free stock. Direct Pexels / Pixabay search coming when the API proxy ships.</p>
+            <div class="ce-visual-grid" id="ceVisuals"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ce-empty" id="ceEmpty">
+        <div class="ce-empty-title">Your platform-tuned posts will appear here</div>
+        Fill the brief above and hit <strong>Generate</strong>. You'll get a LinkedIn long-form, an X tweet pack + thread, an Instagram caption, a TikTok script, and visual ideas — each tuned to your selected Style Tags.
       </div>
     </section>
 
@@ -1094,55 +1216,377 @@ $('addPost').onclick = ()=>{
 /* ========= Generators (template-based, no external API) ========= */
 function p(){ return state.profile || {niche:'AI SaaS', stage:'Pre-seed', target:'Both', goal:'10k followers'}; }
 
-function genContent(){
-  const idea = val('cIdea')||'Why most pre-seed SaaS dies before PMF';
-  const style= val('cStyle');
-  const goal = val('cGoal');
-  const cta  = goal==='Investor DMs' ? 'DM "deck" if you want to see ours.' :
-               goal==='Newsletter signups' ? 'Free weekly playbook → link in bio.' :
-               goal==='Demo bookings' ? 'Book a 15-min demo → link in bio.' :
-               'Follow for the rest of the playbook.';
-  const hooks = [
-    `Most founders get ${idea.split(' ').slice(0,4).join(' ')}… wrong. Here's the fix:`,
-    `I spent 6 months on this so you don't have to:`,
-    `${idea}, in 60 seconds.`,
-    `Hot take: ${idea}. Most disagree. Few are right.`,
-    `If you only read one thread today, make it this one:`,
-    `The 5-step playbook for ${idea.toLowerCase()}.`,
-    `Here's what no one tells you about ${idea.toLowerCase()}:`,
-    `I shipped ${Math.floor(Math.random()*5+3)} experiments. Only one worked. Here's why:`,
-    `Stop doing this. Start doing that. (${idea.split(' ').slice(-3).join(' ')})`,
-    `If I had to restart from $0 today, I'd do this first:`
+/* =========================================================
+   CONTENT ENGINE — Multi-platform generator
+   ========================================================= */
+let _ceLastPack = null;
+
+function ceEsc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+const CE_STYLE_TONES = {
+  storytelling: { opener:'scene', closer:'reveal', voice:'narrative, sensory, in-scene' },
+  humorous:     { opener:'punchline', closer:'callback', voice:'self-deprecating, dry, snappy' },
+  emotional:    { opener:'feeling', closer:'invitation', voice:'warm, vulnerable, first-person' },
+  technical:    { opener:'spec', closer:'tradeoff', voice:'precise, numbers, named patterns' },
+  professional: { opener:'thesis', closer:'recommendation', voice:'measured, third-person, no slang' },
+  contrarian:   { opener:'hot-take', closer:'caveat', voice:'sharp opening, defends with receipts' },
+  listicle:     { opener:'count', closer:'recap', voice:'scannable, numbered, parallel structure' },
+  question:     { opener:'question', closer:'open-ended', voice:'invites reply, low-ego' }
+};
+
+function readCEInputs(){
+  const styles = Array.from(document.querySelectorAll('#ceStyleChips .ce-chip.active')).map(b=>b.dataset.ceStyle);
+  const platforms = Array.from(document.querySelectorAll('#cePlatformChips .ce-chip.active')).map(b=>b.dataset.cePlatform);
+  return {
+    industry: val('ceIndustry') || 'B2B SaaS',
+    audience: val('ceAudience') || 'founders and operators',
+    goal:     val('ceGoal') || 'Followers',
+    topic:    val('ceTopic') || 'How small teams ship faster than big ones',
+    trend:    val('ceTrend'),
+    styles:   styles.length ? styles : ['storytelling'],
+    platforms: platforms.length ? platforms : ['linkedin','x','instagram','tiktok']
+  };
+}
+
+function ceCta(goal){
+  if(goal==='Investor DMs') return 'DM "deck" if you want to see ours.';
+  if(goal==='Newsletter signups') return 'Free weekly playbook — link in bio.';
+  if(goal==='Demo bookings') return 'Book a 15-min demo — link in bio.';
+  if(goal==='Brand awareness') return 'Repost if this hit. Follow for more.';
+  return 'Follow for the rest of the playbook.';
+}
+
+function ceToneSummary(styles){
+  return styles.map(s=>'#'+s.charAt(0).toUpperCase()+s.slice(1)).join(' ');
+}
+
+function ceHook(b){
+  const s = b.styles[0];
+  const t = b.topic.replace(/\.$/,'');
+  if(s==='storytelling') return `Two years ago, I was wrong about ${t.toLowerCase()}. Here's what changed.`;
+  if(s==='humorous')     return `I made every mistake on the "${t}" list. So you don't have to. Probably.`;
+  if(s==='emotional')    return `Nobody warned me how lonely ${t.toLowerCase()} would feel. Here's what got me through.`;
+  if(s==='technical')    return `${t}: 5 measurable patterns from ${b.industry} teams that compounded.`;
+  if(s==='professional') return `A short note on ${t.toLowerCase()} — and what ${b.industry} leaders should actually do next.`;
+  if(s==='contrarian')   return `Unpopular take: ${t.toLowerCase()} is mostly noise. Here's the signal.`;
+  if(s==='listicle')     return `5 things I wish I knew about ${t.toLowerCase()} before I started.`;
+  if(s==='question')     return `Honest question for ${b.audience}: what's actually working for ${t.toLowerCase()} right now?`;
+  return `${t}, in 60 seconds.`;
+}
+
+function ceBullets(b){
+  const t = b.topic.toLowerCase().replace(/\.$/,'');
+  return [
+    `1. Most ${b.industry} teams skip the boring step. It's the one that compounds.`,
+    `2. Track one number per week. Not five. Definitely not fifteen.`,
+    `3. Talk to ${b.audience} on the days you don't feel like it. That's the data.`,
+    `4. Ship the version you're slightly embarrassed by. Then talk about it.`,
+    `5. Repeat for 12 weeks. Almost nobody does. That's the moat.`
   ];
-  const thread = (title)=>`Thread, ${title}\n1/ Hook: ${hooks[Math.floor(Math.random()*hooks.length)]}\n2/ Stake: why this matters now (specific stat or story).\n3/ Insight #1 + a concrete example.\n4/ Insight #2 + a counter-example.\n5/ Insight #3 + a small tactic to ship today.\n6/ Pitfall most founders hit (and how to avoid it).\n7/ Mini-framework (3 steps, named).\n8/ Receipt: a screenshot, a number, a quote.\n9/ Recap: 3 bullets.\n10/ CTA: ${cta}`;
+}
+
+function ceTrendNote(b){
+  if(!b.trend) return '';
+  // Detect first URL, otherwise use first 120 chars as a quote
+  const url = (b.trend.match(/https?:\/\/\S+/)||[])[0];
+  if(url){
+    return `\n\n(Riffing on this: ${url})`;
+  }
+  const quote = b.trend.split('\n')[0].slice(0,120);
+  return `\n\nFor context: "${quote}${b.trend.length>120?'…':''}"`;
+}
+
+/* ---------------- LinkedIn (long-form, ≤ 3000 chars) ---------------- */
+function ceLinkedIn(b){
+  const cta = ceCta(b.goal);
+  const hook = ceHook(b);
+  const bullets = ceBullets(b);
+  const stylesNote = b.styles.length>1 ? ` (Tone mix: ${ceToneSummary(b.styles)})` : '';
+  const body = `${hook}\n\nThree years building in ${b.industry}, and the one thing I'd tell ${b.audience} on day one is this:\n\nThe people who win are not the smartest in the room. They are the ones who ship a small, embarrassing version on Monday — and talk about it on Tuesday.\n\nHere's the playbook${stylesNote}:\n\n${bullets.join('\n')}\n\nThe reason this works: shipping creates the conversation. The conversation creates the data. The data updates the plan.\n\nMost founders try to plan their way to clarity. You can't. You ship your way there.${ceTrendNote(b)}\n\n${cta}\n\n#${b.industry.replace(/\s+/g,'')} #buildinpublic #startups`;
+  const altHooks = [
+    `Here's the truth no one wants to put on a LinkedIn carousel about ${b.topic.toLowerCase()}:`,
+    `If I had to start over in ${b.industry} tomorrow, ${b.topic.toLowerCase()} is the first thing I'd change.`,
+    `${b.audience} ask me this every week. So here's the long answer.`
+  ];
+  return { body, altHooks };
+}
+
+/* ---------------- X / Twitter (tweets ≤ 280, thread, replies) ---------------- */
+function ceX(b){
+  const cta = ceCta(b.goal);
+  const t = b.topic.replace(/\.$/,'');
+  const tweets = [
+    `${ceHook(b)}\n\nA short thread ↓`,
+    `Most ${b.industry} teams plan their way to clarity. You can't. You ship your way there.`,
+    `One number per week. Not five. Definitely not fifteen.`,
+    `Talk to ${b.audience} on the days you don't feel like it. That's the data.`,
+    `Ship the version you're slightly embarrassed by. Then talk about it. Repeat for 12 weeks. Almost nobody does.\n\n${cta}`
+  ];
+  // 5-tweet thread that uses the structure of "Hook → Stake → Insight → Counter → CTA"
+  const thread = [
+    { i:1, text: `${ceHook(b)}\n\n(Thread ↓)` },
+    { i:2, text: `The stake: ${b.audience} can't out-plan a faster-shipping competitor. Speed of feedback > size of plan.` },
+    { i:3, text: `Insight: pick one metric a week. Move it. Or kill it. Either is information.` },
+    { i:4, text: `Counter: "but we need alignment." Alignment without a moving number is a status meeting. Ship → look → adjust.` },
+    { i:5, text: `Recap:\n• one metric / week\n• one shipped thing / week\n• one customer call / week\n\nDo this for 12 weeks. ${cta}` }
+  ];
   const replies = [
-    `"Same here, what worked for us was X. Curious if you tried Y?"`,
-    `"This. Most teams skip step 2 and wonder why retention dies."`,
-    `"Counter: in ${state.profile?.niche||'our niche'}, the opposite is true. Here's why:"`,
-    `"Adding to this, one tactic that 10x'd our reply rate: …"`
+    `Same here. The week we cut our metrics from 8 → 1 was the week things actually moved.`,
+    `Counter: in ${b.industry} specifically, the opposite can be true early. We've found ${t.toLowerCase()} matters less than the cadence of customer conversations.`,
+    `This. Most teams skip "talk about it on Tuesday" and wonder why nothing compounds.`,
+    `Adding to this — pairing the weekly ship with a 10-min Loom doubled our reply rate from ${b.audience}.`
   ];
-  const out = `## Tweet Variations (${style})
-${hooks.map((h,i)=>`${i+1}. ${h}`).join('\n')}
+  return { tweets, thread, replies };
+}
 
-## Threads
-${thread('Build-in-public, receipts edition')}
+/* ---------------- Instagram (caption ≤ 2200, with hashtags + alt) ---------------- */
+function ceInstagram(b){
+  const cta = ceCta(b.goal).replace(/—/g,'•');
+  const lines = [
+    ceHook(b),
+    '',
+    `Building in ${b.industry} taught me something boring and useful:`,
+    '',
+    'You don\'t plan your way to clarity. You ship your way there.',
+    '',
+    'Pick one number. Move it. Talk about it.',
+    '',
+    `Repeat for 12 weeks. Almost nobody does. That's the whole thing.`,
+    '',
+    cta
+  ];
+  const caption = lines.join('\n');
+  const hashtags = [
+    '#'+b.industry.replace(/\s+/g,'').toLowerCase(),
+    '#buildinpublic', '#startuplife', '#founderlife', '#productledgrowth',
+    '#earlystage', '#marketingtips', '#'+(b.audience.split(' ')[0]||'startups').toLowerCase()
+  ];
+  const alt = `Plain dark background with the words "${ceHook(b).slice(0,60)}" in a clean sans-serif. ${b.industry} aesthetic — minimal, no stock imagery.`;
+  return { caption, hashtags, alt };
+}
 
-${thread('Contrarian playbook')}
+/* ---------------- TikTok (script for ~60s with on-screen text) ---------------- */
+function ceTikTok(b){
+  const cta = ceCta(b.goal);
+  const beats = [
+    { sec: '0–3s', label:'Hook', voiceover: ceHook(b), onscreen: ceHook(b).slice(0,40), broll: 'Direct-to-camera, looking slightly off-center, natural light.' },
+    { sec: '3–10s', label:'Context', voiceover: `I've spent the last few years in ${b.industry}, mostly making the wrong call about ${b.topic.toLowerCase()}.`, onscreen: 'Mostly wrong.', broll: 'Cut to laptop close-up or Slack notification.' },
+    { sec: '10–25s', label:'Insight', voiceover: `Here's the thing nobody puts in the LinkedIn carousels: you don't plan your way to clarity. You ship your way there. One number a week. Move it or kill it.`, onscreen: 'Ship → look → adjust.', broll: 'Whiteboard scribble of "1 metric / week".' },
+    { sec: '25–45s', label:'Receipt', voiceover: `Twelve weeks of that, and we 3×\'d the only number that mattered to ${b.audience}. Not because we got smarter. Because we got faster at finding out we were wrong.`, onscreen: '12 weeks · 3×', broll: 'Chart going up, in your product.' },
+    { sec: '45–55s', label:'Hook-back', voiceover: `Most ${b.industry} teams don't do this. They run a 6-week planning cycle and ship once. That's one data point. We ran 12.`, onscreen: '12 data points > 1.', broll: 'Quick calendar wipe.' },
+    { sec: '55–60s', label:'CTA', voiceover: cta, onscreen: cta, broll: 'Direct-to-camera, smile, point to caption.' }
+  ];
+  const caption = `${ceHook(b)} (60s) #${b.industry.replace(/\s+/g,'')} #startup #foundervibes`;
+  return { beats, caption };
+}
 
-${thread('Tactical 5-step framework')}
+/* ---------------- Visual ideas ---------------- */
+function ceVisuals(b){
+  return [
+    { title: 'Founder portrait', desc: `Natural light, looking slightly off-camera, neutral background. Use as the LinkedIn header image and as the TikTok thumbnail.`, search: `founder portrait ${b.industry}` },
+    { title: 'Whiteboard / sketch', desc: `Photo of a real whiteboard with one number circled. Conveys "we're figuring it out" — perfect for the X thread.`, search: `whiteboard strategy ${b.industry}` },
+    { title: 'Product-in-context', desc: `Laptop or phone screen showing your product mid-flow. Slight angle, ambient lighting, not a clean marketing render.`, search: `laptop dashboard ${b.industry}` },
+    { title: 'Team / customer moment', desc: `Two people mid-conversation, one pointing at a screen. Use for the LinkedIn long-form opener (anchors "talk to your audience").`, search: `team collaboration ${b.industry}` }
+  ];
+}
 
-## Reply Templates (copy/paste)
-${replies.map((r,i)=>`R${i+1}. ${r}`).join('\n')}
+/* ---------------- Render ---------------- */
+function ceCharCount(text, limit){
+  const len = text.length;
+  return `<span class="ce-count ${len>limit?'over':''}">${len}/${limit}</span>`;
+}
 
-## Next Steps
-- Ship 3 hooks today. Schedule 1 thread for 9am ET tomorrow.
-- Reply to 10 in-niche posts within 30 min of their publish time.
+function renderCELinkedIn(b){
+  const li = ceLinkedIn(b);
+  const limit = 3000;
+  $('ceLinkedIn').innerHTML = `
+    <div class="ce-post">
+      <div class="ce-post-head">
+        <span class="ce-label">LinkedIn post</span>
+        <button class="btn ghost" data-ce-copy="${ceEsc(li.body)}" onclick="ceCopyAttr(this)">Copy</button>
+      </div>
+      <p class="ce-post-text">${ceEsc(li.body)}</p>
+      <div class="ce-post-foot">
+        <div class="ce-tags">${b.styles.map(s=>`<span class="ce-tag">#${ceEsc(s)}</span>`).join('')}</div>
+        ${ceCharCount(li.body, limit)}
+      </div>
+    </div>
+    <h4>Alternate hooks</h4>
+    ${li.altHooks.map(h=>`<div class="ce-post"><p class="ce-post-text">${ceEsc(h)}</p><div class="ce-post-foot"><span class="ce-label">Hook</span><button class="btn ghost" data-ce-copy="${ceEsc(h)}" onclick="ceCopyAttr(this)">Copy</button></div></div>`).join('')}
+  `;
+}
 
-## Upgrade?
-- Premium Pack ($29): 30 niche-tuned hooks + 3 long-form threads written for you.`;
-  $('contentOut').textContent = out;
+function renderCEX(b){
+  const x = ceX(b);
+  const tweetCard = (t, idx)=>`<div class="ce-post"><div class="ce-post-head"><span class="ce-label">Tweet ${idx+1}</span><button class="btn ghost" data-ce-copy="${ceEsc(t)}" onclick="ceCopyAttr(this)">Copy</button></div><p class="ce-post-text">${ceEsc(t)}</p><div class="ce-post-foot"><span class="ce-label">Standalone</span>${ceCharCount(t,280)}</div></div>`;
+  const threadCard = (t)=>`<div class="ce-post ce-thread-tweet" data-i="${t.i}"><div class="ce-post-head"><span class="ce-label">Thread ${t.i}/5</span><button class="btn ghost" data-ce-copy="${ceEsc(t.text)}" onclick="ceCopyAttr(this)">Copy</button></div><p class="ce-post-text">${ceEsc(t.text)}</p><div class="ce-post-foot"><span class="ce-label">Thread tweet</span>${ceCharCount(t.text,280)}</div></div>`;
+  $('ceX').innerHTML = `
+    <h4>Standalone tweets</h4>
+    ${x.tweets.map(tweetCard).join('')}
+    <h4>5-tweet thread</h4>
+    ${x.thread.map(threadCard).join('')}
+    <h4>Reply templates</h4>
+    ${x.replies.map((r,i)=>`<div class="ce-post"><div class="ce-post-head"><span class="ce-label">Reply ${i+1}</span><button class="btn ghost" data-ce-copy="${ceEsc(r)}" onclick="ceCopyAttr(this)">Copy</button></div><p class="ce-post-text">${ceEsc(r)}</p></div>`).join('')}
+  `;
+}
+
+function renderCEIG(b){
+  const ig = ceInstagram(b);
+  $('ceIG').innerHTML = `
+    <div class="ce-post">
+      <div class="ce-post-head">
+        <span class="ce-label">Caption</span>
+        <button class="btn ghost" data-ce-copy="${ceEsc(ig.caption + '\n\n' + ig.hashtags.join(' '))}" onclick="ceCopyAttr(this)">Copy caption + tags</button>
+      </div>
+      <p class="ce-post-text">${ceEsc(ig.caption)}</p>
+      <div class="ce-post-foot">
+        <div class="ce-tags">${ig.hashtags.map(h=>`<span class="ce-tag">${ceEsc(h)}</span>`).join('')}</div>
+        ${ceCharCount(ig.caption, 2200)}
+      </div>
+    </div>
+    <h4>Alt text for the visual</h4>
+    <div class="ce-post"><p class="ce-post-text">${ceEsc(ig.alt)}</p></div>
+  `;
+}
+
+function renderCETikTok(b){
+  const tt = ceTikTok(b);
+  const beat = (b)=>`<div class="ce-post">
+    <div class="ce-post-head"><span class="ce-label">${ceEsc(b.sec)} · ${ceEsc(b.label)}</span></div>
+    <p class="ce-post-text"><strong>VO:</strong> ${ceEsc(b.voiceover)}\n<strong>On-screen:</strong> ${ceEsc(b.onscreen)}\n<strong>Visual:</strong> ${ceEsc(b.broll)}</p>
+  </div>`;
+  $('ceTT').innerHTML = `
+    ${tt.beats.map(beat).join('')}
+    <h4>Caption for the post</h4>
+    <div class="ce-post"><p class="ce-post-text">${ceEsc(tt.caption)}</p><div class="ce-post-foot"><span class="ce-label">TikTok caption</span>${ceCharCount(tt.caption,2200)}</div></div>
+  `;
+}
+
+function renderCEVisuals(b){
+  const v = ceVisuals(b);
+  $('ceVisuals').innerHTML = v.map(c=>`
+    <div class="ce-visual">
+      <h5>${ceEsc(c.title)}</h5>
+      <p>${ceEsc(c.desc)}</p>
+      <div class="ce-search">Pexels search: <code>${ceEsc(c.search)}</code></div>
+    </div>`).join('');
+}
+
+/* ---------------- Main entry ---------------- */
+function genContent(){
+  const b = readCEInputs();
+  _ceLastPack = {
+    brief: b,
+    linkedin: ceLinkedIn(b),
+    x: ceX(b),
+    instagram: ceInstagram(b),
+    tiktok: ceTikTok(b),
+    visuals: ceVisuals(b)
+  };
+  renderCELinkedIn(b);
+  renderCEX(b);
+  renderCEIG(b);
+  renderCETikTok(b);
+  renderCEVisuals(b);
+  $('cePlatTabs').style.display = 'flex';
+  $('ceResults').style.display = 'block';
+  $('ceEmpty').style.display = 'none';
+  // Default tab = first selected platform, else linkedin
+  const firstPlatform = b.platforms.find(p=>['linkedin','x','instagram','tiktok'].includes(p)) || 'linkedin';
+  switchCETab(firstPlatform);
   toast('Content pack ready');
 }
+
+function resetContent(){
+  ['ceIndustry','ceAudience','ceTopic','ceTrend'].forEach(id=>{ const el=$(id); if(el) el.value=''; });
+  if($('ceGoal')) $('ceGoal').selectedIndex = 0;
+  document.querySelectorAll('#ceStyleChips .ce-chip').forEach(c=>c.classList.remove('active'));
+  document.querySelectorAll('#cePlatformChips .ce-chip').forEach(c=>c.classList.add('active'));
+  $('cePlatTabs').style.display = 'none';
+  $('ceResults').style.display = 'none';
+  $('ceEmpty').style.display = 'block';
+  _ceLastPack = null;
+  toast('Cleared');
+}
+
+function switchCETab(tab){
+  document.querySelectorAll('.ce-ptab').forEach(b=>b.classList.toggle('active', b.dataset.ceTab===tab));
+  document.querySelectorAll('.ce-panel').forEach(p=>p.classList.toggle('active', p.dataset.cePanel===tab));
+}
+
+function copyCENode(id){
+  const el = $(id); if(!el) return;
+  navigator.clipboard.writeText(el.innerText).then(()=>toast('Copied'));
+}
+function ceCopyAttr(btn){
+  const text = btn?.dataset?.ceCopy || '';
+  if(!text) return;
+  navigator.clipboard.writeText(text).then(()=>toast('Copied'));
+}
+
+/* ---------------- Reformat (LinkedIn → X thread / TikTok) ---------------- */
+function ceReformat(target){
+  if(!_ceLastPack){ toast('Generate first'); return; }
+  const b = _ceLastPack.brief;
+  if(target==='thread'){
+    // Take the linkedin body, split into ~5 chunks, retitle as a thread
+    const text = _ceLastPack.linkedin.body.replace(/\n#\S+.*$/gm,'').replace(/\n{2,}/g,'\n\n').trim();
+    const chunks = text.split(/\n\n+/).filter(Boolean);
+    const thread = [];
+    for(let i=0;i<5;i++){
+      const piece = chunks[i] || chunks[chunks.length-1];
+      let t = piece.replace(/\n/g,' ').slice(0,260);
+      if(i===0) t = `${ceHook(b)}\n\n${t}`;
+      if(i===4) t = `${t}\n\n${ceCta(b.goal)}`;
+      thread.push({ i:i+1, text: t.slice(0,280) });
+    }
+    _ceLastPack.x.thread = thread;
+    renderCEX(b);
+    switchCETab('x');
+    toast('Reformatted to X thread');
+    return;
+  }
+  if(target==='tiktok'){
+    // Regenerate the TikTok script with explicit reference to LinkedIn body's bullet points
+    const bullets = ceBullets(b);
+    const beats = ceTikTok(b).beats;
+    // Inject the LinkedIn lesson into the Insight beat
+    beats[2].voiceover = `${bullets[0].replace(/^\d+\.\s*/,'')} ${bullets[1].replace(/^\d+\.\s*/,'')} That's it. The rest is consistency.`;
+    beats[2].onscreen = 'Boring. Consistent. Done.';
+    _ceLastPack.tiktok.beats = beats;
+    renderCETikTok(b);
+    switchCETab('tiktok');
+    toast('Reformatted to TikTok script');
+    return;
+  }
+}
+
+/* ---------------- Chip + tab click handling ---------------- */
+document.addEventListener('click', (e)=>{
+  const styleChip = e.target.closest('#ceStyleChips .ce-chip');
+  if(styleChip){
+    // Enforce max 3 active style tags
+    const active = document.querySelectorAll('#ceStyleChips .ce-chip.active');
+    if(!styleChip.classList.contains('active') && active.length>=3){
+      toast('Max 3 style tags');
+      return;
+    }
+    styleChip.classList.toggle('active');
+    return;
+  }
+  const platChip = e.target.closest('#cePlatformChips .ce-chip');
+  if(platChip){
+    platChip.classList.toggle('active');
+    // Don't allow zero platforms
+    if(document.querySelectorAll('#cePlatformChips .ce-chip.active').length===0){
+      platChip.classList.add('active');
+      toast('Pick at least one platform');
+    }
+    return;
+  }
+  const ptab = e.target.closest('.ce-ptab');
+  if(ptab){ switchCETab(ptab.dataset.ceTab); return; }
+});
 
 function genCampaign(){
   const t = val('cmType'); const hook = val('cmHook')||'Free 14-day trial'; const days = +val('cmDays')||14; const budget=+val('cmBudget')||0;
