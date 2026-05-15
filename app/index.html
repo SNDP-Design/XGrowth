@@ -211,6 +211,13 @@
   body:not(.authed) .modal{display:none !important;visibility:hidden !important}
   body.authed .auth-gate{display:none !important}
   /* Content Engine module */
+  .ce-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start}
+  @media (max-width:1100px){.ce-grid{grid-template-columns:1fr}}
+  .ce-left{display:flex;flex-direction:column;gap:0;min-width:0}
+  .ce-right{position:sticky;top:14px;min-width:0}
+  @media (max-width:1100px){.ce-right{position:static;top:auto}}
+  .ce-output{max-height:calc(100vh - 28px);overflow-y:auto;display:flex;flex-direction:column}
+  @media (max-width:1100px){.ce-output{max-height:none;overflow:visible}}
   .ce-step{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-bottom:14px}
   .ce-step-head{display:flex;align-items:center;gap:12px;margin:0 0 6px;flex-wrap:wrap}
   .ce-step-head h3{margin:0;font-size:17px;letter-spacing:-.2px}
@@ -229,8 +236,8 @@
   .ce-trend-context{background:#0a0a0a;border:1px solid var(--line);border-left:3px solid var(--ink);border-radius:0 12px 12px 0;padding:12px 16px;margin:8px 0 16px}
   .ce-trend-context h4{margin:0 0 4px;font-size:14px;color:var(--ink);font-weight:600}
   .ce-trend-context p{margin:0;font-size:13px;color:var(--muted);line-height:1.5}
-  .ce-posts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
-  @media (max-width:980px){.ce-posts{grid-template-columns:1fr}}
+  .ce-posts{display:flex;flex-direction:column;gap:14px}
+  .ce-output .ce-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:240px;border-radius:12px;background:transparent;border:1px dashed var(--line);padding:36px 22px;text-align:center}
   .ce-post{background:#0a0a0a;border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:12px}
   .ce-post-head{display:flex;align-items:center;gap:8px}
   .ce-post-platform{font-size:13px;font-weight:700;letter-spacing:.2px;display:inline-flex;align-items:center;gap:8px;color:var(--ink)}
@@ -473,37 +480,48 @@
     <!-- CONTENT ENGINE -->
     <section data-view="content" class="hide">
       <h2 class="section">Content Engine</h2>
-      <p class="lede">Industry → trends → posts. Pick a trend that matches your voice, generate LinkedIn and X posts, and publish in one click.</p>
+      <p class="lede">Industry → trends → posts. Pick a trend on the left, see your posts on the right.</p>
 
-      <!-- Step 1: Industry -->
-      <div class="ce-step">
-        <div class="ce-step-head"><span class="ce-step-num">1</span><h3>What's your industry?</h3></div>
-        <p class="muted" style="margin:0 0 14px;font-size:14px">We'll surface what's trending right now for founders and operators in that space.</p>
-        <div class="row" style="gap:10px;align-items:stretch">
-          <input id="ceIndustry" type="text" placeholder="e.g., AI · SaaS · Retail · Fintech · Healthcare · Marketing" style="flex:1;min-width:240px"/>
-          <button class="btn" onclick="ceSearchTrends()">Search trends →</button>
-        </div>
-      </div>
+      <div class="ce-grid">
+        <!-- LEFT: input + trends -->
+        <div class="ce-left">
+          <!-- Step 1: Industry -->
+          <div class="ce-step">
+            <div class="ce-step-head"><span class="ce-step-num">1</span><h3>What's your industry?</h3></div>
+            <p class="muted" style="margin:0 0 14px;font-size:14px">We'll surface what's trending right now for founders and operators in that space.</p>
+            <div class="row" style="gap:10px;align-items:stretch">
+              <input id="ceIndustry" type="text" placeholder="e.g., AI · SaaS · Retail · Fintech · Healthcare" style="flex:1;min-width:200px"/>
+              <button class="btn" onclick="ceSearchTrends()">Search trends →</button>
+            </div>
+          </div>
 
-      <!-- Step 2: Trends list -->
-      <div class="ce-step" id="ceStep2" style="display:none">
-        <div class="ce-step-head">
-          <span class="ce-step-num">2</span>
-          <h3 id="ceTrendsTitle">Trending now</h3>
+          <!-- Step 2: Trends list -->
+          <div class="ce-step" id="ceStep2" style="display:none">
+            <div class="ce-step-head">
+              <span class="ce-step-num">2</span>
+              <h3 id="ceTrendsTitle">Trending now</h3>
+            </div>
+            <p class="muted" style="margin:0 0 14px;font-size:14px">Pick the angle that fits your voice. The post will appear on the right.</p>
+            <div class="ce-trends" id="ceTrends"></div>
+          </div>
         </div>
-        <p class="muted" style="margin:0 0 14px;font-size:14px">Pick the angle that fits your voice. Each becomes a LinkedIn long-form and an X post.</p>
-        <div class="ce-trends" id="ceTrends"></div>
-      </div>
 
-      <!-- Step 3: Generated posts -->
-      <div class="ce-step" id="ceStep3" style="display:none">
-        <div class="ce-step-head">
-          <span class="ce-step-num">3</span>
-          <h3>Your posts</h3>
-          <button type="button" class="btn ghost" onclick="cePickAnother()">← Pick another trend</button>
+        <!-- RIGHT: output (sticky, always visible) -->
+        <div class="ce-right">
+          <div class="ce-step ce-output" id="ceStep3">
+            <div class="ce-step-head">
+              <span class="ce-step-num">3</span>
+              <h3>Your posts</h3>
+              <button type="button" class="btn ghost" id="cePickAnotherBtn" onclick="cePickAnother()" style="display:none">← Pick another</button>
+            </div>
+            <div class="ce-trend-context" id="ceTrendContext" style="display:none"></div>
+            <div class="ce-posts" id="ceGenerated"></div>
+            <div class="ce-empty" id="ceEmpty">
+              <div class="ce-empty-title">Your posts will appear here</div>
+              Type your industry on the left → <strong>Search trends</strong> → pick the one that fits your voice. LinkedIn long-form and X post generate side by side.
+            </div>
+          </div>
         </div>
-        <div class="ce-trend-context" id="ceTrendContext"></div>
-        <div class="ce-posts" id="ceGenerated"></div>
       </div>
     </section>
 
@@ -1250,9 +1268,15 @@ function ceSearchTrends(){
         </div>
       </button>`).join('');
     $('ceStep2').style.display = 'block';
-    $('ceStep3').style.display = 'none';
+    // Reset right column to empty state when re-searching
+    $('ceGenerated').innerHTML = '';
+    $('ceTrendContext').style.display = 'none';
+    $('ceEmpty').style.display = '';
+    $('cePickAnotherBtn').style.display = 'none';
     if(btn){ btn.disabled = false; btn.innerHTML = origLabel; }
-    $('ceStep2').scrollIntoView({behavior:'smooth', block:'start'});
+    if(window.innerWidth <= 1100){
+      $('ceStep2').scrollIntoView({behavior:'smooth', block:'start'});
+    }
   }, 420);
 }
 
@@ -1265,14 +1289,30 @@ function cePickTrend(id){
     x: ceGenX(_ceCurrent.industry, t)
   };
   $('ceTrendContext').innerHTML = `<h4>${ceEsc(t.title)}</h4><p>${ceEsc(t.angle)}</p>`;
+  $('ceTrendContext').style.display = '';
   $('ceGenerated').innerHTML = ceRenderPosts();
-  $('ceStep3').style.display = 'block';
-  $('ceStep3').scrollIntoView({behavior:'smooth', block:'start'});
+  $('ceEmpty').style.display = 'none';
+  $('cePickAnotherBtn').style.display = '';
+  // Scroll the output column (right side) to the top so user sees posts from the top.
+  // On narrow viewports (single column), scroll the page to Step 3 since the output is below.
+  if(window.innerWidth <= 1100){
+    $('ceStep3').scrollIntoView({behavior:'smooth', block:'start'});
+  } else {
+    const out = document.querySelector('.ce-output');
+    if(out) out.scrollTop = 0;
+  }
 }
 
 function cePickAnother(){
-  $('ceStep3').style.display = 'none';
-  $('ceStep2').scrollIntoView({behavior:'smooth', block:'start'});
+  $('ceGenerated').innerHTML = '';
+  $('ceTrendContext').style.display = 'none';
+  $('ceEmpty').style.display = '';
+  $('cePickAnotherBtn').style.display = 'none';
+  _ceCurrent.pickedTrend = null;
+  _ceCurrent.posts = null;
+  if(window.innerWidth <= 1100){
+    $('ceStep2').scrollIntoView({behavior:'smooth', block:'start'});
+  }
 }
 
 function ceGenLinkedIn(industry, t){
