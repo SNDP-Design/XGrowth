@@ -482,15 +482,15 @@
     <!-- CONTENT ENGINE -->
     <section data-view="content" class="hide">
       <h2 class="section">Content Engine</h2>
-      <p class="lede">Industry → news → posts. Pick a news article on the left, see your posts on the right.</p>
+      <p class="lede">Topic → news → posts. Type a topic, pick a news article on the left, see your posts on the right.</p>
 
       <div class="ce-grid">
         <!-- LEFT: input + trends -->
         <div class="ce-left">
           <!-- Step 1: Industry -->
           <div class="ce-step">
-            <div class="ce-step-head"><span class="ce-step-num">1</span><h3>What's your industry?</h3></div>
-            <p class="muted" style="margin:0 0 14px;font-size:14px">We'll surface what's trending right now for founders and operators in that space.</p>
+            <div class="ce-step-head"><span class="ce-step-num">1</span><h3>What's your topic?</h3></div>
+            <p class="muted" style="margin:0 0 14px;font-size:14px">We'll surface the latest news on your topic — pick one to turn into a post.</p>
             <div class="row" style="gap:10px;align-items:stretch">
               <input id="ceIndustry" type="text" placeholder="e.g., AI · SaaS · Retail · Fintech · Healthcare" style="flex:1;min-width:200px"/>
               <button class="btn" onclick="ceSearchTrends()">Search news →</button>
@@ -503,7 +503,7 @@
               <span class="ce-step-num">2</span>
               <h3 id="ceTrendsTitle">Latest news</h3>
             </div>
-            <p class="muted" style="margin:0 0 14px;font-size:14px">10 articles trending in your industry. Pick one and the post appears on the right.</p>
+            <p class="muted" style="margin:0 0 14px;font-size:14px">10 articles on your topic. Pick one — your post appears on the right.</p>
             <div class="ce-trends" id="ceTrends"></div>
           </div>
         </div>
@@ -520,7 +520,7 @@
             <div class="ce-posts" id="ceGenerated"></div>
             <div class="ce-empty" id="ceEmpty">
               <div class="ce-empty-title">Your posts will appear here</div>
-              Type your industry on the left → <strong>Search news</strong> → pick the article that fits your voice. LinkedIn long-form and X post generate side by side.
+              Type your topic on the left → <strong>Search news</strong> → pick the article that fits your voice. LinkedIn long-form and X post generate side by side.
             </div>
           </div>
         </div>
@@ -1285,7 +1285,7 @@ function ceFindTrends(industry){
 
 function ceSearchTrends(){
   const industry = val('ceIndustry');
-  if(!industry){ toast('Type an industry first'); $('ceIndustry')?.focus(); return; }
+  if(!industry){ toast('Type a topic first'); $('ceIndustry')?.focus(); return; }
   const btn = document.querySelector('[onclick="ceSearchTrends()"]');
   const origLabel = btn ? btn.innerHTML : '';
   if(btn){ btn.disabled = true; btn.innerHTML = '<span class="ce-loading"></span>Searching news'; }
@@ -1295,7 +1295,7 @@ function ceSearchTrends(){
     _ceCurrent.trends = trends.map((t,i)=>({...t, id:i}));
     _ceCurrent.pickedTrend = null;
     _ceCurrent.posts = null;
-    $('ceTrendsTitle').textContent = `Latest news in ${industry}`;
+    $('ceTrendsTitle').textContent = `Latest news on ${ceCapIndustry(industry)}`;
     $('ceTrends').innerHTML = _ceCurrent.trends.map(t=>`
       <button type="button" class="ce-trend" onclick="cePickTrend(${t.id})">
         <div class="ce-trend-meta">
