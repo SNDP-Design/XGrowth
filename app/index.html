@@ -1356,26 +1356,134 @@ function cePickAnother(){
   }
 }
 
-function ceGenLinkedIn(industry, t){
-  return `${t.title}
+// Smart-capitalize industry input: "ai" → "AI", "saas" → "SaaS", "fintech" → "Fintech", etc.
+const CE_ACRONYMS = { ai:'AI', saas:'SaaS', smb:'SMB', b2b:'B2B', b2c:'B2C', dtc:'DTC', cpg:'CPG', sfr:'SFR', plg:'PLG', cx:'CX', ux:'UX', api:'API', sql:'SQL', cac:'CAC', ltv:'LTV', arr:'ARR', kpi:'KPI', ipo:'IPO', it:'IT', hr:'HR', rev:'RevOps', m:'M' };
+function ceCapIndustry(s){
+  if(!s) return '';
+  return s.split(/\s+/).map(w => {
+    const lower = w.toLowerCase();
+    if(CE_ACRONYMS[lower]) return CE_ACRONYMS[lower];
+    if(w.length <= 3) return w.toUpperCase();
+    return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+  }).join(' ');
+}
 
-Here's what I'm seeing in ${industry} this week:
+// Map article tags to broad themes so the implications + closing question fit the news category.
+const CE_TAG_THEME = {
+  // pricing / cost / margin
+  'Pricing':'pricing','Cost':'pricing','Margin':'pricing','Margins':'pricing','Returns':'pricing','BNPL':'pricing','Rates':'pricing','Settlement':'pricing','Valuation':'pricing',
+  // ai / models / tooling
+  'AI':'ai','Models':'ai','Open source':'ai','Voice AI':'ai','Tooling':'ai','Dev tools':'ai','AI agents':'ai',
+  // distribution / channels / m&a / ipo
+  'Channels':'channels','Distribution':'channels','M&A':'channels','IPOs':'channels','Newsletters':'channels','Embedded':'channels','CAC':'channels','LinkedIn':'channels','Email':'channels','Agencies':'channels','Founders':'channels','Format':'channels','Attribution':'channels',
+  // product / tech / ux / cx / behavior
+  'Product':'product','Tech':'product','UX':'product','CX':'product','Behavior':'product','Showrooms':'product','Conversions':'product','Big box':'product',
+  // people / hiring / patient / community
+  'Hiring':'people','Patient':'people','Operations':'people','Communities':'people','Education':'people','Cadence':'people',
+  // market / strategy / forecast / regulation
+  'Market':'market','Strategy':'market','Forecast':'market','Regulation':'market','Compliance':'market','Consolidation':'market','Investors':'market','Rentals':'market','Brokerage':'market','Brand':'market','PLG':'market','Membership':'market','B2B':'market','Payments':'market','Credit':'market','Payment':'market','Pharma':'market','Retention':'market','Caution':'market','GTM':'market'
+};
+
+function ceTheme(tag){ return CE_TAG_THEME[tag] || 'market'; }
+
+function ceImplications(theme, industry){
+  if(theme === 'pricing') return [
+    `Re-run your unit economics with the new numbers. Most plans were built on stale assumptions.`,
+    `Customers locked into legacy pricing become your most defensible accounts — don't migrate them without thinking twice.`,
+    `If this is permanent, the next 90 days decide who's positioned to win the next cycle.`
+  ];
+  if(theme === 'ai') return [
+    `Features that were uneconomic 12 months ago are suddenly viable. Re-audit the backlog.`,
+    `The differentiator isn't the model. It's the workflow you wrap around it.`,
+    `Adoption is fast, retention is slow. Win on retention or get repriced.`
+  ];
+  if(theme === 'channels') return [
+    `If acquisition worked for you last year, audit it again this quarter. The benchmarks have shifted.`,
+    `Owned audience beats rented audience — by a wider margin every month.`,
+    `Pick one channel and over-invest. Two-channel strategies are usually a polite way of saying no strategy.`
+  ];
+  if(theme === 'product') return [
+    `Onboarding is the new pricing page. First 10 minutes decide LTV.`,
+    `The teams shipping weekly are out-learning the teams shipping quarterly.`,
+    `If a user can't reach value in one session, fix the product before fixing the messaging.`
+  ];
+  if(theme === 'people') return [
+    `Hiring decisions made this quarter will define your culture for the next two years.`,
+    `Leverage beats headcount. The 4-person team hitting $1M ARR isn't a fluke anymore.`,
+    `If you can't articulate what each person owns this week, you don't have a team — you have meetings.`
+  ];
+  return [
+    `Macro signals like this shift the playbook for everyone in ${industry}.`,
+    `The window between "early signal" and "everyone knows" is shorter than it used to be.`,
+    `Operators who internalize this in the next 30 days will look prescient by year-end.`
+  ];
+}
+
+function ceCloser(theme, industry){
+  if(theme === 'pricing') return `How are you adjusting pricing in response — or sitting tight?`;
+  if(theme === 'ai') return `What's the last feature you shipped because the math finally worked?`;
+  if(theme === 'channels') return `Which channel is actually working for you right now? I'm comparing notes.`;
+  if(theme === 'product') return `What did you ship this week that surprised you?`;
+  if(theme === 'people') return `What's the hiring signal you wish you'd known 12 months earlier?`;
+  return `Are you seeing this in ${industry} on your end? Curious where the early signal is loudest.`;
+}
+
+function ceXTake(theme, industry){
+  if(theme === 'pricing') return `Re-run your unit economics. The benchmarks just shifted.`;
+  if(theme === 'ai') return `What was uneconomic 12 months ago is suddenly viable. Re-audit the backlog.`;
+  if(theme === 'channels') return `Owned audience > rented audience. The gap widens every month.`;
+  if(theme === 'product') return `Ship weekly or get out-learned. Onboarding is the new pricing page.`;
+  if(theme === 'people') return `Leverage > headcount. Still.`;
+  return `${industry} operators who internalize this in 30 days look prescient by year-end.`;
+}
+
+function ceHashtag(s){
+  return '#' + (s||'').replace(/[^A-Za-z0-9]+/g,'');
+}
+function ceHashtags(industry, tag){
+  const ind = ceHashtag(industry).toLowerCase();
+  const tg = ceHashtag(tag).toLowerCase();
+  // De-dup if industry happens to equal tag
+  const set = new Set([ind, tg, '#startups', '#buildinpublic']);
+  return Array.from(set).join(' ');
+}
+
+function ceGenLinkedIn(industry, t){
+  const ind = ceCapIndustry(industry);
+  const theme = ceTheme(t.tag);
+  const imps = ceImplications(theme, ind);
+  return `${t.title}
 
 ${t.angle}
 
-A few patterns worth naming:
+What this means in practice:
+→ ${imps[0]}
+→ ${imps[1]}
+→ ${imps[2]}
 
-1. The teams getting ahead are running 2-week experiments, not 6-month roadmaps.
-2. Customer calls beat competitor decks. Every time.
-3. Ship the version you're slightly embarrassed by — then talk about it.
+${ceCloser(theme, ind)}
 
-If this resonates, what are you seeing on your end? I want to know.
-
-#${industry.replace(/\s+/g,'')} #buildinpublic`;
+— via ${t.source}
+${ceHashtags(industry, t.tag)}`;
 }
 
 function ceGenX(industry, t){
-  return `${t.title}\n\n${t.angle}\n\nWhat's working for you right now?`;
+  const ind = ceCapIndustry(industry);
+  const theme = ceTheme(t.tag);
+  const take = ceXTake(theme, ind);
+  const closer = `What are you seeing?`;
+  // Try variants in order; pick the first one that fits 280 chars.
+  const variants = [
+    `${t.title}\n\n${take}\n\n${closer}`,
+    `${t.title}\n\n${take}`,
+    `${take}\n\n${closer}`,
+    `${t.title}\n\n${closer}`,
+    take
+  ];
+  for(const v of variants){
+    if(v.length <= 280) return v;
+  }
+  return variants[variants.length-1].slice(0,277) + '…';
 }
 
 function ceRenderPosts(){
