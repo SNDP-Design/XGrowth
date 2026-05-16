@@ -26,13 +26,13 @@ const ALLOWED_ORIGINS = [
 ];
 
 // Try models in order; first one that responds wins. Lets the worker survive
-// Google deprecating / gating individual models without code changes.
+// Google deprecating / gating individual models, and lets us prefer the newest
+// model whose free-tier quota hasn't been exhausted on a given day.
 const GEMINI_MODELS = [
+  'gemini-3-flash-preview',
   'gemini-2.5-flash',
+  'gemini-2.5-flash-lite',
   'gemini-2.0-flash',
-  'gemini-2.0-flash-001',
-  'gemini-1.5-flash-latest',
-  'gemini-1.5-flash',
 ];
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models/';
 
@@ -91,7 +91,8 @@ export default {
 
     try {
       const { text, model } = await callGemini(env.GEMINI_API_KEY, prompt);
-      return json({ ok: true, text, platform, mode, model }, 200, origin, allowed);
+      const final = platform === 'x' ? trimForX(text) : text;
+      return json({ ok: true, text: final, platform, mode, model }, 200, origin, allowed);
     } catch (err) {
       return json({ error: 'Generation failed: ' + (err.message || 'unknown') }, 502, origin, allowed);
     }
@@ -99,6 +100,61 @@ export default {
 };
 
 /* ----------------------- helpers ----------------------- */
+
+// Safety net: if Gemini overshoots 280 for an X post, trim from the end
+// while preserving the URL (if any) on its own line.
+function trimForX(text){
+  if(!text) return text;
+  const TWEET_LIMIT = 280;
+  if(text.length <= TWEET_LIMIT) return text;
+
+  // Find the URL — typically the last non-empty line, or any line starting with http
+  const lines = text.split('\n');
+  let urlIdx = -1;
+  for(let i = lines.length - 1; i >= 0; i--){
+    if(/^https?:\/\//.test(lines[i].trim())){ urlIdx = i; break; }
+  }
+
+  let url = '';
+  let before = text;
+  if(urlIdx >= 0){
+    url = lines[urlIdx].trim();
+    before = lines.slice(0, urlIdx).join('\n').trim();
+  }
+
+  // Budget for the prose: full 280 minus URL minus the two newlines that separate them
+  const separator = url ? '\n\n' : '';
+  const budget = TWEET_LIMIT - url.length - separator.length;
+  if(budget <= 0){
+    // URL alone is over budget — return URL only
+    return url || text.slice(0, 277) + '…';
+  }
+
+  // First try: cut from the end at sentence boundaries (., ?, !)
+  let trimmed = before;
+  while(trimmed.length > budget){
+    // Find last sentence boundary that leaves us under budget
+    const boundaries = [];
+    const re = /[.!?](\s|$)/g;
+    let m;
+    while((m = re.exec(trimmed)) !== null){
+      boundaries.push(m.index + 1);
+    }
+    // Take the largest boundary that fits
+    let cut = boundaries.reverse().find(b => b <= budget);
+    if(cut == null){
+      // No sentence boundary fits — hard cut at word boundary
+      const slice = trimmed.slice(0, budget - 1);
+      const lastSpace = slice.lastIndexOf(' ');
+      trimmed = (lastSpace > 30 ? slice.slice(0, lastSpace) : slice).trim() + '…';
+      break;
+    }
+    trimmed = trimmed.slice(0, cut).trim();
+  }
+
+  return url ? `${trimmed}${separator}${url}` : trimmed;
+}
+
 
 function corsHeaders(origin, allowed) {
   return {
@@ -130,10 +186,12 @@ function buildPrompt({ topic, articleTitle, articleAngle, articleUrl, platform, 
 - 1 short question that invites a real reply (not "thoughts?")
 - Article URL on its own line at the end
 - 2 hashtags max, on the final line`
-      : `Write a single tweet. 280 characters total, including spaces and the URL. The URL counts as 23 characters on Twitter/X. Structure:
-- 1-2 punchy lines with a specific take on the article
+      : `Write a single tweet. HARD CONSTRAINT: 280 characters TOTAL — count every character including spaces, line breaks, AND the URL. The URL counts as 23 characters even if longer (Twitter shortens to t.co). Aim for at most 240 characters of plain text PLUS the 23-char URL. If you can't fit it, cut the take, not the URL. Structure:
+- 1-2 punchy lines with a specific take on the article (≤240 chars)
+- Blank line
 - Article URL at the end on its own line
-- NO hashtags, NO "thoughts?", NO threads.`;
+- NO hashtags, NO "thoughts?", NO threads.
+- BEFORE returning, COUNT your characters. If over 280, rewrite shorter.`;
 
   const toneGuide =
     {
