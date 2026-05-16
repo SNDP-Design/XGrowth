@@ -254,6 +254,16 @@
   .ce-post-actions .btn.publish:hover{background:linear-gradient(180deg,#fff,#e5e5e5)}
   .ce-loading{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.2);border-top-color:var(--ink);border-radius:50%;animation:ce-spin .8s linear infinite;vertical-align:-2px;margin-right:8px}
   @keyframes ce-spin{to{transform:rotate(360deg)}}
+  /* Output post — AI integration additions */
+  .ce-post-head{justify-content:space-between}
+  .ce-ai-badge{display:inline-flex;align-items:center;font-size:10px;font-weight:700;letter-spacing:.6px;color:#0a0a0a;background:linear-gradient(180deg,#fafafa,#d4d4d4);border-radius:6px;padding:3px 7px;line-height:1}
+  .ce-skeleton{background:#0a0a0a;border:1px dashed var(--line);border-radius:10px;padding:24px 18px;color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:14px;min-height:120px}
+  .ce-spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.15);border-top-color:var(--ink);border-radius:50%;animation:ce-spin .8s linear infinite;margin-right:10px}
+  .ce-style-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:8px 0 0;border-top:1px solid var(--line);margin-top:8px}
+  .ce-style-label{font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);margin-right:4px}
+  .ce-style-chip{height:28px;padding:0 11px;background:var(--chip);border:1px solid var(--line);color:var(--muted);font:600 12px system-ui,-apple-system,sans-serif;border-radius:999px;cursor:pointer;transition:.15s}
+  .ce-style-chip:hover{color:var(--ink);border-color:#3a3a3a}
+  .ce-style-chip.active{background:linear-gradient(180deg,#fafafa,#d4d4d4);color:#0a0a0a;border-color:#fafafa}
 </style>
 </head>
 <body>
@@ -1475,27 +1485,106 @@ async function ceSearchTrends(){
   }
 }
 
-function cePickTrend(id){
+// XGrowth LLM proxy — calls Gemini via our Cloudflare Worker.
+const CE_API = 'https://xgrowth-api.xgrowth.workers.dev';
+const CE_LIMITS = { linkedin: 3000, x: 280 };
+
+async function cePickTrend(id){
   const t = _ceCurrent.trends.find(x=>x.id===id);
   if(!t) return;
   _ceCurrent.pickedTrend = t;
-  _ceCurrent.posts = {
-    linkedin: ceGenLinkedIn(_ceCurrent.industry, t),
-    x: ceGenX(_ceCurrent.industry, t)
-  };
+  _ceCurrent.posts = { linkedin: '', x: '', liMode: 'default', xMode: 'default', liLoading: true, xLoading: true };
   $('ceTrendContext').innerHTML = `<h4>${ceEsc(t.title)}</h4><p>${ceEsc(t.angle)}</p>`;
   $('ceTrendContext').style.display = '';
   $('ceGenerated').innerHTML = ceRenderPosts();
   $('ceEmpty').style.display = 'none';
   $('cePickAnotherBtn').style.display = '';
-  // Scroll the output column (right side) to the top so user sees posts from the top.
-  // On narrow viewports (single column), scroll the page to Step 3 since the output is below.
+  // Scroll
   if(window.innerWidth <= 1100){
     $('ceStep3').scrollIntoView({behavior:'smooth', block:'start'});
   } else {
     const out = document.querySelector('.ce-output');
     if(out) out.scrollTop = 0;
   }
+  // Fire both LLM calls in parallel
+  const [li, x] = await Promise.all([
+    ceGeneratePost('linkedin', t, 'default'),
+    ceGeneratePost('x', t, 'default')
+  ]);
+  // Guard: user may have picked a different trend while we waited
+  if(_ceCurrent.pickedTrend !== t) return;
+  _ceCurrent.posts.linkedin = li;
+  _ceCurrent.posts.x = x;
+  _ceCurrent.posts.liLoading = false;
+  _ceCurrent.posts.xLoading = false;
+  $('ceGenerated').innerHTML = ceRenderPosts();
+}
+
+async function ceGeneratePost(platform, t, mode){
+  try{
+    const resp = await fetch(CE_API + '/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        topic: _ceCurrent.industry,
+        articleTitle: t.title,
+        articleAngle: t.angle || '',
+        articleUrl: t.url || '',
+        platform,
+        mode
+      })
+    });
+    if(!resp.ok){
+      console.warn('Generate API non-OK', resp.status, await resp.text());
+      return ceFallbackPost(platform, t);
+    }
+    const data = await resp.json();
+    if(data.ok && data.text) return data.text;
+    console.warn('Generate API empty', data);
+    return ceFallbackPost(platform, t);
+  }catch(e){
+    console.warn('Generate API error', e);
+    return ceFallbackPost(platform, t);
+  }
+}
+
+async function ceRegenerate(platform, mode){
+  if(!_ceCurrent.pickedTrend) return;
+  if(platform === 'linkedin'){
+    _ceCurrent.posts.liMode = mode;
+    _ceCurrent.posts.liLoading = true;
+  } else {
+    _ceCurrent.posts.xMode = mode;
+    _ceCurrent.posts.xLoading = true;
+  }
+  $('ceGenerated').innerHTML = ceRenderPosts();
+  const text = await ceGeneratePost(platform, _ceCurrent.pickedTrend, mode);
+  if(!_ceCurrent.pickedTrend) return;
+  if(platform === 'linkedin'){
+    _ceCurrent.posts.linkedin = text;
+    _ceCurrent.posts.liLoading = false;
+  } else {
+    _ceCurrent.posts.x = text;
+    _ceCurrent.posts.xLoading = false;
+  }
+  $('ceGenerated').innerHTML = ceRenderPosts();
+}
+
+// Local template fallback in case the LLM Worker is down. Keeps the app working,
+// just with the older template-style output.
+function ceFallbackPost(platform, t){
+  const url = t.url || '';
+  const opener = "Worth a real read this morning.";
+  if(platform === 'linkedin'){
+    const tag = ceTopicHashtag(_ceCurrent.industry || '');
+    return `${opener}\n\n${t.title}\n\nSharing without commentary — let it speak.\n\n${url}\n\n${tag} #buildinpublic`.trim();
+  }
+  // X — keep under 280
+  const candidate = `${opener}\n\n${t.title}\n\n${url}`.trim();
+  if(candidate.length <= 280) return candidate;
+  const candidate2 = `${t.title}\n\n${url}`.trim();
+  if(candidate2.length <= 280) return candidate2;
+  return (t.title || '').slice(0, 277) + '…';
 }
 
 function cePickAnother(){
@@ -1561,66 +1650,62 @@ function ceTopicHashtag(s){
   return cleaned ? '#' + cleaned : '';
 }
 
-function ceGenLinkedIn(industry, t){
-  const opener = ceOpener(t);
-  const bridge = ceBridge(t);
-  const topicTag = ceTopicHashtag(industry);
-  const urlLine = t.url ? `\n\n${t.url}` : '';
-  const tagLine = topicTag ? `\n\n${topicTag} #buildinpublic` : `\n\n#buildinpublic`;
-  return `${opener}
+const CE_STYLE_MODES = [
+  { mode:'default',    label:'Default' },
+  { mode:'shorter',    label:'Shorter' },
+  { mode:'contrarian', label:'Contrarian' },
+  { mode:'founder',    label:'Founder voice' },
+  { mode:'data',       label:'Data-driven' }
+];
 
-${t.title}
-
-${bridge}${urlLine}${tagLine}`;
+function ceStyleRow(platform, activeMode){
+  return `<div class="ce-style-row">
+    <span class="ce-style-label">Style:</span>
+    ${CE_STYLE_MODES.map(m =>
+      `<button type="button" class="ce-style-chip ${m.mode===activeMode?'active':''}" onclick="ceRegenerate('${platform}','${m.mode}')">${m.label}</button>`
+    ).join('')}
+  </div>`;
 }
 
-function ceGenX(industry, t){
-  const opener = ceOpener(t);
-  const u = t.url || '';
-  // Prefer compact, real-feeling shares. Twitter culture: title + link is normal.
-  const variants = [
-    `${opener}\n\n${t.title}\n\n${u}`,
-    `${t.title}\n\n${u}`,
-    `${opener}\n\n${t.title}`,
-    `${t.title}`
-  ];
-  for(const v of variants){
-    const trimmed = v.trim();
-    if(trimmed.length <= 280) return trimmed;
-  }
-  return (t.title||'').slice(0,277) + '…';
+function cePostCard(platform, loading, text, mode){
+  const limit = CE_LIMITS[platform];
+  const isLinkedIn = platform === 'linkedin';
+  const platformLabel = isLinkedIn ? 'LinkedIn' : 'X / Twitter';
+  const platformSvg = isLinkedIn
+    ? `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14zM8.5 17V10h-2v7h2zm-1-7.9a1.1 1.1 0 1 0 0-2.2 1.1 1.1 0 0 0 0 2.2zM18 17v-3.9c0-2.1-1.1-3.1-2.6-3.1-1.2 0-1.7.7-2 1.2V10h-2v7h2v-4c0-1 .2-2 1.4-2s1.2 1.1 1.2 2v4H18z"/></svg>`
+    : `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2H21.5l-7.36 8.41L23 22h-6.84l-5.21-6.81L4.91 22H1.65l7.86-8.98L1.5 2h6.99l4.71 6.23L18.244 2z"/></svg>`;
+  const postHandler = isLinkedIn ? 'cePostLinkedIn()' : 'cePostX()';
+  const postLabel = isLinkedIn ? 'Post on LinkedIn ↗' : 'Post on X ↗';
+
+  const body = loading
+    ? `<div class="ce-skeleton"><span class="ce-spinner"></span>Writing your ${platformLabel} post…</div>`
+    : `<p class="ce-post-text">${ceEsc(text||'')}</p>`;
+
+  const len = (text||'').length;
+  const foot = loading ? '' : `
+    <div class="ce-post-foot">
+      <span class="ce-count ${len>limit?'over':''}">${len}/${limit}</span>
+      <div class="ce-post-actions">
+        <button class="btn ghost" data-ce-copy="${ceEsc(text||'')}" onclick="ceCopyAttr(this)">Copy</button>
+        <button class="btn publish" onclick="${postHandler}">${postLabel}</button>
+      </div>
+    </div>`;
+
+  return `<div class="ce-post" data-platform="${platform}">
+    <div class="ce-post-head">
+      <span class="ce-post-platform">${platformSvg} ${platformLabel}</span>
+      <span class="ce-ai-badge" title="Generated by Gemini">AI</span>
+    </div>
+    ${body}
+    ${loading ? '' : ceStyleRow(platform, mode)}
+    ${foot}
+  </div>`;
 }
 
 function ceRenderPosts(){
-  const li = _ceCurrent.posts.linkedin;
-  const x = _ceCurrent.posts.x;
-  return `
-    <div class="ce-post">
-      <div class="ce-post-head">
-        <span class="ce-post-platform"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14zM8.5 17V10h-2v7h2zm-1-7.9a1.1 1.1 0 1 0 0-2.2 1.1 1.1 0 0 0 0 2.2zM18 17v-3.9c0-2.1-1.1-3.1-2.6-3.1-1.2 0-1.7.7-2 1.2V10h-2v7h2v-4c0-1 .2-2 1.4-2s1.2 1.1 1.2 2v4H18z"/></svg> LinkedIn</span>
-      </div>
-      <p class="ce-post-text">${ceEsc(li)}</p>
-      <div class="ce-post-foot">
-        <span class="ce-count ${li.length>3000?'over':''}">${li.length}/3000</span>
-        <div class="ce-post-actions">
-          <button class="btn ghost" data-ce-copy="${ceEsc(li)}" onclick="ceCopyAttr(this)">Copy</button>
-          <button class="btn publish" onclick="cePostLinkedIn()">Post on LinkedIn ↗</button>
-        </div>
-      </div>
-    </div>
-    <div class="ce-post">
-      <div class="ce-post-head">
-        <span class="ce-post-platform"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2H21.5l-7.36 8.41L23 22h-6.84l-5.21-6.81L4.91 22H1.65l7.86-8.98L1.5 2h6.99l4.71 6.23L18.244 2z"/></svg> X / Twitter</span>
-      </div>
-      <p class="ce-post-text">${ceEsc(x)}</p>
-      <div class="ce-post-foot">
-        <span class="ce-count ${x.length>280?'over':''}">${x.length}/280</span>
-        <div class="ce-post-actions">
-          <button class="btn ghost" data-ce-copy="${ceEsc(x)}" onclick="ceCopyAttr(this)">Copy</button>
-          <button class="btn publish" onclick="cePostX()">Post on X ↗</button>
-        </div>
-      </div>
-    </div>`;
+  const p = _ceCurrent.posts || {};
+  return cePostCard('linkedin', !!p.liLoading, p.linkedin, p.liMode || 'default') +
+         cePostCard('x',        !!p.xLoading,  p.x,        p.xMode || 'default');
 }
 
 function ceCopyAttr(btn){
