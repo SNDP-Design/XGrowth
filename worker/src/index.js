@@ -184,13 +184,12 @@ function buildPrompt({ topic, articleTitle, articleAngle, articleUrl, platform, 
 - 2-4 sentences of specific reaction that references the article's actual content
 - Optional: 2-3 bullet points if it sharpens the message (use → as the bullet marker, not "1.")
 - 1 short question that invites a real reply (not "thoughts?")
-- Article URL on its own line at the end
-- 2 hashtags max, on the final line`
-      : `Write a single tweet. HARD CONSTRAINT: 280 characters TOTAL — count every character including spaces, line breaks, AND the URL. The URL counts as 23 characters even if longer (Twitter shortens to t.co). Aim for at most 240 characters of plain text PLUS the 23-char URL. If you can't fit it, cut the take, not the URL. Structure:
-- 1-2 punchy lines with a specific take on the article (≤240 chars)
-- Blank line
-- Article URL at the end on its own line
-- NO hashtags, NO "thoughts?", NO threads.
+- 2 hashtags max, on the final line
+- DO NOT include the article URL anywhere in the post.`
+      : `Write a single tweet. HARD CONSTRAINT: 280 characters TOTAL — count every character including spaces and line breaks. Structure:
+- 1-2 punchy lines with a specific take on the article (≤280 chars total)
+- NO hashtags, NO "thoughts?", NO threads, NO URLs.
+- DO NOT include the article URL anywhere in the tweet.
 - BEFORE returning, COUNT your characters. If over 280, rewrite shorter.`;
 
   const toneGuide =
@@ -208,7 +207,7 @@ TOPIC HE FOLLOWS: "${topic || 'startup growth'}"
 
 ARTICLE HE JUST READ:
 Title: ${articleTitle}
-${articleAngle ? 'Context: ' + articleAngle + '\n' : ''}${articleUrl ? 'URL: ' + articleUrl : ''}
+${articleAngle ? 'Context: ' + articleAngle : ''}
 
 ${platformGuide}
 
@@ -221,6 +220,7 @@ HARD RULES — break ANY of these and the post is unusable:
 - NO emojis unless the topic genuinely calls for one (e.g., 🚀 is banned).
 - NO bold/italics markdown — LinkedIn and X don't render it.
 - NO closing platitudes ("hope this helps!", "keep building").
+- NO URLs in the output text. None.
 - Write in first person, present tense.
 - Sound like a smart human, not a content marketer.
 

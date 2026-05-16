@@ -1401,15 +1401,30 @@ function ceAngleFromHit(h){
 async function ceFetchLiveNews(topic){
   // HN Algolia search — works for any topic, returns real articles with titles, URLs, dates.
   // Doc: https://hn.algolia.com/api
+  // search_by_date = newest first. numericFilters caps to last 365 days so
+  // we never surface stale (e.g. 2017) articles for a topic that's quiet today.
   try {
-    const url = `https://hn.algolia.com/api/v1/search?query=${encodeURIComponent(topic)}&tags=story&hitsPerPage=12`;
+    const oneYearAgo = Math.floor(Date.now() / 1000) - 365 * 24 * 3600;
+    const url = `https://hn.algolia.com/api/v1/search_by_date?query=${encodeURIComponent(topic)}&tags=story&hitsPerPage=24&numericFilters=created_at_i>${oneYearAgo}`;
     const ctrl = new AbortController();
     const tid = setTimeout(()=>ctrl.abort(), 6000); // 6s timeout
     const res = await fetch(url, { signal: ctrl.signal });
     clearTimeout(tid);
     if(!res.ok) return null;
     const data = await res.json();
-    const hits = (data.hits||[]).filter(h => h.title && (h.url || h.objectID)).slice(0,10);
+    // Filter: must have title, must have a real URL (skip Ask HN/Show HN if no URL),
+    // and have at least minimal engagement to avoid spam.
+    let hits = (data.hits||[]).filter(h =>
+      h.title &&
+      h.url &&
+      ((h.points || 0) >= 3 || (h.num_comments || 0) >= 2)
+    );
+    // If quality filter killed everything, retry without engagement threshold (keep only
+    // requirement that URL is present) so a fresh topic with no traction still returns results.
+    if(hits.length === 0){
+      hits = (data.hits||[]).filter(h => h.title && h.url);
+    }
+    hits = hits.slice(0, 10);
     if(hits.length === 0) return null;
     return hits.map(h => ({
       tag: ceTagFromHit(h),
@@ -1571,19 +1586,17 @@ async function ceRegenerate(platform, mode){
 }
 
 // Local template fallback in case the LLM Worker is down. Keeps the app working,
-// just with the older template-style output.
+// just with the older template-style output. No URLs in the post text by design.
 function ceFallbackPost(platform, t){
-  const url = t.url || '';
   const opener = "Worth a real read this morning.";
   if(platform === 'linkedin'){
     const tag = ceTopicHashtag(_ceCurrent.industry || '');
-    return `${opener}\n\n${t.title}\n\nSharing without commentary — let it speak.\n\n${url}\n\n${tag} #buildinpublic`.trim();
+    const tagLine = tag ? `\n\n${tag} #buildinpublic` : `\n\n#buildinpublic`;
+    return `${opener}\n\n${t.title}\n\nSharing without commentary — let it speak.${tagLine}`.trim();
   }
   // X — keep under 280
-  const candidate = `${opener}\n\n${t.title}\n\n${url}`.trim();
+  const candidate = `${opener}\n\n${t.title}`.trim();
   if(candidate.length <= 280) return candidate;
-  const candidate2 = `${t.title}\n\n${url}`.trim();
-  if(candidate2.length <= 280) return candidate2;
   return (t.title || '').slice(0, 277) + '…';
 }
 
