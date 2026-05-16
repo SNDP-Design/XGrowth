@@ -778,8 +778,9 @@ async function loadFromCloud(){
     const snap = await db.collection('users').doc(fbAuth.currentUser.uid).get();
     if(snap.exists){
       const cloud = snap.data() || {};
-      // Cloud wins on initial load
+      // Cloud wins on initial load, EXCEPT range — always start at 7d on login.
       Object.assign(state, cloud);
+      state.range = 7;
       localStorage.setItem(KEY, JSON.stringify(state));
       cloudLoaded = true;
       if(state.profile){ applyProfile(); }
@@ -955,14 +956,14 @@ function renderAll(){
 }
 
 function rangeWindow(){
-  const r = state.range || 14;
+  const r = state.range || 7;
   return {r, label:`last ${r} days`, prevLabel:`prior ${r} days`};
 }
 
 function renderKPIs(){
   const m = state.metrics;
   if(!m.followers.length){ return; }
-  const r = state.range || 14;
+  const r = state.range || 7;
   const cur = m.followers.at(-1);
   const prev = m.followers.at(-1-r) || m.followers[0];
   $('kFollowers').textContent = fmt(cur);
@@ -1010,7 +1011,7 @@ function renderKPIs(){
 
 function renderVelocity(){
   const m = state.metrics; if(!m.followers.length){ return; }
-  const r = state.range || 14;
+  const r = state.range || 7;
   const f = m.followers.slice(-r-1);
   const deltas = []; for(let i=1;i<f.length;i++) deltas.push(f[i]-f[i-1]);
   const max = Math.max(...deltas.map(Math.abs),1);
@@ -1026,7 +1027,7 @@ function renderVelocity(){
 
 function renderFunnel(){
   const m = state.metrics; if(!m.impressions.length){ return; }
-  const r = state.range || 14;
+  const r = state.range || 7;
   const impr = sum(m.impressions.slice(-r));
   const visits = sum(m.visits.slice(-r));
   // Assume profile clicks ~ 32% of profile visits become CTA clicks; leads from campaigns
@@ -1072,7 +1073,7 @@ function drawSpark(id, data){
 }
 
 function renderBars(){
-  const r = state.range || 14;
+  const r = state.range || 7;
   const data = state.metrics.impressions.slice(-r);
   if(!data.length) return;
   const max = Math.max(...data);
@@ -1515,128 +1516,73 @@ function ceCapIndustry(s){
   }).join(' ');
 }
 
-// Map article tags to broad themes so the implications + closing question fit the news category.
-const CE_TAG_THEME = {
-  // pricing / cost / margin
-  'Pricing':'pricing','Cost':'pricing','Margin':'pricing','Margins':'pricing','Returns':'pricing','BNPL':'pricing','Rates':'pricing','Settlement':'pricing','Valuation':'pricing',
-  // ai / models / tooling
-  'AI':'ai','Models':'ai','Open source':'ai','Voice AI':'ai','Tooling':'ai','Dev tools':'ai','AI agents':'ai',
-  // distribution / channels / m&a / ipo
-  'Channels':'channels','Distribution':'channels','M&A':'channels','IPOs':'channels','Newsletters':'channels','Embedded':'channels','CAC':'channels','LinkedIn':'channels','Email':'channels','Agencies':'channels','Founders':'channels','Format':'channels','Attribution':'channels',
-  // product / tech / ux / cx / behavior
-  'Product':'product','Tech':'product','UX':'product','CX':'product','Behavior':'product','Showrooms':'product','Conversions':'product','Big box':'product',
-  // people / hiring / patient / community
-  'Hiring':'people','Patient':'people','Operations':'people','Communities':'people','Education':'people','Cadence':'people',
-  // market / strategy / forecast / regulation
-  'Market':'market','Strategy':'market','Forecast':'market','Regulation':'market','Compliance':'market','Consolidation':'market','Investors':'market','Rentals':'market','Brokerage':'market','Brand':'market','PLG':'market','Membership':'market','B2B':'market','Payments':'market','Credit':'market','Payment':'market','Pharma':'market','Retention':'market','Caution':'market','GTM':'market'
-};
+// Minimalist post generation. We don't have an LLM, so we don't fake "analysis."
+// Output is short, human-feeling — the news + a 1-line frame. User adds their own take by editing.
+const CE_OPENERS = [
+  "This one's worth pausing on.",
+  "Quietly one of the most underrated reads of the week.",
+  "Filed under: things that matter more than the headline.",
+  "Spent the morning thinking about this.",
+  "Adding this to my tabs-open-for-days pile.",
+  "Genuinely shifted how I'm thinking lately:",
+  "Worth the click.",
+  "If you're building right now, this matters:",
+  "The thing I keep coming back to:",
+  "Bookmarking this one for later."
+];
+const CE_BRIDGES = [
+  "Worth a real read, not a skim.",
+  "The comment thread is half the value.",
+  "Curious what others are taking away.",
+  "Small read, big implications.",
+  "Sharing without commentary — let it speak."
+];
 
-function ceTheme(tag){ return CE_TAG_THEME[tag] || 'market'; }
-
-function ceImplications(theme, industry){
-  if(theme === 'pricing') return [
-    `Re-run your unit economics with the new numbers. Most plans were built on stale assumptions.`,
-    `Customers locked into legacy pricing become your most defensible accounts — don't migrate them without thinking twice.`,
-    `If this is permanent, the next 90 days decide who's positioned to win the next cycle.`
-  ];
-  if(theme === 'ai') return [
-    `Features that were uneconomic 12 months ago are suddenly viable. Re-audit the backlog.`,
-    `The differentiator isn't the model. It's the workflow you wrap around it.`,
-    `Adoption is fast, retention is slow. Win on retention or get repriced.`
-  ];
-  if(theme === 'channels') return [
-    `If acquisition worked for you last year, audit it again this quarter. The benchmarks have shifted.`,
-    `Owned audience beats rented audience — by a wider margin every month.`,
-    `Pick one channel and over-invest. Two-channel strategies are usually a polite way of saying no strategy.`
-  ];
-  if(theme === 'product') return [
-    `Onboarding is the new pricing page. First 10 minutes decide LTV.`,
-    `The teams shipping weekly are out-learning the teams shipping quarterly.`,
-    `If a user can't reach value in one session, fix the product before fixing the messaging.`
-  ];
-  if(theme === 'people') return [
-    `Hiring decisions made this quarter will define your culture for the next two years.`,
-    `Leverage beats headcount. The 4-person team hitting $1M ARR isn't a fluke anymore.`,
-    `If you can't articulate what each person owns this week, you don't have a team — you have meetings.`
-  ];
-  return [
-    `Macro signals like this shift the playbook for everyone in ${industry}.`,
-    `The window between "early signal" and "everyone knows" is shorter than it used to be.`,
-    `Operators who internalize this in the next 30 days will look prescient by year-end.`
-  ];
+// Deterministic pick so the same article always produces the same post (no random churn on re-render).
+function ceHashStr(s){
+  let h = 0;
+  for(let i=0;i<(s||'').length;i++) h = ((h<<5) - h + (s.charCodeAt(i)|0)) | 0;
+  return Math.abs(h);
 }
+function ceOpener(t){ return CE_OPENERS[ceHashStr(t.title||'') % CE_OPENERS.length]; }
+function ceBridge(t){ return CE_BRIDGES[ceHashStr((t.title||'') + 'b') % CE_BRIDGES.length]; }
 
-function ceCloser(theme, industry){
-  if(theme === 'pricing') return `How are you adjusting pricing in response — or sitting tight?`;
-  if(theme === 'ai') return `What's the last feature you shipped because the math finally worked?`;
-  if(theme === 'channels') return `Which channel is actually working for you right now? I'm comparing notes.`;
-  if(theme === 'product') return `What did you ship this week that surprised you?`;
-  if(theme === 'people') return `What's the hiring signal you wish you'd known 12 months earlier?`;
-  return `Are you seeing this in ${industry} on your end? Curious where the early signal is loudest.`;
-}
-
-function ceXTake(theme, industry){
-  if(theme === 'pricing') return `Re-run your unit economics. The benchmarks just shifted.`;
-  if(theme === 'ai') return `What was uneconomic 12 months ago is suddenly viable. Re-audit the backlog.`;
-  if(theme === 'channels') return `Owned audience > rented audience. The gap widens every month.`;
-  if(theme === 'product') return `Ship weekly or get out-learned. Onboarding is the new pricing page.`;
-  if(theme === 'people') return `Leverage > headcount. Still.`;
-  return `${industry} operators who internalize this in 30 days look prescient by year-end.`;
-}
-
-function ceHashtag(s){
-  return '#' + (s||'').replace(/[^A-Za-z0-9]+/g,'');
-}
-function ceHashtags(industry, tag){
-  const ind = ceHashtag(industry).toLowerCase();
-  const tg = ceHashtag(tag).toLowerCase();
-  // De-dup if industry happens to equal tag
-  const set = new Set([ind, tg, '#startups', '#buildinpublic']);
-  return Array.from(set).join(' ');
+// Tasteful topic hashtag — PascalCase, no junk chars.
+function ceTopicHashtag(s){
+  if(!s) return '';
+  const parts = (s||'').split(/\s+/).map(w => w.replace(/[^A-Za-z0-9]/g,''));
+  const cleaned = parts.filter(Boolean).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join('');
+  return cleaned ? '#' + cleaned : '';
 }
 
 function ceGenLinkedIn(industry, t){
-  const ind = ceCapIndustry(industry);
-  const theme = ceTheme(t.tag);
-  const imps = ceImplications(theme, ind);
-  const sourceLine = `— via ${t.source}${t.url ? '\nRead more: ' + t.url : ''}`;
-  return `${t.title}
+  const opener = ceOpener(t);
+  const bridge = ceBridge(t);
+  const topicTag = ceTopicHashtag(industry);
+  const urlLine = t.url ? `\n\n${t.url}` : '';
+  const tagLine = topicTag ? `\n\n${topicTag} #buildinpublic` : `\n\n#buildinpublic`;
+  return `${opener}
 
-${t.angle}
+${t.title}
 
-What this means in practice:
-→ ${imps[0]}
-→ ${imps[1]}
-→ ${imps[2]}
-
-${ceCloser(theme, ind)}
-
-${sourceLine}
-${ceHashtags(industry, t.tag)}`;
+${bridge}${urlLine}${tagLine}`;
 }
 
 function ceGenX(industry, t){
-  const ind = ceCapIndustry(industry);
-  const theme = ceTheme(t.tag);
-  const take = ceXTake(theme, ind);
-  const closer = `What are you seeing?`;
-  const u = t.url ? '\n\n' + t.url : '';
-  // Try variants in order; pick the first one that fits 280 chars.
-  // Prefer versions that include the URL when present.
+  const opener = ceOpener(t);
+  const u = t.url || '';
+  // Prefer compact, real-feeling shares. Twitter culture: title + link is normal.
   const variants = [
-    `${t.title}\n\n${take}\n\n${closer}${u}`,
-    `${t.title}\n\n${take}${u}`,
-    `${take}\n\n${closer}${u}`,
-    `${t.title}${u}`,
-    `${t.title}\n\n${take}\n\n${closer}`,
-    `${t.title}\n\n${take}`,
-    `${take}\n\n${closer}`,
-    take
+    `${opener}\n\n${t.title}\n\n${u}`,
+    `${t.title}\n\n${u}`,
+    `${opener}\n\n${t.title}`,
+    `${t.title}`
   ];
   for(const v of variants){
-    if(v.length <= 280) return v;
+    const trimmed = v.trim();
+    if(trimmed.length <= 280) return trimmed;
   }
-  return variants[variants.length-1].slice(0,277) + '…';
+  return (t.title||'').slice(0,277) + '…';
 }
 
 function ceRenderPosts(){
@@ -1916,7 +1862,7 @@ ${state.campaigns.map(c=>`- ${c.name}: $${c.spend} spend · ${c.leads} leads · 
 `;
   $('reportOut').textContent = md;
   // Populate side cards
-  const r = state.range || 14;
+  const r = state.range || 7;
   const totalImpr = sum(m.impressions.slice(-r));
   const totalVisits = sum(m.visits.slice(-r));
   const totalLeads = state.campaigns.reduce((a,c)=>a+(c.leads||0),0);
