@@ -354,8 +354,8 @@
         <h2 class="section">Analytics Dashboard</h2>
         <div class="row" style="align-items:center;gap:10px">
           <div class="range" id="rangeSel">
-            <button data-r="7">7d</button>
-            <button data-r="14" class="active">14d</button>
+            <button data-r="7" class="active">7d</button>
+            <button data-r="14">14d</button>
             <button data-r="30">30d</button>
           </div>
           <button class="profile-btn" id="editProfile" type="button" aria-label="Edit profile">
@@ -946,6 +946,7 @@ function resetData(){
 
 /* ========= Render: Dashboard ========= */
 function renderAll(){
+  syncRangeButton();
   renderKPIs();
   renderBars();
   renderVelocity();
@@ -1084,10 +1085,15 @@ function renderBars(){
 }
 
 /* Range selector wiring */
+function syncRangeButton(){
+  document.querySelectorAll('#rangeSel button[data-r]').forEach(x=>{
+    x.classList.toggle('active', +x.dataset.r === state.range);
+  });
+}
 document.addEventListener('click', (e)=>{
   const b = e.target.closest('#rangeSel button[data-r]'); if(!b) return;
   state.range = +b.dataset.r;
-  document.querySelectorAll('#rangeSel button').forEach(x=>x.classList.toggle('active', x===b));
+  syncRangeButton();
   save(); renderAll();
 });
 
