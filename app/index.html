@@ -746,9 +746,11 @@ const state = load() || {
   posts: [],
   campaigns: [],
   goals: [],
-  range: 14
+  range: 7
 };
-if(state.range == null) state.range = 14;
+// Always start at 7-day range on login. User can switch mid-session;
+// next reload returns to 7d. (If you want range to persist, change to: if(state.range == null) state.range = 7;)
+state.range = 7;
 
 function save(){
   localStorage.setItem(KEY, JSON.stringify(state));
@@ -1342,54 +1344,128 @@ function ceFindTrends(industry){
   return { key:null, trends: CE_TREND_GENERIC, match:'generic' };
 }
 
-function ceSearchTrends(){
+/* ----- Live news via Hacker News Algolia API (free, CORS-enabled, no key) ----- */
+function ceRelDate(iso){
+  if(!iso) return 'recent';
+  const d = new Date(iso);
+  const diff = (Date.now() - d.getTime()) / 1000;
+  if(diff < 3600) return 'just now';
+  if(diff < 86400){
+    const h = Math.floor(diff/3600);
+    return h === 1 ? '1h ago' : `${h}h ago`;
+  }
+  if(diff < 604800){
+    const dd = Math.floor(diff/86400);
+    return dd === 1 ? '1 day ago' : `${dd} days ago`;
+  }
+  if(diff < 2592000){
+    const w = Math.floor(diff/604800);
+    return w === 1 ? '1 week ago' : `${w} weeks ago`;
+  }
+  return d.toLocaleDateString();
+}
+function ceDomainFromUrl(u){
+  if(!u) return '';
+  try { return new URL(u).hostname.replace(/^www\./,''); } catch { return ''; }
+}
+function ceTagFromHit(h){
+  const p = h.points || 0, c = h.num_comments || 0;
+  if(p > 200) return 'Hot';
+  if(c > 50) return 'Discussion';
+  return 'News';
+}
+function ceAngleFromHit(h){
+  const c = h.num_comments || 0, p = h.points || 0;
+  if(p > 100 && c > 50) return `Trending on Hacker News — ${p.toLocaleString()} points, ${c.toLocaleString()} comments. A good moment to weigh in.`;
+  if(c > 30) return `Sparking ${c.toLocaleString()} comments on Hacker News. The discussion is where the real signal is.`;
+  if(p > 50) return `Surfacing on Hacker News with ${p} points. Early signal worth a take.`;
+  return `Posted to Hacker News (${p} points, ${c} comments). Fresh and not yet over-discussed.`;
+}
+async function ceFetchLiveNews(topic){
+  // HN Algolia search — works for any topic, returns real articles with titles, URLs, dates.
+  // Doc: https://hn.algolia.com/api
+  try {
+    const url = `https://hn.algolia.com/api/v1/search?query=${encodeURIComponent(topic)}&tags=story&hitsPerPage=12`;
+    const ctrl = new AbortController();
+    const tid = setTimeout(()=>ctrl.abort(), 6000); // 6s timeout
+    const res = await fetch(url, { signal: ctrl.signal });
+    clearTimeout(tid);
+    if(!res.ok) return null;
+    const data = await res.json();
+    const hits = (data.hits||[]).filter(h => h.title && (h.url || h.objectID)).slice(0,10);
+    if(hits.length === 0) return null;
+    return hits.map(h => ({
+      tag: ceTagFromHit(h),
+      source: ceDomainFromUrl(h.url) || 'news.ycombinator.com',
+      date: ceRelDate(h.created_at),
+      title: h.title,
+      angle: ceAngleFromHit(h),
+      url: h.url || `https://news.ycombinator.com/item?id=${h.objectID}`
+    }));
+  } catch (e) {
+    return null;
+  }
+}
+
+async function ceSearchTrends(){
   const industry = val('ceIndustry');
   if(!industry){ toast('Type a topic first'); $('ceIndustry')?.focus(); return; }
   const btn = document.querySelector('[onclick="ceSearchTrends()"]');
   const origLabel = btn ? btn.innerHTML : '';
   if(btn){ btn.disabled = true; btn.innerHTML = '<span class="ce-loading"></span>Searching news'; }
-  setTimeout(()=>{
+
+  // 1. Try live news from Hacker News Algolia. Works for any topic.
+  let hits = await ceFetchLiveNews(industry);
+  let mode = hits ? 'live' : 'curated';
+  let curatedKey = null;
+  if(!hits){
+    // 2. Fall back to curated bank if HN was unreachable / returned nothing.
     const result = ceFindTrends(industry);
-    _ceCurrent.industry = industry;
-    _ceCurrent.trends = result.trends.map((t,i)=>({...t, id:i}));
-    _ceCurrent.pickedTrend = null;
-    _ceCurrent.posts = null;
-    const topicCap = ceCapIndustry(industry);
-    $('ceTrendsTitle').textContent = `Latest news on ${topicCap}`;
-    // Helper text reflects how well we matched the topic.
-    const helper = $('ceTrendsHelper');
-    if(helper){
-      if(result.match === 'exact'){
-        helper.textContent = `10 articles on your topic. Pick one — your post appears on the right.`;
-      } else if(result.match === 'mapped'){
-        helper.textContent = `Showing ${CE_BUCKET_LABEL[result.key]} news — the closest curated category to "${topicCap}". Pick one to turn it into a post.`;
-      } else {
-        helper.textContent = `We don't have curated news for "${topicCap}" yet — showing general startup angles. Try: ${Object.values(CE_BUCKET_LABEL).join(', ')}.`;
-      }
+    hits = result.trends;
+    curatedKey = result.key;
+    mode = result.match === 'exact' ? 'curated-exact' : result.match === 'mapped' ? 'curated-mapped' : 'curated-generic';
+  }
+
+  _ceCurrent.industry = industry;
+  _ceCurrent.trends = hits.map((t,i)=>({...t, id:i}));
+  _ceCurrent.pickedTrend = null;
+  _ceCurrent.posts = null;
+  const topicCap = ceCapIndustry(industry);
+  $('ceTrendsTitle').textContent = `Latest news on ${topicCap}`;
+  const helper = $('ceTrendsHelper');
+  if(helper){
+    if(mode === 'live'){
+      helper.textContent = `${hits.length} live results from Hacker News for "${topicCap}". Click any article to turn it into a LinkedIn + X post.`;
+    } else if(mode === 'curated-exact'){
+      helper.textContent = `Couldn't reach Hacker News — showing curated ${CE_BUCKET_LABEL[curatedKey]} angles instead. Click any to generate posts.`;
+    } else if(mode === 'curated-mapped'){
+      helper.textContent = `Couldn't reach Hacker News — showing curated ${CE_BUCKET_LABEL[curatedKey]} angles (closest match to "${topicCap}"). Click any to generate posts.`;
+    } else {
+      helper.textContent = `Couldn't reach Hacker News and no curated match for "${topicCap}" — showing general startup angles. Click any to generate posts.`;
     }
-    $('ceTrends').innerHTML = _ceCurrent.trends.map(t=>`
-      <button type="button" class="ce-trend" onclick="cePickTrend(${t.id})">
-        <div class="ce-trend-meta">
-          <span class="ce-tag">${ceEsc(t.tag)}</span>
-          <span class="ce-trend-source">${ceEsc(t.source||'')} · ${ceEsc(t.date||'')}</span>
-        </div>
-        <h4>${ceEsc(t.title)}</h4>
-        <p>${ceEsc(t.angle)}</p>
-        <div class="ce-trend-foot">
-          <span class="ce-pick">Generate post →</span>
-        </div>
-      </button>`).join('');
-    $('ceStep2').style.display = 'block';
-    // Reset right column to empty state when re-searching
-    $('ceGenerated').innerHTML = '';
-    $('ceTrendContext').style.display = 'none';
-    $('ceEmpty').style.display = '';
-    $('cePickAnotherBtn').style.display = 'none';
-    if(btn){ btn.disabled = false; btn.innerHTML = origLabel; }
-    if(window.innerWidth <= 1100){
-      $('ceStep2').scrollIntoView({behavior:'smooth', block:'start'});
-    }
-  }, 420);
+  }
+  $('ceTrends').innerHTML = _ceCurrent.trends.map(t=>`
+    <button type="button" class="ce-trend" onclick="cePickTrend(${t.id})">
+      <div class="ce-trend-meta">
+        <span class="ce-tag">${ceEsc(t.tag||'News')}</span>
+        <span class="ce-trend-source">${ceEsc(t.source||'')} · ${ceEsc(t.date||'')}</span>
+      </div>
+      <h4>${ceEsc(t.title)}</h4>
+      <p>${ceEsc(t.angle)}</p>
+      <div class="ce-trend-foot">
+        <span class="ce-pick">Generate post →</span>
+      </div>
+    </button>`).join('');
+  $('ceStep2').style.display = 'block';
+  // Reset right column to empty state when re-searching
+  $('ceGenerated').innerHTML = '';
+  $('ceTrendContext').style.display = 'none';
+  $('ceEmpty').style.display = '';
+  $('cePickAnotherBtn').style.display = 'none';
+  if(btn){ btn.disabled = false; btn.innerHTML = origLabel; }
+  if(window.innerWidth <= 1100){
+    $('ceStep2').scrollIntoView({behavior:'smooth', block:'start'});
+  }
 }
 
 function cePickTrend(id){
@@ -1523,6 +1599,7 @@ function ceGenLinkedIn(industry, t){
   const ind = ceCapIndustry(industry);
   const theme = ceTheme(t.tag);
   const imps = ceImplications(theme, ind);
+  const sourceLine = `— via ${t.source}${t.url ? '\nRead more: ' + t.url : ''}`;
   return `${t.title}
 
 ${t.angle}
@@ -1534,7 +1611,7 @@ What this means in practice:
 
 ${ceCloser(theme, ind)}
 
-— via ${t.source}
+${sourceLine}
 ${ceHashtags(industry, t.tag)}`;
 }
 
@@ -1543,12 +1620,17 @@ function ceGenX(industry, t){
   const theme = ceTheme(t.tag);
   const take = ceXTake(theme, ind);
   const closer = `What are you seeing?`;
+  const u = t.url ? '\n\n' + t.url : '';
   // Try variants in order; pick the first one that fits 280 chars.
+  // Prefer versions that include the URL when present.
   const variants = [
+    `${t.title}\n\n${take}\n\n${closer}${u}`,
+    `${t.title}\n\n${take}${u}`,
+    `${take}\n\n${closer}${u}`,
+    `${t.title}${u}`,
     `${t.title}\n\n${take}\n\n${closer}`,
     `${t.title}\n\n${take}`,
     `${take}\n\n${closer}`,
-    `${t.title}\n\n${closer}`,
     take
   ];
   for(const v of variants){
