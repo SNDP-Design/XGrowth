@@ -271,8 +271,8 @@
   .ce-spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.15);border-top-color:var(--ink);border-radius:50%;animation:ce-spin .8s linear infinite;margin-right:10px}
   .ce-style-label{font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);margin-right:2px;flex-shrink:0}
   /* Input mode tabs */
-  .ce-input-wrap{margin-bottom:16px}
-  .ce-mode-tabs{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+  .ce-input-wrap{margin-bottom:0}
+  .ce-mode-tabs{display:flex;gap:8px;flex-wrap:wrap}
   .ce-mode-tab{height:36px;padding:0 16px;background:var(--chip);border:1px solid var(--line);color:var(--muted);font:600 13px system-ui,-apple-system,sans-serif;border-radius:10px;cursor:pointer;transition:.15s}
   .ce-mode-tab:hover{color:var(--ink);border-color:#3a3a3a}
   .ce-mode-tab.active{background:linear-gradient(180deg,#1c1c1c,#141414);color:var(--ink);border-color:#3a3a3a;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
@@ -553,47 +553,49 @@
         <button class="btn ghost" onclick="ceVoiceOpen()" style="flex-shrink:0;margin-top:4px">Voice settings</button>
       </div>
 
-      <!-- Input mode tabs -->
-      <div class="ce-mode-tabs">
-        <button class="ce-mode-tab active" data-cmode="search" onclick="ceSwitchInputMode('search')">Search news</button>
-        <button class="ce-mode-tab" data-cmode="url" onclick="ceSwitchInputMode('url')">Paste a URL</button>
-        <button class="ce-mode-tab" data-cmode="write" onclick="ceSwitchInputMode('write')">Write your own</button>
-      </div>
-
-      <!-- Input panels -->
-      <div class="ce-input-wrap">
-        <div id="ceModeSearch" class="ce-mode-panel active">
-          <div class="row" style="gap:10px;align-items:stretch">
-            <input id="ceTopicInput" type="text" placeholder="e.g., AI · SaaS · Fintech · Climate tech" style="flex:1;min-width:180px"/>
-            <button class="btn" id="ceSearchBtn" onclick="ceSearchNews()">Search news →</button>
-          </div>
-        </div>
-        <div id="ceModeUrl" class="ce-mode-panel">
-          <div class="row" style="gap:10px;align-items:stretch;flex-wrap:wrap">
-            <input id="ceUrlInput" type="url" placeholder="https://techcrunch.com/2025/..." style="flex:1;min-width:220px"/>
-            <button class="btn" id="ceUrlBtn" onclick="ceFetchUrlPreview()">Get article →</button>
-          </div>
-          <div id="ceUrlPreview" style="display:none" class="ce-url-preview">
-            <label style="font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px">Article title</label>
-            <input id="ceUrlTitle" type="text" placeholder="Article title…" style="width:100%;margin-bottom:10px"/>
-            <label style="font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px">Context (optional)</label>
-            <input id="ceUrlContext" type="text" placeholder="What's the key insight from this article?" style="width:100%;margin-bottom:12px"/>
-            <button class="btn" onclick="ceGenerateFromUrl()">Generate posts →</button>
-          </div>
-        </div>
-        <div id="ceModeWrite" class="ce-mode-panel">
-          <textarea id="ceWriteInput" placeholder="Paste rough notes, bullet points, or a half-formed idea. We'll turn it into polished posts for every platform…" style="min-height:110px;width:100%;resize:vertical;margin-bottom:10px"></textarea>
-          <div class="row" style="gap:10px;align-items:stretch;flex-wrap:wrap">
-            <input id="ceWriteTopic" type="text" placeholder="Topic tag (optional): e.g., AI pricing" style="flex:1;min-width:160px"/>
-            <button class="btn" id="ceWriteBtn" onclick="ceGenerateFromWrite()">Generate posts →</button>
-          </div>
-        </div>
-      </div>
-
       <!-- Two-column grid -->
       <div class="ce-grid">
-        <!-- LEFT: news list (search mode only) -->
+        <!-- LEFT: input + news list -->
         <div class="ce-left" id="ceLeftCol">
+          <!-- Input step -->
+          <div class="ce-step">
+            <!-- Input mode tabs -->
+            <div class="ce-mode-tabs" style="margin-bottom:14px">
+              <button class="ce-mode-tab active" data-cmode="search" onclick="ceSwitchInputMode('search')">Search news</button>
+              <button class="ce-mode-tab" data-cmode="url" onclick="ceSwitchInputMode('url')">Paste a URL</button>
+              <button class="ce-mode-tab" data-cmode="write" onclick="ceSwitchInputMode('write')">Write your own</button>
+            </div>
+            <!-- Input panels -->
+            <div class="ce-input-wrap" style="margin-bottom:0">
+              <div id="ceModeSearch" class="ce-mode-panel active">
+                <div class="row" style="gap:10px;align-items:stretch">
+                  <input id="ceTopicInput" type="text" placeholder="e.g., AI · SaaS · Fintech · Climate tech" style="flex:1;min-width:180px"/>
+                  <button class="btn" id="ceSearchBtn" onclick="ceSearchNews()">Search →</button>
+                </div>
+              </div>
+              <div id="ceModeUrl" class="ce-mode-panel">
+                <div class="row" style="gap:10px;align-items:stretch;flex-wrap:wrap">
+                  <input id="ceUrlInput" type="url" placeholder="https://techcrunch.com/2025/..." style="flex:1;min-width:180px"/>
+                  <button class="btn" id="ceUrlBtn" onclick="ceFetchUrlPreview()">Get article →</button>
+                </div>
+                <div id="ceUrlPreview" style="display:none" class="ce-url-preview">
+                  <label style="font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px">Article title</label>
+                  <input id="ceUrlTitle" type="text" placeholder="Article title…" style="width:100%;margin-bottom:10px"/>
+                  <label style="font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px">Context (optional)</label>
+                  <input id="ceUrlContext" type="text" placeholder="What's the key insight from this article?" style="width:100%;margin-bottom:12px"/>
+                  <button class="btn" onclick="ceGenerateFromUrl()">Generate posts →</button>
+                </div>
+              </div>
+              <div id="ceModeWrite" class="ce-mode-panel">
+                <textarea id="ceWriteInput" placeholder="Paste rough notes, bullet points, or a half-formed idea. We'll turn it into polished posts for every platform…" style="min-height:110px;width:100%;resize:vertical;margin-bottom:10px"></textarea>
+                <div class="row" style="gap:10px;align-items:stretch;flex-wrap:wrap">
+                  <input id="ceWriteTopic" type="text" placeholder="Topic (optional): e.g., AI pricing" style="flex:1;min-width:140px"/>
+                  <button class="btn" id="ceWriteBtn" onclick="ceGenerateFromWrite()">Generate →</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- News list (search mode) -->
           <div class="ce-step" id="ceNewsPanel" style="display:none">
             <div class="ce-step-head">
               <span class="ce-step-num">2</span>
