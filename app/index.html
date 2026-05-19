@@ -223,6 +223,7 @@
   body:not(.authed) .modal{display:none !important;visibility:hidden !important}
   body.authed .auth-gate{display:none !important}
   /* Content Engine module */
+  .ce-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap}
   .ce-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start}
   @media (max-width:1100px){.ce-grid{grid-template-columns:1fr}}
   .ce-left{display:flex;flex-direction:column;gap:0;min-width:0}
@@ -233,7 +234,6 @@
   .ce-step{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-bottom:14px}
   .ce-step-head{display:flex;align-items:center;gap:12px;margin:0 0 6px;flex-wrap:wrap}
   .ce-step-head h3{margin:0;font-size:17px;letter-spacing:-.2px}
-  .ce-step-head > .btn{margin-left:auto}
   .ce-step-num{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:linear-gradient(180deg,#fafafa,#d4d4d4);color:#0a0a0a;font-size:13px;font-weight:700;flex-shrink:0}
   .ce-trends{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:8px}
   @media (max-width:880px){.ce-trends{grid-template-columns:1fr}}
@@ -247,15 +247,16 @@
   .ce-trend .ce-tag{display:inline-flex;font-size:11px;color:var(--muted);background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:3px 9px;flex-shrink:0}
   .ce-trend .ce-pick{font-size:12px;font-weight:600;color:var(--ink);display:inline-flex;align-items:center;gap:6px;transition:transform .2s}
   .ce-trend:hover .ce-pick{transform:translateX(2px)}
-  .ce-trend-context{background:#0a0a0a;border:1px solid var(--line);border-left:3px solid var(--ink);border-radius:0 12px 12px 0;padding:12px 16px;margin:8px 0 16px}
+  .ce-trend-context{background:#0a0a0a;border:1px solid var(--line);border-left:3px solid var(--ink);border-radius:0 12px 12px 0;padding:12px 16px;margin:0 0 14px}
   .ce-trend-context h4{margin:0 0 4px;font-size:14px;color:var(--ink);font-weight:600}
   .ce-trend-context p{margin:0;font-size:13px;color:var(--muted);line-height:1.5}
   .ce-posts{display:flex;flex-direction:column;gap:14px}
-  .ce-output .ce-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:240px;border-radius:12px;background:transparent;border:1px dashed var(--line);padding:36px 22px;text-align:center}
+  .ce-output .ce-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:240px;border-radius:12px;background:transparent;border:1px dashed var(--line);padding:36px 22px;text-align:center}
+  .ce-empty-title{font-size:15px;font-weight:600;color:var(--ink)}
   .ce-post{background:#0a0a0a;border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:12px}
-  .ce-post-head{display:flex;align-items:center;gap:8px}
+  .ce-post-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
   .ce-post-platform{font-size:13px;font-weight:700;letter-spacing:.2px;display:inline-flex;align-items:center;gap:8px;color:var(--ink)}
-  .ce-post-platform svg{width:18px;height:18px}
+  .ce-post-platform svg{width:18px;height:18px;flex-shrink:0}
   .ce-post-text{color:#ededed;font-size:15px;line-height:1.6;white-space:pre-wrap;word-break:break-word;margin:0;flex:1}
   .ce-post-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;padding-top:10px;border-top:1px solid var(--line);flex-wrap:wrap}
   .ce-count{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
@@ -264,18 +265,59 @@
   .ce-post-actions .btn{height:38px;padding:0 14px;font-size:13px}
   .ce-post-actions .btn.publish{background:linear-gradient(180deg,#fafafa,#d4d4d4);color:#0a0a0a;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
   .ce-post-actions .btn.publish:hover{background:linear-gradient(180deg,#fff,#e5e5e5)}
-  .ce-loading{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.2);border-top-color:var(--ink);border-radius:50%;animation:ce-spin .8s linear infinite;vertical-align:-2px;margin-right:8px}
   @keyframes ce-spin{to{transform:rotate(360deg)}}
-  /* Output post — AI integration additions */
-  .ce-post-head{justify-content:space-between}
   .ce-ai-badge{display:inline-flex;align-items:center;font-size:10px;font-weight:700;letter-spacing:.6px;color:#0a0a0a;background:linear-gradient(180deg,#fafafa,#d4d4d4);border-radius:6px;padding:3px 7px;line-height:1}
   .ce-skeleton{background:#0a0a0a;border:1px dashed var(--line);border-radius:10px;padding:24px 18px;color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:14px;min-height:120px}
   .ce-spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.15);border-top-color:var(--ink);border-radius:50%;animation:ce-spin .8s linear infinite;margin-right:10px}
-  .ce-style-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:8px 0 0;border-top:1px solid var(--line);margin-top:8px}
-  .ce-style-label{font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);margin-right:4px}
-  .ce-style-chip{height:28px;padding:0 11px;background:var(--chip);border:1px solid var(--line);color:var(--muted);font:600 12px system-ui,-apple-system,sans-serif;border-radius:999px;cursor:pointer;transition:.15s}
-  .ce-style-chip:hover{color:var(--ink);border-color:#3a3a3a}
-  .ce-style-chip.active{background:linear-gradient(180deg,#fafafa,#d4d4d4);color:#0a0a0a;border-color:#fafafa}
+  .ce-style-label{font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);margin-right:2px;flex-shrink:0}
+  /* Input mode tabs */
+  .ce-input-wrap{margin-bottom:16px}
+  .ce-mode-tabs{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+  .ce-mode-tab{height:36px;padding:0 16px;background:var(--chip);border:1px solid var(--line);color:var(--muted);font:600 13px system-ui,-apple-system,sans-serif;border-radius:10px;cursor:pointer;transition:.15s}
+  .ce-mode-tab:hover{color:var(--ink);border-color:#3a3a3a}
+  .ce-mode-tab.active{background:linear-gradient(180deg,#1c1c1c,#141414);color:var(--ink);border-color:#3a3a3a;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+  .ce-mode-panel{display:none}.ce-mode-panel.active{display:block}
+  .ce-url-preview{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-top:10px}
+  /* Platform tabs */
+  .ce-platform-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+  .ce-plat-tab{height:34px;padding:0 13px;background:var(--chip);border:1px solid var(--line);color:var(--muted);font:600 12px system-ui,-apple-system,sans-serif;border-radius:8px;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+  .ce-plat-tab svg{width:14px;height:14px;flex-shrink:0}
+  .ce-plat-tab:hover{color:var(--ink);border-color:#3a3a3a}
+  .ce-plat-tab.active{background:linear-gradient(180deg,#1c1c1c,#141414);color:var(--ink);border-color:#3a3a3a;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+  /* Post type chips */
+  .ce-type-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+  .ce-type-chip{height:28px;padding:0 11px;background:var(--chip);border:1px solid var(--line);color:var(--muted);font:600 12px system-ui,-apple-system,sans-serif;border-radius:999px;cursor:pointer;transition:.15s}
+  .ce-type-chip:hover{color:var(--ink);border-color:#3a3a3a}
+  .ce-type-chip.active{background:linear-gradient(180deg,#fafafa,#d4d4d4);color:#0a0a0a;border-color:#fafafa}
+  /* Instagram / Reddit special layouts */
+  .ce-insta{display:flex;flex-direction:column;gap:12px}
+  .ce-insta-caption,.ce-insta-hashtags{white-space:pre-wrap;word-break:break-word;margin:0}
+  .ce-insta-caption{font-size:15px;line-height:1.6;color:#ededed}
+  .ce-insta-hashtags{font-size:13px;line-height:1.8;color:var(--muted)}
+  .ce-reddit{display:flex;flex-direction:column;gap:10px}
+  .ce-reddit-section{background:#0a0a0a;border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+  .ce-reddit-section label{display:block;font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+  .ce-reddit-section p{margin:0;font-size:14px;line-height:1.55;white-space:pre-wrap;word-break:break-word}
+  /* History */
+  .ce-history{margin-top:20px;border-top:1px solid var(--line);padding-top:14px}
+  .ce-history-toggle{background:none;border:none;color:var(--muted);font:600 12px/1 system-ui,-apple-system,sans-serif;cursor:pointer;padding:0;display:inline-flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:.4px}
+  .ce-history-toggle:hover{color:var(--ink)}
+  .ce-history-count{background:var(--chip);border:1px solid var(--line);color:var(--muted);font-size:11px;font-weight:700;border-radius:999px;padding:2px 7px}
+  .ce-history-list{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+  .ce-history-item{background:#080808;border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+  .ce-history-item-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .ce-history-item-meta{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .ce-history-item-text{font-size:13px;color:#cfcfcf;line-height:1.5;white-space:pre-wrap;word-break:break-word;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  /* Voice settings modal */
+  .ce-voice-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:none;align-items:center;justify-content:center;padding:16px}
+  .ce-voice-overlay.show{display:flex}
+  .ce-voice-modal{background:linear-gradient(180deg,#111,#0a0a0a);border:1px solid var(--line);border-radius:16px;padding:24px;width:100%;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+  .ce-voice-modal h3{margin:0 0 18px;font-size:18px;letter-spacing:-.2px}
+  .ce-voice-modal .vm-label{display:block;font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+  .ce-voice-style-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+  .ce-voice-style-btn{height:36px;padding:0 16px;background:var(--chip);border:1px solid var(--line);color:var(--muted);font:600 13px system-ui,-apple-system,sans-serif;border-radius:10px;cursor:pointer;transition:.15s}
+  .ce-voice-style-btn:hover{color:var(--ink)}
+  .ce-voice-style-btn.active{background:linear-gradient(180deg,#fafafa,#d4d4d4);color:#0a0a0a;border-color:#fafafa}
 </style>
 </head>
 <body>
@@ -503,46 +545,104 @@
 
     <!-- CONTENT ENGINE -->
     <section data-view="content" class="hide">
-      <h2 class="section">Content Engine</h2>
-      <p class="lede">Topic → news → posts. Type a topic, pick a news article on the left, see your posts on the right.</p>
+      <div class="ce-header">
+        <div>
+          <h2 class="section" style="margin-bottom:4px">Content Engine</h2>
+          <p class="lede" style="margin:0">One brief → ready-to-post content for every platform.</p>
+        </div>
+        <button class="btn ghost" onclick="ceVoiceOpen()" style="flex-shrink:0;margin-top:4px">Voice settings</button>
+      </div>
 
-      <div class="ce-grid">
-        <!-- LEFT: input + trends -->
-        <div class="ce-left">
-          <!-- Step 1: Industry -->
-          <div class="ce-step">
-            <div class="ce-step-head"><span class="ce-step-num">1</span><h3>What's your topic?</h3></div>
-            <p class="muted" style="margin:0 0 14px;font-size:14px">We'll surface the latest news on your topic — pick one to turn into a post.</p>
-            <div class="row" style="gap:10px;align-items:stretch">
-              <input id="ceIndustry" type="text" placeholder="e.g., AI · SaaS · Retail · Fintech · Healthcare" style="flex:1;min-width:200px"/>
-              <button class="btn" onclick="ceSearchTrends()">Search news →</button>
-            </div>
+      <!-- Input mode tabs -->
+      <div class="ce-mode-tabs">
+        <button class="ce-mode-tab active" data-cmode="search" onclick="ceSwitchInputMode('search')">Search news</button>
+        <button class="ce-mode-tab" data-cmode="url" onclick="ceSwitchInputMode('url')">Paste a URL</button>
+        <button class="ce-mode-tab" data-cmode="write" onclick="ceSwitchInputMode('write')">Write your own</button>
+      </div>
+
+      <!-- Input panels -->
+      <div class="ce-input-wrap">
+        <div id="ceModeSearch" class="ce-mode-panel active">
+          <div class="row" style="gap:10px;align-items:stretch">
+            <input id="ceTopicInput" type="text" placeholder="e.g., AI · SaaS · Fintech · Climate tech" style="flex:1;min-width:180px"/>
+            <button class="btn" id="ceSearchBtn" onclick="ceSearchNews()">Search news →</button>
           </div>
+        </div>
+        <div id="ceModeUrl" class="ce-mode-panel">
+          <div class="row" style="gap:10px;align-items:stretch;flex-wrap:wrap">
+            <input id="ceUrlInput" type="url" placeholder="https://techcrunch.com/2025/..." style="flex:1;min-width:220px"/>
+            <button class="btn" id="ceUrlBtn" onclick="ceFetchUrlPreview()">Get article →</button>
+          </div>
+          <div id="ceUrlPreview" style="display:none" class="ce-url-preview">
+            <label style="font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px">Article title</label>
+            <input id="ceUrlTitle" type="text" placeholder="Article title…" style="width:100%;margin-bottom:10px"/>
+            <label style="font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px">Context (optional)</label>
+            <input id="ceUrlContext" type="text" placeholder="What's the key insight from this article?" style="width:100%;margin-bottom:12px"/>
+            <button class="btn" onclick="ceGenerateFromUrl()">Generate posts →</button>
+          </div>
+        </div>
+        <div id="ceModeWrite" class="ce-mode-panel">
+          <textarea id="ceWriteInput" placeholder="Paste rough notes, bullet points, or a half-formed idea. We'll turn it into polished posts for every platform…" style="min-height:110px;width:100%;resize:vertical;margin-bottom:10px"></textarea>
+          <div class="row" style="gap:10px;align-items:stretch;flex-wrap:wrap">
+            <input id="ceWriteTopic" type="text" placeholder="Topic tag (optional): e.g., AI pricing" style="flex:1;min-width:160px"/>
+            <button class="btn" id="ceWriteBtn" onclick="ceGenerateFromWrite()">Generate posts →</button>
+          </div>
+        </div>
+      </div>
 
-          <!-- Step 2: Trends list -->
-          <div class="ce-step" id="ceStep2" style="display:none">
+      <!-- Two-column grid -->
+      <div class="ce-grid">
+        <!-- LEFT: news list (search mode only) -->
+        <div class="ce-left" id="ceLeftCol">
+          <div class="ce-step" id="ceNewsPanel" style="display:none">
             <div class="ce-step-head">
               <span class="ce-step-num">2</span>
-              <h3 id="ceTrendsTitle">Latest news</h3>
+              <h3 id="ceNewsTitle">Latest news</h3>
             </div>
-            <p class="muted" id="ceTrendsHelper" style="margin:0 0 14px;font-size:14px">10 articles on your topic. Pick one — your post appears on the right.</p>
+            <p class="muted" id="ceNewsHelper" style="margin:0 0 14px;font-size:14px"></p>
             <div class="ce-trends" id="ceTrends"></div>
           </div>
         </div>
 
-        <!-- RIGHT: output (sticky, always visible) -->
+        <!-- RIGHT: output (sticky) -->
         <div class="ce-right">
           <div class="ce-step ce-output" id="ceStep3">
-            <div class="ce-step-head">
-              <span class="ce-step-num">3</span>
-              <h3>Your posts</h3>
-              <button type="button" class="btn ghost" id="cePickAnotherBtn" onclick="cePickAnother()" style="display:none">← Pick another</button>
-            </div>
+            <!-- Selected article context -->
             <div class="ce-trend-context" id="ceTrendContext" style="display:none"></div>
+
+            <!-- Post type chips -->
+            <div id="ceTypeRow" class="ce-type-row" style="display:none">
+              <span class="ce-style-label">Type:</span>
+              <button class="ce-type-chip active" data-type="hot-take" onclick="ceSetType('hot-take')">Hot Take</button>
+              <button class="ce-type-chip" data-type="story" onclick="ceSetType('story')">Story</button>
+              <button class="ce-type-chip" data-type="teach" onclick="ceSetType('teach')">Teach</button>
+              <button class="ce-type-chip" data-type="data" onclick="ceSetType('data')">Data-Led</button>
+              <button class="ce-type-chip" data-type="question" onclick="ceSetType('question')">Question</button>
+              <button class="ce-type-chip" data-type="founder" onclick="ceSetType('founder')">Founder</button>
+            </div>
+
+            <!-- Platform tabs -->
+            <div id="cePlatformTabs" class="ce-platform-tabs" style="display:none">
+              <button class="ce-plat-tab active" data-plat="linkedin" onclick="ceSwitchPlatform('linkedin')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14zM8.5 17V10h-2v7h2zm-1-7.9a1.1 1.1 0 1 0 0-2.2 1.1 1.1 0 0 0 0 2.2zM18 17v-3.9c0-2.1-1.1-3.1-2.6-3.1-1.2 0-1.7.7-2 1.2V10h-2v7h2v-4c0-1 .2-2 1.4-2s1.2 1.1 1.2 2v4H18z"/></svg>LinkedIn</button>
+              <button class="ce-plat-tab" data-plat="x" onclick="ceSwitchPlatform('x')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2H21.5l-7.36 8.41L23 22h-6.84l-5.21-6.81L4.91 22H1.65l7.86-8.98L1.5 2h6.99l4.71 6.23L18.244 2z"/></svg>X</button>
+              <button class="ce-plat-tab" data-plat="threads" onclick="ceSwitchPlatform('threads')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.186 24h-.007c-3.581-.024-6.334-1.205-8.184-3.509C2.35 18.44 1.5 15.586 1.473 12.01v-.017c.027-3.579.877-6.43 2.525-8.482C5.845 1.205 8.6.024 12.18 0h.014c2.746.02 5.043.725 6.826 2.098 1.677 1.29 2.858 3.13 3.509 5.467l-2.04.569c-.505-1.865-1.406-3.348-2.67-4.29-1.283-.963-2.95-1.467-5.07-1.482-2.678.02-4.758.853-6.184 2.476-1.406 1.6-2.124 3.958-2.145 7.011.021 3.054.739 5.41 2.145 7.012 1.426 1.622 3.506 2.455 6.184 2.474 1.996-.015 3.491-.438 4.651-1.298.952-.708 1.673-1.72 2.145-3.003l2.03.618c-.627 1.626-1.564 2.914-2.8 3.832-1.454 1.052-3.289 1.6-5.588 1.617z"/></svg>Threads</button>
+              <button class="ce-plat-tab" data-plat="instagram" onclick="ceSwitchPlatform('instagram')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>Instagram</button>
+              <button class="ce-plat-tab" data-plat="reddit" onclick="ceSwitchPlatform('reddit')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.13 4.87-7.004 4.87-3.874 0-7.004-2.176-7.004-4.87 0-.183.015-.366.043-.534A1.748 1.748 0 0 1 4.028 12c0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.487l.885-4.182a.342.342 0 0 1 .14-.197.35.35 0 0 1 .238-.042l2.906.617a1.214 1.214 0 0 1 1.108-.701zM9.25 12C8.561 12 8 12.562 8 13.25c0 .687.561 1.248 1.25 1.248.687 0 1.248-.561 1.248-1.249 0-.688-.561-1.249-1.249-1.249zm5.5 0c-.687 0-1.248.561-1.248 1.25 0 .687.561 1.248 1.249 1.248.688 0 1.249-.561 1.249-1.249 0-.687-.562-1.249-1.25-1.249zm-5.466 3.99a.327.327 0 0 0-.231.094.33.33 0 0 0 0 .463c.842.842 2.484.913 2.961.913.477 0 2.105-.056 2.961-.913a.361.361 0 0 0 .029-.463.33.33 0 0 0-.464 0c-.547.533-1.684.73-2.512.73-.828 0-1.979-.196-2.512-.73a.326.326 0 0 0-.232-.095z"/></svg>Reddit</button>
+            </div>
+
             <div class="ce-posts" id="ceGenerated"></div>
+
             <div class="ce-empty" id="ceEmpty">
-              <div class="ce-empty-title">Your posts will appear here</div>
-              Type your topic on the left → <strong>Search news</strong> → pick the article that fits your voice. LinkedIn long-form and X post generate side by side.
+              <div class="ce-empty-title">Your post will appear here</div>
+              <span style="color:var(--muted);font-size:14px">Search news and pick an article · paste a URL · or write your own brief.</span>
+            </div>
+
+            <div id="ceHistorySection" style="display:none" class="ce-history">
+              <button class="ce-history-toggle" onclick="ceToggleHistory()">
+                History <span class="ce-history-count" id="ceHistoryCount">0</span>
+                <span id="ceHistoryArrow">▾</span>
+              </button>
+              <div id="ceHistoryList" style="display:none" class="ce-history-list"></div>
             </div>
           </div>
         </div>
@@ -706,6 +806,26 @@
 </div>
 
 <div class="toast" id="toast">Copied</div>
+
+<!-- Voice settings modal -->
+<div class="ce-voice-overlay" id="ceVoiceOverlay" onclick="if(event.target===this)ceVoiceClose()">
+  <div class="ce-voice-modal">
+    <h3>Voice settings</h3>
+    <span class="vm-label">Writing style</span>
+    <div class="ce-voice-style-row">
+      <button class="ce-voice-style-btn active" data-vstyle="casual" onclick="ceVoiceSetStyle('casual')">Casual</button>
+      <button class="ce-voice-style-btn" data-vstyle="professional" onclick="ceVoiceSetStyle('professional')">Professional</button>
+      <button class="ce-voice-style-btn" data-vstyle="bold" onclick="ceVoiceSetStyle('bold')">Bold</button>
+    </div>
+    <span class="vm-label">Your niche / context</span>
+    <input id="ceVoiceNiche" type="text" placeholder="e.g., B2B SaaS for HR teams · indie maker · fintech founder" style="width:100%;margin-bottom:20px"/>
+    <p style="color:var(--muted);font-size:13px;margin:0 0 18px;line-height:1.5">This context is sent to the AI with every post you generate — it personalises the voice to your audience.</p>
+    <div class="row" style="justify-content:flex-end;gap:10px">
+      <button class="btn secondary" onclick="ceVoiceClose()">Cancel</button>
+      <button class="btn" onclick="ceVoiceSave()">Save</button>
+    </div>
+  </div>
+</div>
 
 <script>
 /* ========= State ========= */
@@ -1182,10 +1302,444 @@ $('addPost').onclick = ()=>{
 function p(){ return state.profile || {niche:'AI SaaS', stage:'Pre-seed', target:'Both', goal:'10k followers'}; }
 
 /* =========================================================
-   CONTENT ENGINE — Industry → trends → posts → publish
+   CONTENT ENGINE — full rebuild
+   3 input modes · 5 platforms · 6 post types · history · voice
    ========================================================= */
 function ceEsc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
+/* ── CE state ───────────────────────────────────────────────────────────── */
+const CE_API = 'https://xgrowth-api.xgrowth.workers.dev';
+
+const _ce = {
+  inputMode: 'search',
+  topic: '',
+  article: null,
+  platform: 'linkedin',
+  postType: 'hot-take',
+  posts: {},
+  voice: { style: 'casual', niche: '' },
+  history: [],
+  historyOpen: false,
+  _pickedAt: null,
+  _articles: [],
+};
+['linkedin','x','threads','instagram','reddit'].forEach(p => {
+  _ce.posts[p] = { text: '', loading: false, generated: false };
+});
+
+/* ── Input mode switching ─────────────────────────────────────────────── */
+
+function ceSwitchInputMode(mode) {
+  _ce.inputMode = mode;
+  document.querySelectorAll('.ce-mode-tab').forEach(b => b.classList.toggle('active', b.dataset.cmode === mode));
+  document.querySelectorAll('.ce-mode-panel').forEach(p => p.classList.remove('active'));
+  const panelMap = { search:'ceModeSearch', url:'ceModeUrl', write:'ceModeWrite' };
+  $(panelMap[mode])?.classList.add('active');
+  if (mode !== 'search') $('ceNewsPanel').style.display = 'none';
+}
+
+/* ── Search news mode ─────────────────────────────────────────────────── */
+
+function ceRelDate(iso){
+  if(!iso) return 'recent';
+  const d = new Date(iso), diff = (Date.now() - d.getTime()) / 1000;
+  if(diff < 3600){ const h = Math.floor(diff/3600); return h===1?'1h ago':`${h}h ago`; }
+  if(diff < 86400){ const dd = Math.floor(diff/86400); return dd===1?'1 day ago':`${dd} days ago`; }
+  if(diff < 604800){ const w = Math.floor(diff/604800); return w===1?'1 week ago':`${w} weeks ago`; }
+  return d.toLocaleDateString();
+}
+function ceDomainFromUrl(u){
+  if(!u) return '';
+  try { return new URL(u).hostname.replace(/^www\./,''); } catch { return ''; }
+}
+function ceTagFromHit(h){
+  const p=h.points||0, c=h.num_comments||0;
+  if(p>200) return 'Hot'; if(c>50) return 'Discussion'; return 'News';
+}
+function ceAngleFromHit(h){
+  const c=h.num_comments||0, p=h.points||0;
+  if(p>100&&c>50) return `Trending on Hacker News — ${p.toLocaleString()} points, ${c.toLocaleString()} comments.`;
+  if(c>30) return `Sparking ${c.toLocaleString()} comments on Hacker News.`;
+  if(p>50) return `${p} points on Hacker News. Early signal worth a take.`;
+  return `Posted to Hacker News (${p} points, ${c} comments).`;
+}
+
+async function ceFetchLiveNews(topic){
+  try {
+    const oneYearAgo = Math.floor(Date.now()/1000) - 365*24*3600;
+    const url = `https://hn.algolia.com/api/v1/search_by_date?query=${encodeURIComponent(topic)}&tags=story&hitsPerPage=24&numericFilters=created_at_i>${oneYearAgo}`;
+    const ctrl = new AbortController();
+    const tid = setTimeout(()=>ctrl.abort(), 6000);
+    const res = await fetch(url, { signal: ctrl.signal });
+    clearTimeout(tid);
+    if(!res.ok) return null;
+    const data = await res.json();
+    let hits = (data.hits||[]).filter(h => h.title && h.url && ((h.points||0)>=3||(h.num_comments||0)>=2));
+    if(!hits.length) hits = (data.hits||[]).filter(h => h.title && h.url);
+    hits = hits.slice(0,10);
+    if(!hits.length) return null;
+    return hits.map(h => ({
+      tag: ceTagFromHit(h), source: ceDomainFromUrl(h.url)||'news.ycombinator.com',
+      date: ceRelDate(h.created_at), title: h.title, angle: ceAngleFromHit(h),
+      url: h.url||`https://news.ycombinator.com/item?id=${h.objectID}`
+    }));
+  } catch { return null; }
+}
+
+const CE_FALLBACK_ARTICLES = [
+  { tag:'AI',      source:'Hacker News', date:'this week', title:'AI agents are eating the SaaS UI layer', angle:'Customers are asking for chat-first interfaces. The configure-it-yourself era is fading.' },
+  { tag:'Growth',  source:'Lenny\'s',    date:'this week', title:'The activation metrics that actually predict retention at scale', angle:'What you measure in week 1 shapes your year-1 curve.' },
+  { tag:'Pricing', source:'SaaStr',      date:'this week', title:'Usage-based pricing is now table stakes — flat per-seat is losing deals', angle:'Hybrid models are winning RFPs that pure subscription would lose.' },
+  { tag:'Product', source:'Reforge',     date:'this week', title:'Habit loops are dead — here\'s what actually drives daily active use', angle:'The engagement playbook has changed since 2020.' },
+  { tag:'GTM',     source:'First Round', date:'this week', title:'Founder-led content is outperforming brand-led content 5–10x', angle:'Audiences trust people, not logos.' },
+];
+
+async function ceSearchNews(){
+  const topic = $('ceTopicInput')?.value?.trim();
+  if(!topic){ toast('Type a topic first'); $('ceTopicInput')?.focus(); return; }
+  const btn = $('ceSearchBtn');
+  if(btn){ btn.disabled=true; btn.innerHTML='<span class="ce-spinner"></span>Searching…'; }
+
+  let hits = await ceFetchLiveNews(topic);
+  if(!hits) hits = CE_FALLBACK_ARTICLES;
+
+  _ce.topic = topic;
+  _ce.article = null; _ce._pickedAt = null;
+  ['linkedin','x','threads','instagram','reddit'].forEach(p => { _ce.posts[p] = {text:'',loading:false,generated:false}; });
+
+  const cap = topic.charAt(0).toUpperCase() + topic.slice(1);
+  $('ceNewsTitle').textContent = `Latest: ${cap}`;
+  $('ceNewsHelper').textContent = `${hits.length} articles — pick one to generate posts.`;
+
+  _ce._articles = hits;
+  $('ceTrends').innerHTML = hits.map((t,i) => `
+    <button type="button" class="ce-trend" onclick="cePickArticle(${i})">
+      <div class="ce-trend-meta">
+        <span class="ce-tag">${ceEsc(t.tag||'News')}</span>
+        <span class="ce-trend-source">${ceEsc(t.source||'')} · ${ceEsc(t.date||'')}</span>
+      </div>
+      <h4>${ceEsc(t.title)}</h4>
+      <p>${ceEsc(t.angle)}</p>
+      <div class="ce-trend-foot"><span class="ce-pick">Generate post →</span></div>
+    </button>`).join('');
+
+  $('ceNewsPanel').style.display = 'block';
+  ceResetOutput();
+  if(btn){ btn.disabled=false; btn.innerHTML='Search news →'; }
+  if(window.innerWidth<=1100) $('ceNewsPanel')?.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+async function cePickArticle(idx){
+  const t = _ce._articles[idx];
+  if(!t) return;
+  const pickedAt = Date.now();
+  _ce._pickedAt = pickedAt; _ce.article = t; _ce.topic = _ce.topic || t.title;
+  ['linkedin','x','threads','instagram','reddit'].forEach(p => { _ce.posts[p] = {text:'',loading:false,generated:false}; });
+  $('ceTrendContext').innerHTML = `<h4>${ceEsc(t.title)}</h4><p>${ceEsc(t.angle)}</p>`;
+  $('ceTrendContext').style.display = '';
+  ceShowControls();
+  ceGenerateCurrent(pickedAt);
+  if(window.innerWidth<=1100) $('ceStep3')?.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+/* ── URL mode ─────────────────────────────────────────────────────────── */
+
+async function ceFetchUrlPreview(){
+  const url = $('ceUrlInput')?.value?.trim();
+  if(!url||!url.startsWith('http')){ toast('Paste a valid URL first'); return; }
+  const btn = $('ceUrlBtn');
+  if(btn){ btn.disabled=true; btn.innerHTML='<span class="ce-spinner"></span>Fetching…'; }
+  try {
+    const resp = await fetch(CE_API+'/preview',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})});
+    if(resp.ok){
+      const data = await resp.json();
+      if(data.ok && data.title){ $('ceUrlTitle').value=data.title; $('ceUrlContext').value=data.description||''; }
+      else toast('Could not extract title — enter it manually');
+    } else { toast('Could not fetch article — enter details manually'); }
+  } catch { toast('Network error — enter details manually'); }
+  $('ceUrlPreview').style.display='block';
+  if(btn){ btn.disabled=false; btn.innerHTML='Get article →'; }
+}
+
+async function ceGenerateFromUrl(){
+  const title = $('ceUrlTitle')?.value?.trim();
+  const context = $('ceUrlContext')?.value?.trim();
+  if(!title){ toast('Enter the article title first'); $('ceUrlTitle')?.focus(); return; }
+  _ce.topic = title; _ce.article = { title, angle:context||'', url:$('ceUrlInput')?.value?.trim()||'' };
+  const pickedAt = Date.now(); _ce._pickedAt = pickedAt;
+  ['linkedin','x','threads','instagram','reddit'].forEach(p => { _ce.posts[p] = {text:'',loading:false,generated:false}; });
+  $('ceTrendContext').innerHTML = `<h4>${ceEsc(title)}</h4>${context?`<p>${ceEsc(context)}</p>`:''}`;
+  $('ceTrendContext').style.display = '';
+  ceShowControls(); ceGenerateCurrent(pickedAt);
+}
+
+/* ── Write mode ───────────────────────────────────────────────────────── */
+
+async function ceGenerateFromWrite(){
+  const notes = $('ceWriteInput')?.value?.trim();
+  const topic = $('ceWriteTopic')?.value?.trim();
+  if(!notes){ toast('Write something first'); $('ceWriteInput')?.focus(); return; }
+  _ce.topic = topic||'startup insight';
+  _ce.article = { title:notes, angle:'', url:'', inputMode:'freewrite' };
+  const pickedAt = Date.now(); _ce._pickedAt = pickedAt;
+  ['linkedin','x','threads','instagram','reddit'].forEach(p => { _ce.posts[p] = {text:'',loading:false,generated:false}; });
+  $('ceTrendContext').style.display='none';
+  ceShowControls(); ceGenerateCurrent(pickedAt);
+}
+
+/* ── Output controls ──────────────────────────────────────────────────── */
+
+function ceShowControls(){
+  $('ceTypeRow').style.display=''; $('cePlatformTabs').style.display=''; $('ceEmpty').style.display='none';
+}
+function ceResetOutput(){
+  $('ceTypeRow').style.display='none'; $('cePlatformTabs').style.display='none';
+  $('ceTrendContext').style.display='none'; $('ceEmpty').style.display=''; $('ceGenerated').innerHTML='';
+  ['linkedin','x','threads','instagram','reddit'].forEach(p => { _ce.posts[p] = {text:'',loading:false,generated:false}; });
+}
+
+/* ── Platform + type switching ────────────────────────────────────────── */
+
+function ceSwitchPlatform(platform){
+  _ce.platform = platform;
+  document.querySelectorAll('.ce-plat-tab').forEach(b => b.classList.toggle('active', b.dataset.plat===platform));
+  if(_ce.article && !_ce.posts[platform].generated && !_ce.posts[platform].loading){
+    ceGenerateCurrent(_ce._pickedAt);
+  } else { ceRenderCurrentPost(); }
+}
+
+function ceSetType(type){
+  _ce.postType = type;
+  document.querySelectorAll('.ce-type-chip').forEach(b => b.classList.toggle('active', b.dataset.type===type));
+  if(_ce.article){
+    _ce.posts[_ce.platform] = {text:'',loading:false,generated:false};
+    ceGenerateCurrent(_ce._pickedAt);
+  }
+}
+
+/* ── Post generation ──────────────────────────────────────────────────── */
+
+async function ceGenerateCurrent(pickedAt){
+  const platform = _ce.platform, article = _ce.article;
+  if(!article) return;
+  _ce.posts[platform].loading=true; _ce.posts[platform].generated=false;
+  ceRenderCurrentPost();
+
+  const text = await ceCallAPI(platform, article, _ce.postType);
+  if(_ce._pickedAt !== pickedAt) return; // race guard
+
+  _ce.posts[platform].text=text; _ce.posts[platform].loading=false; _ce.posts[platform].generated=true;
+  ceRenderCurrentPost();
+  ceSaveToHistory(platform, text, _ce.postType, article);
+}
+
+async function ceCallAPI(platform, article, type){
+  try {
+    const resp = await fetch(CE_API+'/generate',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        topic: _ce.topic, articleTitle: article.title, articleAngle: article.angle||'',
+        platform, mode: type, voiceNiche: _ce.voice.niche||'', voiceStyle: _ce.voice.style||'casual',
+        inputMode: article.inputMode||'search',
+      })
+    });
+    if(!resp.ok){ console.warn('CE API',resp.status); return ceFallback(platform,article); }
+    const data = await resp.json();
+    if(data.ok && data.text) return data.text;
+    return ceFallback(platform,article);
+  } catch(e){ console.warn('CE API error',e); return ceFallback(platform,article); }
+}
+
+function ceFallback(platform, article){
+  const title = article?.title||'Worth a read.';
+  if(platform==='x') return title.slice(0,277)+(title.length>277?'…':'');
+  if(platform==='threads') return title.slice(0,497)+(title.length>497?'…':'');
+  if(platform==='instagram') return `CAPTION:\n${title.slice(0,240)}\n\nHASHTAGS:\n#startup #saas #founder #buildinpublic #indiehacker #productlaunch #b2b #growthmarketing #startuplife #solofounder #makersgonnamake #sideproject #bootstrapped #indiemaker #techstartup`;
+  if(platform==='reddit') return `SUBREDDIT: r/startups\n\nTITLE: ${title.slice(0,190)}\n\nBODY:\nSharing this because it sparked a real reaction. Curious what others are seeing in this space.`;
+  return title;
+}
+
+/* ── Rendering ────────────────────────────────────────────────────────── */
+
+const CE_PLAT_INFO = {
+  linkedin:  { label:'LinkedIn',  limit:3000,  svg:`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14zM8.5 17V10h-2v7h2zm-1-7.9a1.1 1.1 0 1 0 0-2.2 1.1 1.1 0 0 0 0 2.2zM18 17v-3.9c0-2.1-1.1-3.1-2.6-3.1-1.2 0-1.7.7-2 1.2V10h-2v7h2v-4c0-1 .2-2 1.4-2s1.2 1.1 1.2 2v4H18z"/></svg>` },
+  x:         { label:'X / Twitter',limit:280,  svg:`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2H21.5l-7.36 8.41L23 22h-6.84l-5.21-6.81L4.91 22H1.65l7.86-8.98L1.5 2h6.99l4.71 6.23L18.244 2z"/></svg>` },
+  threads:   { label:'Threads',    limit:500,  svg:`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.186 24h-.007c-3.581-.024-6.334-1.205-8.184-3.509C2.35 18.44 1.5 15.586 1.473 12.01v-.017c.027-3.579.877-6.43 2.525-8.482C5.845 1.205 8.6.024 12.18 0h.014c2.746.02 5.043.725 6.826 2.098 1.677 1.29 2.858 3.13 3.509 5.467l-2.04.569c-.505-1.865-1.406-3.348-2.67-4.29-1.283-.963-2.95-1.467-5.07-1.482-2.678.02-4.758.853-6.184 2.476-1.406 1.6-2.124 3.958-2.145 7.011.021 3.054.739 5.41 2.145 7.012 1.426 1.622 3.506 2.455 6.184 2.474 1.996-.015 3.491-.438 4.651-1.298.952-.708 1.673-1.72 2.145-3.003l2.03.618c-.627 1.626-1.564 2.914-2.8 3.832-1.454 1.052-3.289 1.6-5.588 1.617z"/></svg>` },
+  instagram: { label:'Instagram',  limit:2200, svg:`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>` },
+  reddit:    { label:'Reddit',     limit:null, svg:`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.13 4.87-7.004 4.87-3.874 0-7.004-2.176-7.004-4.87 0-.183.015-.366.043-.534A1.748 1.748 0 0 1 4.028 12c0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.487l.885-4.182a.342.342 0 0 1 .14-.197.35.35 0 0 1 .238-.042l2.906.617a1.214 1.214 0 0 1 1.108-.701zM9.25 12C8.561 12 8 12.562 8 13.25c0 .687.561 1.248 1.25 1.248.687 0 1.248-.561 1.248-1.249 0-.688-.561-1.249-1.249-1.249zm5.5 0c-.687 0-1.248.561-1.248 1.25 0 .687.561 1.248 1.249 1.248.688 0 1.249-.561 1.249-1.249 0-.687-.562-1.249-1.25-1.249zm-5.466 3.99a.327.327 0 0 0-.231.094.33.33 0 0 0 0 .463c.842.842 2.484.913 2.961.913.477 0 2.105-.056 2.961-.913a.361.361 0 0 0 .029-.463.33.33 0 0 0-.464 0c-.547.533-1.684.73-2.512.73-.828 0-1.979-.196-2.512-.73a.326.326 0 0 0-.232-.095z"/></svg>` },
+};
+
+function ceRenderCurrentPost(){
+  const p = _ce.posts[_ce.platform];
+  $('ceGenerated').innerHTML = cePostCard(_ce.platform, p.loading, p.text||'');
+}
+
+function cePostCard(platform, loading, text){
+  const info = CE_PLAT_INFO[platform]||CE_PLAT_INFO.linkedin;
+  if(loading) return `<div class="ce-post"><div class="ce-post-head"><span class="ce-post-platform">${info.svg} ${info.label}</span><span class="ce-ai-badge">AI</span></div><div class="ce-skeleton"><span class="ce-spinner"></span>Writing your ${info.label} post…</div></div>`;
+  if(!text) return `<div class="ce-post"><div class="ce-post-head"><span class="ce-post-platform">${info.svg} ${info.label}</span><span class="ce-ai-badge">AI</span></div><div class="ce-skeleton" style="opacity:.5">Ready to generate</div></div>`;
+
+  if(platform==='instagram'){
+    const {caption, hashtags} = ceParseInstagram(text);
+    return `<div class="ce-post" data-platform="instagram"><div class="ce-post-head"><span class="ce-post-platform">${info.svg} ${info.label}</span><span class="ce-ai-badge">AI</span></div>
+    <div class="ce-insta">
+      <div><div class="ce-style-label" style="margin-bottom:6px">Caption</div><p class="ce-insta-caption">${ceEsc(caption)}</p><button class="btn ghost" style="height:30px;padding:0 12px;font-size:12px;margin-top:8px" data-ce-copy="${ceEsc(caption)}" onclick="ceCopyAttr(this)">Copy caption</button></div>
+      ${hashtags?`<div><div class="ce-style-label" style="margin-bottom:6px">Hashtags</div><p class="ce-insta-hashtags">${ceEsc(hashtags)}</p><button class="btn ghost" style="height:30px;padding:0 12px;font-size:12px;margin-top:8px" data-ce-copy="${ceEsc(hashtags)}" onclick="ceCopyAttr(this)">Copy hashtags</button></div>`:''}
+    </div>
+    <div class="ce-post-foot"><span class="ce-count">${text.length} chars</span><div class="ce-post-actions"><button class="btn ghost" data-ce-copy="${ceEsc(text)}" onclick="ceCopyAttr(this)">Copy all</button><a class="btn publish" href="https://www.instagram.com/" target="_blank" rel="noopener noreferrer">Open Instagram ↗</a></div></div></div>`;
+  }
+
+  if(platform==='reddit'){
+    const {subreddit, title, body} = ceParseReddit(text);
+    return `<div class="ce-post" data-platform="reddit"><div class="ce-post-head"><span class="ce-post-platform">${info.svg} ${info.label}</span><span class="ce-ai-badge">AI</span></div>
+    <div class="ce-reddit">
+      ${subreddit?`<div class="ce-reddit-section"><label>Suggested subreddit</label><p>${ceEsc(subreddit)}</p><button class="btn ghost" style="height:28px;padding:0 10px;font-size:12px;margin-top:8px" data-ce-copy="${ceEsc(subreddit)}" onclick="ceCopyAttr(this)">Copy</button></div>`:''}
+      ${title?`<div class="ce-reddit-section"><label>Post title</label><p>${ceEsc(title)}</p><button class="btn ghost" style="height:28px;padding:0 10px;font-size:12px;margin-top:8px" data-ce-copy="${ceEsc(title)}" onclick="ceCopyAttr(this)">Copy title</button></div>`:''}
+      ${body?`<div class="ce-reddit-section"><label>Post body</label><p class="ce-post-text" style="font-size:14px">${ceEsc(body)}</p><button class="btn ghost" style="height:28px;padding:0 10px;font-size:12px;margin-top:8px" data-ce-copy="${ceEsc(body)}" onclick="ceCopyAttr(this)">Copy body</button></div>`:''}
+    </div>
+    <div class="ce-post-foot"><span class="ce-count">${text.length} chars</span><div class="ce-post-actions"><button class="btn ghost" data-ce-copy="${ceEsc(text)}" onclick="ceCopyAttr(this)">Copy all</button><a class="btn publish" href="https://www.reddit.com/submit" target="_blank" rel="noopener noreferrer">Post on Reddit ↗</a></div></div></div>`;
+  }
+
+  const limit = info.limit, len = text.length;
+  const postUrl = {
+    linkedin: `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(text.slice(0,1300))}`,
+    x:        `https://twitter.com/intent/tweet?text=${encodeURIComponent(text.slice(0,280))}`,
+    threads:  `https://www.threads.net/intent/post?text=${encodeURIComponent(text.slice(0,500))}`,
+  }[platform]||'#';
+
+  return `<div class="ce-post" data-platform="${platform}"><div class="ce-post-head"><span class="ce-post-platform">${info.svg} ${info.label}</span><span class="ce-ai-badge">AI</span></div>
+  <p class="ce-post-text">${ceEsc(text)}</p>
+  <div class="ce-post-foot"><span class="ce-count ${limit&&len>limit?'over':''}">${len}${limit?'/'+limit:''} chars</span><div class="ce-post-actions"><button class="btn ghost" data-ce-copy="${ceEsc(text)}" onclick="ceCopyAttr(this)">Copy</button><a class="btn publish" href="${postUrl}" target="_blank" rel="noopener noreferrer">Post on ${info.label} ↗</a></div></div></div>`;
+}
+
+/* ── Parsers ──────────────────────────────────────────────────────────── */
+
+function ceParseInstagram(text){
+  const cm = text.match(/CAPTION:\s*([\s\S]+?)(?:\n\n+HASHTAGS:|$)/i);
+  const hm = text.match(/HASHTAGS:\s*([\s\S]+?)$/i);
+  if(cm||hm) return { caption:(cm?.[1]||'').trim(), hashtags:(hm?.[1]||'').trim() };
+  const lines = text.split('\n');
+  const hi = lines.findIndex(l=>(l.match(/#\w+/g)||[]).length>=5);
+  if(hi>0) return { caption:lines.slice(0,hi).join('\n').trim(), hashtags:lines.slice(hi).join('\n').trim() };
+  return { caption:text, hashtags:'' };
+}
+
+function ceParseReddit(text){
+  return {
+    subreddit: (text.match(/SUBREDDIT:\s*(.+)/i)?.[1]||'').trim(),
+    title:     (text.match(/TITLE:\s*(.+)/i)?.[1]||'').trim(),
+    body:      (text.match(/BODY:\s*([\s\S]+?)$/i)?.[1]||'').trim(),
+  };
+}
+
+/* ── History ──────────────────────────────────────────────────────────── */
+
+async function ceSaveToHistory(platform, text, type, article){
+  if(!fbAuth.currentUser||!text) return;
+  try {
+    await db.collection('users').doc(fbAuth.currentUser.uid).collection('ceHistory').add({
+      platform, text, type, topic:_ce.topic||'', articleTitle:article?.title||'',
+      inputMode:article?.inputMode||'search',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    ceLoadHistory();
+  } catch(e){ console.warn('History save',e); }
+}
+
+async function ceLoadHistory(){
+  if(!fbAuth.currentUser) return;
+  try {
+    const snap = await db.collection('users').doc(fbAuth.currentUser.uid)
+      .collection('ceHistory').orderBy('createdAt','desc').limit(20).get();
+    _ce.history = snap.docs.map(d=>({id:d.id,...d.data()}));
+    ceRenderHistoryBadge();
+    if(_ce.historyOpen) ceRenderHistoryList();
+  } catch(e){ console.warn('History load',e); }
+}
+
+function ceRenderHistoryBadge(){
+  const n = _ce.history.length, el = $('ceHistorySection');
+  if(!el) return;
+  el.style.display = n>0?'block':'none';
+  const b=$('ceHistoryCount'); if(b) b.textContent=n;
+}
+
+function ceToggleHistory(){
+  _ce.historyOpen=!_ce.historyOpen;
+  const list=$('ceHistoryList'), arrow=$('ceHistoryArrow');
+  if(!list) return;
+  list.style.display=_ce.historyOpen?'flex':'none';
+  if(arrow) arrow.textContent=_ce.historyOpen?'▴':'▾';
+  if(_ce.historyOpen) ceRenderHistoryList();
+}
+
+function ceRenderHistoryList(){
+  const list=$('ceHistoryList'); if(!list) return;
+  const LABELS={linkedin:'LinkedIn',x:'X',threads:'Threads',instagram:'Instagram',reddit:'Reddit'};
+  if(!_ce.history.length){ list.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px 0">No posts generated yet.</div>'; return; }
+  list.innerHTML=_ce.history.map(h=>`
+    <div class="ce-history-item">
+      <div class="ce-history-item-head">
+        <span class="ce-history-item-meta">
+          <span class="ce-tag">${ceEsc(LABELS[h.platform]||h.platform)}</span>
+          <span>${ceEsc(h.type||'')}</span>
+          ${h.topic?`<span>${ceEsc(h.topic)}</span>`:''}
+        </span>
+        <button class="btn ghost" style="height:26px;padding:0 10px;font-size:11px" data-ce-copy="${ceEsc(h.text||'')}" onclick="ceCopyAttr(this)">Copy</button>
+      </div>
+      <p class="ce-history-item-text">${ceEsc(h.text||'')}</p>
+    </div>`).join('');
+}
+
+/* ── Voice settings ───────────────────────────────────────────────────── */
+
+function ceVoiceOpen(){
+  $('ceVoiceOverlay').classList.add('show');
+  $('ceVoiceNiche').value=_ce.voice.niche||'';
+  document.querySelectorAll('.ce-voice-style-btn').forEach(b=>b.classList.toggle('active',b.dataset.vstyle===(_ce.voice.style||'casual')));
+}
+function ceVoiceClose(){ $('ceVoiceOverlay').classList.remove('show'); }
+function ceVoiceSetStyle(style){
+  _ce.voice.style=style;
+  document.querySelectorAll('.ce-voice-style-btn').forEach(b=>b.classList.toggle('active',b.dataset.vstyle===style));
+}
+async function ceVoiceSave(){
+  _ce.voice.niche=($('ceVoiceNiche')?.value||'').trim();
+  if(fbAuth.currentUser){
+    try{
+      await db.collection('users').doc(fbAuth.currentUser.uid).collection('prefs').doc('ceVoice').set({style:_ce.voice.style,niche:_ce.voice.niche});
+      toast('Voice saved');
+    }catch{ toast('Saved locally'); }
+  } else { toast('Voice saved (sign in to sync)'); }
+  ceVoiceClose();
+}
+async function ceLoadVoice(){
+  if(!fbAuth.currentUser) return;
+  try{
+    const doc=await db.collection('users').doc(fbAuth.currentUser.uid).collection('prefs').doc('ceVoice').get();
+    if(doc.exists){ const d=doc.data(); _ce.voice.style=d.style||'casual'; _ce.voice.niche=d.niche||''; }
+  }catch(e){ console.warn('Voice load',e); }
+}
+
+function ceInit(){ ceLoadHistory(); ceLoadVoice(); }
+
+/* ── Copy util ────────────────────────────────────────────────────────── */
+
+function ceCopyAttr(btn){
+  const text=btn?.dataset?.ceCopy||'';
+  if(!text) return;
+  navigator.clipboard.writeText(text).then(()=>toast('Copied'));
+}
+
+// Enter-to-trigger for search + URL inputs
+document.addEventListener('keydown',(e)=>{
+  if(e.key!=='Enter') return;
+  const id=document.activeElement?.id;
+  if(id==='ceTopicInput'){ e.preventDefault(); ceSearchNews(); }
+  else if(id==='ceUrlInput'){ e.preventDefault(); ceFetchUrlPreview(); }
+});
+
+/* ── Old CE_TREND_BANK kept only as named const (no longer used for display) ── */
 const CE_TREND_BANK = {
   ai: [
     { tag:'Models',     source:'The Information',    date:'2 days ago',  title:"Anthropic's Claude 4 ships with longer context — what changes for product teams", angle:"Longer context windows + better tool use are quietly making real agent products viable in production for the first time." },
@@ -1298,473 +1852,6 @@ const CE_TREND_GENERIC = [
   { tag:'Hiring',       source:'Lenny\'s Newsletter', date:'last week',   title:"Small teams are out-shipping bigger ones — and getting noticed",       angle:"4-person teams hitting $1M ARR are now common stories. Leverage > headcount as the founder skill of the year." }
 ];
 
-let _ceCurrent = { industry:'', trends:[], pickedTrend:null, posts:null };
-
-// Specific product / topic names → bucket. Checked AFTER exact bank-key match so
-// "ai" still wins as an exact match, but "claude code" routes to the AI bank.
-const CE_TOPIC_KEYWORDS = {
-  // AI products & terms
-  'claude':'ai', 'anthropic':'ai', 'openai':'ai', 'gpt':'ai', 'chatgpt':'ai', 'gemini':'ai',
-  'mistral':'ai', 'llama':'ai', 'llm':'ai', 'llms':'ai', 'agent':'ai', 'agents':'ai',
-  'cursor':'ai', 'copilot':'ai', 'perplexity':'ai', 'midjourney':'ai', 'dalle':'ai',
-  'machinelearning':'ai', 'deeplearning':'ai', 'generativeai':'ai', 'foundationmodel':'ai',
-  'transformer':'ai', 'rag':'ai', 'finetuning':'ai', 'embeddings':'ai', 'vectordb':'ai',
-  'huggingface':'ai', 'replicate':'ai', 'langchain':'ai', 'llamaindex':'ai', 'cody':'ai',
-  // SaaS products / generic
-  'notion':'saas', 'linear':'saas', 'airtable':'saas', 'slack':'saas', 'figma':'saas',
-  'monday':'saas', 'hubspot':'saas', 'salesforce':'saas', 'zoom':'saas', 'asana':'saas',
-  'miro':'saas', 'productivity':'saas', 'collaboration':'saas', 'verticalsaas':'saas',
-  'horizontalsaas':'saas', 'b2bsoftware':'saas', 'software':'saas',
-  // Fintech
-  'stripe':'fintech', 'plaid':'fintech', 'square':'fintech', 'paypal':'fintech',
-  'venmo':'fintech', 'robinhood':'fintech', 'coinbase':'fintech', 'crypto':'fintech',
-  'cryptocurrency':'fintech', 'blockchain':'fintech', 'defi':'fintech', 'web3':'fintech',
-  'mercury':'fintech', 'brex':'fintech', 'ramp':'fintech', 'chime':'fintech',
-  'klarna':'fintech', 'affirm':'fintech', 'neobank':'fintech', 'insurtech':'fintech',
-  'embeddedfinance':'fintech', 'baas':'fintech',
-  // Healthcare
-  'telehealth':'healthcare', 'telemedicine':'healthcare', 'pharma':'healthcare',
-  'biotech':'healthcare', 'digitalhealth':'healthcare', 'oscar':'healthcare',
-  'hims':'healthcare', 'glp':'healthcare', 'ehr':'healthcare', 'epic':'healthcare',
-  // Marketing
-  'advertising':'marketing', 'paidads':'marketing', 'performance':'marketing',
-  'contentmarketing':'marketing', 'organicgrowth':'marketing', 'newsletter':'marketing',
-  'substack':'marketing', 'beehiiv':'marketing', 'convertkit':'marketing', 'mailchimp':'marketing',
-  // E-commerce
-  'shopify':'ecommerce', 'woocommerce':'ecommerce', 'bigcommerce':'ecommerce',
-  'etsy':'ecommerce', 'amazonseller':'ecommerce', 'tiktokshop':'ecommerce',
-  'temu':'ecommerce', 'shein':'ecommerce', 'onlinestore':'ecommerce',
-  // Real estate
-  'zillow':'realestate', 'redfin':'realestate', 'opendoor':'realestate', 'compass':'realestate',
-  'housing':'realestate', 'mortgage':'realestate', 'rentals':'realestate',
-  'airbnb':'realestate', 'vrbo':'realestate',
-  // Retail
-  'walmart':'retail', 'costco':'retail', 'target':'retail', 'kroger':'retail',
-  'grocery':'retail', 'bigbox':'retail'
-};
-
-// Human-readable bucket labels for disclosure text
-const CE_BUCKET_LABEL = {
-  ai:'AI', saas:'SaaS', retail:'Retail', fintech:'Fintech',
-  healthcare:'Healthcare', marketing:'Marketing', ecommerce:'E-commerce', realestate:'Real Estate'
-};
-
-function ceFindTrends(industry){
-  const i = (industry||'').toLowerCase().replace(/[^a-z]/g,'');
-  // 1. Exact bank key match (e.g., "ai", "saas", "fintech")
-  for(const key of Object.keys(CE_TREND_BANK)){
-    if(i.includes(key)) return { key, trends: CE_TREND_BANK[key], match:'exact' };
-  }
-  // 2. Product / keyword map
-  for(const keyword of Object.keys(CE_TOPIC_KEYWORDS)){
-    if(i.includes(keyword)){
-      const bucket = CE_TOPIC_KEYWORDS[keyword];
-      return { key: bucket, trends: CE_TREND_BANK[bucket], match:'mapped' };
-    }
-  }
-  // 3. Broad synonym fallbacks
-  if(i.includes('startup')||i.includes('b2b')) return { key:'saas', trends: CE_TREND_BANK.saas, match:'mapped' };
-  if(i.includes('shop')||i.includes('dtc')||i.includes('brand')) return { key:'ecommerce', trends: CE_TREND_BANK.ecommerce, match:'mapped' };
-  if(i.includes('agency')||i.includes('growth')||i.includes('seo')||i.includes('ads')) return { key:'marketing', trends: CE_TREND_BANK.marketing, match:'mapped' };
-  if(i.includes('health')||i.includes('clinic')||i.includes('medical')) return { key:'healthcare', trends: CE_TREND_BANK.healthcare, match:'mapped' };
-  if(i.includes('finance')||i.includes('bank')||i.includes('lending')||i.includes('credit')) return { key:'fintech', trends: CE_TREND_BANK.fintech, match:'mapped' };
-  if(i.includes('property')||i.includes('housing')||i.includes('real')) return { key:'realestate', trends: CE_TREND_BANK.realestate, match:'mapped' };
-  // 4. Nothing matched — return generic with a clear flag
-  return { key:null, trends: CE_TREND_GENERIC, match:'generic' };
-}
-
-/* ----- Live news via Hacker News Algolia API (free, CORS-enabled, no key) ----- */
-function ceRelDate(iso){
-  if(!iso) return 'recent';
-  const d = new Date(iso);
-  const diff = (Date.now() - d.getTime()) / 1000;
-  if(diff < 3600) return 'just now';
-  if(diff < 86400){
-    const h = Math.floor(diff/3600);
-    return h === 1 ? '1h ago' : `${h}h ago`;
-  }
-  if(diff < 604800){
-    const dd = Math.floor(diff/86400);
-    return dd === 1 ? '1 day ago' : `${dd} days ago`;
-  }
-  if(diff < 2592000){
-    const w = Math.floor(diff/604800);
-    return w === 1 ? '1 week ago' : `${w} weeks ago`;
-  }
-  return d.toLocaleDateString();
-}
-function ceDomainFromUrl(u){
-  if(!u) return '';
-  try { return new URL(u).hostname.replace(/^www\./,''); } catch { return ''; }
-}
-function ceTagFromHit(h){
-  const p = h.points || 0, c = h.num_comments || 0;
-  if(p > 200) return 'Hot';
-  if(c > 50) return 'Discussion';
-  return 'News';
-}
-function ceAngleFromHit(h){
-  const c = h.num_comments || 0, p = h.points || 0;
-  if(p > 100 && c > 50) return `Trending on Hacker News — ${p.toLocaleString()} points, ${c.toLocaleString()} comments. A good moment to weigh in.`;
-  if(c > 30) return `Sparking ${c.toLocaleString()} comments on Hacker News. The discussion is where the real signal is.`;
-  if(p > 50) return `Surfacing on Hacker News with ${p} points. Early signal worth a take.`;
-  return `Posted to Hacker News (${p} points, ${c} comments). Fresh and not yet over-discussed.`;
-}
-async function ceFetchLiveNews(topic){
-  // HN Algolia search — works for any topic, returns real articles with titles, URLs, dates.
-  // Doc: https://hn.algolia.com/api
-  // search_by_date = newest first. numericFilters caps to last 365 days so
-  // we never surface stale (e.g. 2017) articles for a topic that's quiet today.
-  try {
-    const oneYearAgo = Math.floor(Date.now() / 1000) - 365 * 24 * 3600;
-    const url = `https://hn.algolia.com/api/v1/search_by_date?query=${encodeURIComponent(topic)}&tags=story&hitsPerPage=24&numericFilters=created_at_i>${oneYearAgo}`;
-    const ctrl = new AbortController();
-    const tid = setTimeout(()=>ctrl.abort(), 6000); // 6s timeout
-    const res = await fetch(url, { signal: ctrl.signal });
-    clearTimeout(tid);
-    if(!res.ok) return null;
-    const data = await res.json();
-    // Filter: must have title, must have a real URL (skip Ask HN/Show HN if no URL),
-    // and have at least minimal engagement to avoid spam.
-    let hits = (data.hits||[]).filter(h =>
-      h.title &&
-      h.url &&
-      ((h.points || 0) >= 3 || (h.num_comments || 0) >= 2)
-    );
-    // If quality filter killed everything, retry without engagement threshold (keep only
-    // requirement that URL is present) so a fresh topic with no traction still returns results.
-    if(hits.length === 0){
-      hits = (data.hits||[]).filter(h => h.title && h.url);
-    }
-    hits = hits.slice(0, 10);
-    if(hits.length === 0) return null;
-    return hits.map(h => ({
-      tag: ceTagFromHit(h),
-      source: ceDomainFromUrl(h.url) || 'news.ycombinator.com',
-      date: ceRelDate(h.created_at),
-      title: h.title,
-      angle: ceAngleFromHit(h),
-      url: h.url || `https://news.ycombinator.com/item?id=${h.objectID}`
-    }));
-  } catch (e) {
-    return null;
-  }
-}
-
-async function ceSearchTrends(){
-  const industry = val('ceIndustry');
-  if(!industry){ toast('Type a topic first'); $('ceIndustry')?.focus(); return; }
-  const btn = document.querySelector('[onclick="ceSearchTrends()"]');
-  const origLabel = btn ? btn.innerHTML : '';
-  if(btn){ btn.disabled = true; btn.innerHTML = '<span class="ce-loading"></span>Searching news'; }
-
-  // 1. Try live news from Hacker News Algolia. Works for any topic.
-  let hits = await ceFetchLiveNews(industry);
-  let mode = hits ? 'live' : 'curated';
-  let curatedKey = null;
-  if(!hits){
-    // 2. Fall back to curated bank if HN was unreachable / returned nothing.
-    const result = ceFindTrends(industry);
-    hits = result.trends;
-    curatedKey = result.key;
-    mode = result.match === 'exact' ? 'curated-exact' : result.match === 'mapped' ? 'curated-mapped' : 'curated-generic';
-  }
-
-  _ceCurrent.industry = industry;
-  _ceCurrent.trends = hits.map((t,i)=>({...t, id:i}));
-  _ceCurrent.pickedTrend = null;
-  _ceCurrent.posts = null;
-  const topicCap = ceCapIndustry(industry);
-  $('ceTrendsTitle').textContent = `Latest news on ${topicCap}`;
-  const helper = $('ceTrendsHelper');
-  if(helper){
-    if(mode === 'live'){
-      helper.textContent = `${hits.length} live results from Hacker News for "${topicCap}". Click any article to turn it into a LinkedIn + X post.`;
-    } else if(mode === 'curated-exact'){
-      helper.textContent = `Couldn't reach Hacker News — showing curated ${CE_BUCKET_LABEL[curatedKey]} angles instead. Click any to generate posts.`;
-    } else if(mode === 'curated-mapped'){
-      helper.textContent = `Couldn't reach Hacker News — showing curated ${CE_BUCKET_LABEL[curatedKey]} angles (closest match to "${topicCap}"). Click any to generate posts.`;
-    } else {
-      helper.textContent = `Couldn't reach Hacker News and no curated match for "${topicCap}" — showing general startup angles. Click any to generate posts.`;
-    }
-  }
-  $('ceTrends').innerHTML = _ceCurrent.trends.map(t=>`
-    <button type="button" class="ce-trend" onclick="cePickTrend(${t.id})">
-      <div class="ce-trend-meta">
-        <span class="ce-tag">${ceEsc(t.tag||'News')}</span>
-        <span class="ce-trend-source">${ceEsc(t.source||'')} · ${ceEsc(t.date||'')}</span>
-      </div>
-      <h4>${ceEsc(t.title)}</h4>
-      <p>${ceEsc(t.angle)}</p>
-      <div class="ce-trend-foot">
-        <span class="ce-pick">Generate post →</span>
-      </div>
-    </button>`).join('');
-  $('ceStep2').style.display = 'block';
-  // Reset right column to empty state when re-searching
-  $('ceGenerated').innerHTML = '';
-  $('ceTrendContext').style.display = 'none';
-  $('ceEmpty').style.display = '';
-  $('cePickAnotherBtn').style.display = 'none';
-  if(btn){ btn.disabled = false; btn.innerHTML = origLabel; }
-  if(window.innerWidth <= 1100){
-    $('ceStep2').scrollIntoView({behavior:'smooth', block:'start'});
-  }
-}
-
-// XGrowth LLM proxy — calls Gemini via our Cloudflare Worker.
-const CE_API = 'https://xgrowth-api.xgrowth.workers.dev';
-const CE_LIMITS = { linkedin: 3000, x: 280 };
-
-async function cePickTrend(id){
-  const t = _ceCurrent.trends.find(x=>x.id===id);
-  if(!t) return;
-  _ceCurrent.pickedTrend = t;
-  _ceCurrent.posts = { linkedin: '', x: '', liMode: 'default', xMode: 'default', liLoading: true, xLoading: true };
-  $('ceTrendContext').innerHTML = `<h4>${ceEsc(t.title)}</h4><p>${ceEsc(t.angle)}</p>`;
-  $('ceTrendContext').style.display = '';
-  $('ceGenerated').innerHTML = ceRenderPosts();
-  $('ceEmpty').style.display = 'none';
-  $('cePickAnotherBtn').style.display = '';
-  // Scroll
-  if(window.innerWidth <= 1100){
-    $('ceStep3').scrollIntoView({behavior:'smooth', block:'start'});
-  } else {
-    const out = document.querySelector('.ce-output');
-    if(out) out.scrollTop = 0;
-  }
-  // Fire both LLM calls in parallel
-  const [li, x] = await Promise.all([
-    ceGeneratePost('linkedin', t, 'default'),
-    ceGeneratePost('x', t, 'default')
-  ]);
-  // Guard: user may have picked a different trend while we waited
-  if(_ceCurrent.pickedTrend !== t) return;
-  _ceCurrent.posts.linkedin = li;
-  _ceCurrent.posts.x = x;
-  _ceCurrent.posts.liLoading = false;
-  _ceCurrent.posts.xLoading = false;
-  $('ceGenerated').innerHTML = ceRenderPosts();
-}
-
-async function ceGeneratePost(platform, t, mode){
-  try{
-    const resp = await fetch(CE_API + '/generate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        topic: _ceCurrent.industry,
-        articleTitle: t.title,
-        articleAngle: t.angle || '',
-        articleUrl: t.url || '',
-        platform,
-        mode
-      })
-    });
-    if(!resp.ok){
-      console.warn('Generate API non-OK', resp.status, await resp.text());
-      return ceFallbackPost(platform, t);
-    }
-    const data = await resp.json();
-    if(data.ok && data.text) return data.text;
-    console.warn('Generate API empty', data);
-    return ceFallbackPost(platform, t);
-  }catch(e){
-    console.warn('Generate API error', e);
-    return ceFallbackPost(platform, t);
-  }
-}
-
-async function ceRegenerate(platform, mode){
-  if(!_ceCurrent.pickedTrend) return;
-  if(platform === 'linkedin'){
-    _ceCurrent.posts.liMode = mode;
-    _ceCurrent.posts.liLoading = true;
-  } else {
-    _ceCurrent.posts.xMode = mode;
-    _ceCurrent.posts.xLoading = true;
-  }
-  $('ceGenerated').innerHTML = ceRenderPosts();
-  const text = await ceGeneratePost(platform, _ceCurrent.pickedTrend, mode);
-  if(!_ceCurrent.pickedTrend) return;
-  if(platform === 'linkedin'){
-    _ceCurrent.posts.linkedin = text;
-    _ceCurrent.posts.liLoading = false;
-  } else {
-    _ceCurrent.posts.x = text;
-    _ceCurrent.posts.xLoading = false;
-  }
-  $('ceGenerated').innerHTML = ceRenderPosts();
-}
-
-// Local template fallback in case the LLM Worker is down. Keeps the app working,
-// just with the older template-style output. No URLs in the post text by design.
-function ceFallbackPost(platform, t){
-  const opener = "Worth a real read this morning.";
-  if(platform === 'linkedin'){
-    const tag = ceTopicHashtag(_ceCurrent.industry || '');
-    const tagLine = tag ? `\n\n${tag} #buildinpublic` : `\n\n#buildinpublic`;
-    return `${opener}\n\n${t.title}\n\nSharing without commentary — let it speak.${tagLine}`.trim();
-  }
-  // X — keep under 280
-  const candidate = `${opener}\n\n${t.title}`.trim();
-  if(candidate.length <= 280) return candidate;
-  return (t.title || '').slice(0, 277) + '…';
-}
-
-function cePickAnother(){
-  $('ceGenerated').innerHTML = '';
-  $('ceTrendContext').style.display = 'none';
-  $('ceEmpty').style.display = '';
-  $('cePickAnotherBtn').style.display = 'none';
-  _ceCurrent.pickedTrend = null;
-  _ceCurrent.posts = null;
-  if(window.innerWidth <= 1100){
-    $('ceStep2').scrollIntoView({behavior:'smooth', block:'start'});
-  }
-}
-
-// Smart-capitalize industry input: "ai" → "AI", "saas" → "SaaS", "fintech" → "Fintech", etc.
-const CE_ACRONYMS = { ai:'AI', saas:'SaaS', smb:'SMB', b2b:'B2B', b2c:'B2C', dtc:'DTC', cpg:'CPG', sfr:'SFR', plg:'PLG', cx:'CX', ux:'UX', api:'API', sql:'SQL', cac:'CAC', ltv:'LTV', arr:'ARR', kpi:'KPI', ipo:'IPO', it:'IT', hr:'HR', rev:'RevOps', m:'M' };
-function ceCapIndustry(s){
-  if(!s) return '';
-  return s.split(/\s+/).map(w => {
-    const lower = w.toLowerCase();
-    if(CE_ACRONYMS[lower]) return CE_ACRONYMS[lower];
-    if(w.length <= 3) return w.toUpperCase();
-    return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
-  }).join(' ');
-}
-
-// Minimalist post generation. We don't have an LLM, so we don't fake "analysis."
-// Output is short, human-feeling — the news + a 1-line frame. User adds their own take by editing.
-const CE_OPENERS = [
-  "This one's worth pausing on.",
-  "Quietly one of the most underrated reads of the week.",
-  "Filed under: things that matter more than the headline.",
-  "Spent the morning thinking about this.",
-  "Adding this to my tabs-open-for-days pile.",
-  "Genuinely shifted how I'm thinking lately:",
-  "Worth the click.",
-  "If you're building right now, this matters:",
-  "The thing I keep coming back to:",
-  "Bookmarking this one for later."
-];
-const CE_BRIDGES = [
-  "Worth a real read, not a skim.",
-  "The comment thread is half the value.",
-  "Curious what others are taking away.",
-  "Small read, big implications.",
-  "Sharing without commentary — let it speak."
-];
-
-// Deterministic pick so the same article always produces the same post (no random churn on re-render).
-function ceHashStr(s){
-  let h = 0;
-  for(let i=0;i<(s||'').length;i++) h = ((h<<5) - h + (s.charCodeAt(i)|0)) | 0;
-  return Math.abs(h);
-}
-function ceOpener(t){ return CE_OPENERS[ceHashStr(t.title||'') % CE_OPENERS.length]; }
-function ceBridge(t){ return CE_BRIDGES[ceHashStr((t.title||'') + 'b') % CE_BRIDGES.length]; }
-
-// Tasteful topic hashtag — PascalCase, no junk chars.
-function ceTopicHashtag(s){
-  if(!s) return '';
-  const parts = (s||'').split(/\s+/).map(w => w.replace(/[^A-Za-z0-9]/g,''));
-  const cleaned = parts.filter(Boolean).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join('');
-  return cleaned ? '#' + cleaned : '';
-}
-
-const CE_STYLE_MODES = [
-  { mode:'default',    label:'Default' },
-  { mode:'shorter',    label:'Shorter' },
-  { mode:'contrarian', label:'Contrarian' },
-  { mode:'founder',    label:'Founder voice' },
-  { mode:'data',       label:'Data-driven' }
-];
-
-function ceStyleRow(platform, activeMode){
-  return `<div class="ce-style-row">
-    <span class="ce-style-label">Style:</span>
-    ${CE_STYLE_MODES.map(m =>
-      `<button type="button" class="ce-style-chip ${m.mode===activeMode?'active':''}" onclick="ceRegenerate('${platform}','${m.mode}')">${m.label}</button>`
-    ).join('')}
-  </div>`;
-}
-
-function cePostCard(platform, loading, text, mode){
-  const limit = CE_LIMITS[platform];
-  const isLinkedIn = platform === 'linkedin';
-  const platformLabel = isLinkedIn ? 'LinkedIn' : 'X / Twitter';
-  const platformSvg = isLinkedIn
-    ? `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14zM8.5 17V10h-2v7h2zm-1-7.9a1.1 1.1 0 1 0 0-2.2 1.1 1.1 0 0 0 0 2.2zM18 17v-3.9c0-2.1-1.1-3.1-2.6-3.1-1.2 0-1.7.7-2 1.2V10h-2v7h2v-4c0-1 .2-2 1.4-2s1.2 1.1 1.2 2v4H18z"/></svg>`
-    : `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2H21.5l-7.36 8.41L23 22h-6.84l-5.21-6.81L4.91 22H1.65l7.86-8.98L1.5 2h6.99l4.71 6.23L18.244 2z"/></svg>`;
-  const postHandler = isLinkedIn ? 'cePostLinkedIn()' : 'cePostX()';
-  const postLabel = isLinkedIn ? 'Post on LinkedIn ↗' : 'Post on X ↗';
-
-  const body = loading
-    ? `<div class="ce-skeleton"><span class="ce-spinner"></span>Writing your ${platformLabel} post…</div>`
-    : `<p class="ce-post-text">${ceEsc(text||'')}</p>`;
-
-  const len = (text||'').length;
-  const foot = loading ? '' : `
-    <div class="ce-post-foot">
-      <span class="ce-count ${len>limit?'over':''}">${len}/${limit}</span>
-      <div class="ce-post-actions">
-        <button class="btn ghost" data-ce-copy="${ceEsc(text||'')}" onclick="ceCopyAttr(this)">Copy</button>
-        <button class="btn publish" onclick="${postHandler}">${postLabel}</button>
-      </div>
-    </div>`;
-
-  return `<div class="ce-post" data-platform="${platform}">
-    <div class="ce-post-head">
-      <span class="ce-post-platform">${platformSvg} ${platformLabel}</span>
-      <span class="ce-ai-badge" title="Generated by Gemini">AI</span>
-    </div>
-    ${body}
-    ${loading ? '' : ceStyleRow(platform, mode)}
-    ${foot}
-  </div>`;
-}
-
-function ceRenderPosts(){
-  const p = _ceCurrent.posts || {};
-  return cePostCard('linkedin', !!p.liLoading, p.linkedin, p.liMode || 'default') +
-         cePostCard('x',        !!p.xLoading,  p.x,        p.xMode || 'default');
-}
-
-function ceCopyAttr(btn){
-  const text = btn?.dataset?.ceCopy || '';
-  if(!text) return;
-  navigator.clipboard.writeText(text).then(()=>toast('Copied'));
-}
-
-function cePostLinkedIn(){
-  if(!_ceCurrent.posts) return;
-  const text = _ceCurrent.posts.linkedin;
-  // LinkedIn has no official text-prefill endpoint, so copy first → user pastes if shareActive query doesn't auto-fill.
-  navigator.clipboard.writeText(text).then(()=>{
-    toast('Copied — paste into LinkedIn');
-    window.open('https://www.linkedin.com/feed/?shareActive=true&text=' + encodeURIComponent(text.slice(0,1300)), '_blank', 'noopener,noreferrer');
-  }).catch(()=>{
-    window.open('https://www.linkedin.com/feed/', '_blank', 'noopener,noreferrer');
-  });
-}
-
-function cePostX(){
-  if(!_ceCurrent.posts) return;
-  const text = _ceCurrent.posts.x.slice(0,280);
-  // Twitter intent reliably pre-fills compose.
-  window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(text), '_blank', 'noopener,noreferrer');
-}
-
-// Enter-to-search on the industry input
-document.addEventListener('keydown', (e)=>{
-  if(e.key==='Enter' && document.activeElement && document.activeElement.id==='ceIndustry'){
-    e.preventDefault();
-    ceSearchTrends();
-  }
-});
 
 function genCampaign(){
   const t = val('cmType'); const hook = val('cmHook')||'Free 14-day trial'; const days = +val('cmDays')||14; const budget=+val('cmBudget')||0;
@@ -2190,6 +2277,7 @@ fbAuth.onAuthStateChanged(user=>{
       // After cloud load, show welcome only if no profile exists anywhere
       if(!state.profile){ openWelcome(); }
     });
+    ceInit(); // load CE history + voice prefs
   } else {
     document.body.classList.remove('authed');
     cloudLoaded = false;
