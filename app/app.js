@@ -525,17 +525,18 @@ function ceEsc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;
 const CE_API = 'https://xgrowth-api.xgrowth.workers.dev';
 
 // Image generation state
-const _imgGen = { selectedUrl: '', selectedIdx: -1, seeds: [], objectUrls: [] };
+const _imgGen = { selectedUrl: '', selectedIdx: -1, seeds: [] };
 
-// The 6 Pollinations models shown in the auto-grid (free, no key, client-side)
-// Only confirmed valid model IDs from image.pollinations.ai
+// 6 visual style variants for the parallel grid.
+// All use Gemini image gen (server-side, no ad-blocker issues, no extra API key).
+// Each adds a style prefix to the user's prompt so the 6 cells look genuinely different.
 const IMGGEN_GRID_MODELS = [
-  { id: 'flux-pro',     label: 'FLUX Pro',     tag: 'Best overall'   },
-  { id: 'flux-realism', label: 'Realism',      tag: 'Photorealistic' },
-  { id: 'flux',         label: 'FLUX Schnell', tag: 'Fast & clean'   },
-  { id: 'flux-anime',   label: 'Anime',        tag: 'Illustrated'    },
-  { id: 'flux-3d',      label: 'FLUX 3D',      tag: '3D / Product'   },
-  { id: 'any-dark',     label: 'Any Dark',     tag: 'Dark aesthetic' },
+  { id: 'gemini', label: 'Realistic',  tag: 'Photorealistic',  style: 'Photorealistic product photography, sharp focus, natural light' },
+  { id: 'gemini', label: 'Editorial',  tag: 'Magazine shot',   style: 'Clean editorial studio photography, white background, professional lighting' },
+  { id: 'gemini', label: 'Cinematic',  tag: 'Dramatic',        style: 'Cinematic dramatic side lighting, moody atmosphere, shallow depth of field' },
+  { id: 'gemini', label: 'Minimal',    tag: 'Clean & simple',  style: 'Minimalist design, clean composition, lots of white space, subtle shadows' },
+  { id: 'gemini', label: 'Bold',       tag: 'Graphic art',     style: 'Bold graphic design, vibrant saturated colors, high contrast, artistic' },
+  { id: 'gemini', label: 'Dark',       tag: 'Dark aesthetic',  style: 'Dark moody aesthetic, deep shadows, noir atmosphere, dramatic contrast' },
 ];
 
 // Authed POST to the Worker. Attaches the user's Firebase ID token.
@@ -1146,16 +1147,11 @@ function ceImgRenderGrid(phase){
     </div>`).join('');
 }
 
-/* Fire all 6 in parallel with fresh seeds */
+/* Fire all 6 in parallel */
 async function ceImgGenerate(){
   const prompt = ($('ceImgPromptInput')?.value || '').trim();
   if(!prompt){ toast('Enter a prompt first'); return; }
 
-  // Free any blob URLs from the previous generation
-  _imgGen.objectUrls.forEach(u => URL.revokeObjectURL(u));
-  _imgGen.objectUrls = [];
-
-  _imgGen.seeds       = IMGGEN_GRID_MODELS.map(() => Math.floor(Math.random() * 1e9));
   _imgGen.selectedUrl = '';
   _imgGen.selectedIdx = -1;
   $('ceImgDownloadBtn').disabled = true;
@@ -1166,48 +1162,28 @@ async function ceImgGenerate(){
   $('ceImgGenBtn').disabled = false;
 }
 
-/* Load one image via the Worker proxy and update its cell.
-   The Worker fetches from Pollinations server-to-server (bypasses browser
-   ad-blockers) and streams the raw binary back.  We read it as a Blob and
-   create a same-origin blob: URL — never intercepted by any extension.
-   No base64 encoding anywhere = no Worker CPU time limit issues. */
+/* Load one image (Gemini via Worker) and update its cell.
+   Each cell sends its own style prefix so the 6 outputs look genuinely different.
+   Gemini runs server-side — no ad-blocker or Pollinations 402 issues. */
 async function ceImgLoadOne(prompt, model, idx){
-  const seed = _imgGen.seeds[idx] || Math.floor(Math.random() * 1e9);
+  // Prepend the visual style so Gemini interprets each cell differently
+  const stylizedPrompt = model.style ? `${model.style}: ${prompt}` : prompt;
   try {
-    // Raw fetch (not xgFetch) because the Worker returns image/jpeg binary, not JSON
-    const user = fbAuth?.currentUser;
-    if(!user) throw new Error('Sign in required');
-    const token = await user.getIdToken();
-
-    const resp = await fetch(CE_API + '/generate-image', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-      body:    JSON.stringify({ prompt, provider: 'pollinations', model: model.id, seed }),
+    const data = await xgFetch('/generate-image', {
+      prompt:   stylizedPrompt,
+      provider: 'gemini',
     });
-
-    if(!resp.ok){
-      let msg = 'HTTP ' + resp.status;
-      try { const j = await resp.json(); msg = j.error || msg; } catch {}
-      throw new Error(msg);
-    }
-
-    const blob      = await resp.blob();
-    const objectUrl = URL.createObjectURL(blob);
-    _imgGen.objectUrls.push(objectUrl);
+    if(!data.imageData) throw new Error('No image returned');
+    const dataUrl = `data:${data.mimeType || 'image/jpeg'};base64,${data.imageData}`;
 
     const cell = $(`imgCell${idx}`);
-    if(!cell || !cell.classList.contains('loading')){
-      // Cell was replaced by a retry — release the URL immediately
-      URL.revokeObjectURL(objectUrl);
-      _imgGen.objectUrls = _imgGen.objectUrls.filter(u => u !== objectUrl);
-      return objectUrl;
-    }
+    if(!cell || !cell.classList.contains('loading')) return dataUrl;
     cell.className   = 'imggen-cell done';
-    cell.dataset.url = objectUrl;
+    cell.dataset.url = dataUrl;
     cell.innerHTML   = `
-      <img src="${objectUrl}" alt="${model.label}">
+      <img src="${dataUrl}" alt="${model.label}">
       <div class="imggen-label"><strong>${model.label}</strong><span>${model.tag}</span></div>`;
-    return objectUrl;
+    return dataUrl;
   } catch(e) {
     const cell = $(`imgCell${idx}`);
     if(!cell || !cell.classList.contains('loading')) return;
@@ -1257,13 +1233,12 @@ function ceImgSelectCell(idx){
   $('ceImgDownloadBtn').disabled = false;
 }
 
-/* Download the selected image.
-   selectedUrl is a blob: URL — just assign it directly to an <a> and click. */
+/* Download the selected image (stored as a data: URL from Gemini base64). */
 function ceImgDownload(){
   if(!_imgGen.selectedUrl){ toast('Tap an image to select it first'); return; }
   try {
     const a    = document.createElement('a');
-    a.href     = _imgGen.selectedUrl; // blob: URL works natively as a download
+    a.href     = _imgGen.selectedUrl;
     a.download = `xgrowth-insta-${Date.now()}.jpg`;
     document.body.appendChild(a);
     a.click();
@@ -1276,9 +1251,6 @@ function ceImgDownload(){
 function ceImgClose(){
   $('ceImgGenOverlay').classList.remove('show');
   document.body.style.overflow = '';
-  // Release blob URLs to free browser memory
-  _imgGen.objectUrls.forEach(u => URL.revokeObjectURL(u));
-  _imgGen.objectUrls = [];
 }
 
 /* ── Copy util ────────────────────────────────────────────────────────── */
