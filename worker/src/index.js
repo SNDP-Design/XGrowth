@@ -115,12 +115,31 @@ export default {
       if (!prompt || typeof prompt !== 'string') {
         return json({ error: 'Missing prompt' }, 400, origin, allowed);
       }
+
+      // Pollinations: stream image binary directly — zero base64/CPU overhead,
+      // and the request is server-to-server so browser ad-blockers can't interfere.
+      if (provider === 'pollinations') {
+        const { model: pollinationsModel = 'flux', seed } = body;
+        try {
+          const imgResp = await callPollinationsProxy(prompt, pollinationsModel, seed);
+          const ct = imgResp.headers.get('content-type') || 'image/jpeg';
+          return new Response(imgResp.body, {
+            status: 200,
+            headers: {
+              'Content-Type': ct.split(';')[0].trim(),
+              'Cache-Control': 'no-store',
+              ...corsHeaders(origin, allowed),
+            },
+          });
+        } catch (err) {
+          return json({ error: 'Image generation failed: ' + (err.message || 'unknown') }, 502, origin, allowed);
+        }
+      }
+
+      // HF / Gemini — return base64 JSON as before
       try {
         let result;
-        if (provider === 'pollinations') {
-          const { model: pollinationsModel = 'flux', seed } = body;
-          result = await callPollinationsImage(prompt, pollinationsModel, seed);
-        } else if (provider.startsWith('hf-')) {
+        if (provider.startsWith('hf-')) {
           if (!env.HF_TOKEN) return json({ error: 'HF_TOKEN secret not configured — run: npx wrangler secret put HF_TOKEN' }, 500, origin, allowed);
           result = await callHuggingFaceImage(env.HF_TOKEN, prompt, provider);
         } else {
@@ -1111,20 +1130,21 @@ ${HARD_RULES}
 - Do NOT add any text before Email 1 or after the final email`;
 }
 
-/* ─── Pollinations image client (server-to-server proxy) ─────────────────── */
+/* ─── Pollinations image proxy (server-to-server, binary stream) ──────────── */
 
-// Fetch from Pollinations server-side so the browser never makes a direct
-// request to image.pollinations.ai — bypasses any ad-blocker / privacy-extension
-// that blocks third-party image CDN domains. Returns base64 so the client
-// can display it as a data: URL (not blockable by extensions).
-async function callPollinationsImage(prompt, model, seed) {
+// Fetch the image from Pollinations server-side and return the raw Response for
+// streaming.  No base64 encoding = zero CPU overhead (avoids the Worker's CPU
+// time limit which kills base64 loops on large images).  The browser receives
+// raw image bytes via CORS-annotated headers; the client converts to a blob URL.
+async function callPollinationsProxy(prompt, model, seed) {
   const s = seed || Math.floor(Math.random() * 1e9);
   const imageUrl =
     `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}` +
     `?width=1080&height=1080&model=${encodeURIComponent(model)}&nologo=true&seed=${s}`;
 
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 25000); // 25s hard limit
+  // Abort after 25s — leaves 5s headroom before the Worker's 30s wall-clock limit.
+  const timer = setTimeout(() => controller.abort(), 25000);
 
   let resp;
   try {
@@ -1137,28 +1157,13 @@ async function callPollinationsImage(prompt, model, seed) {
     });
   } catch (e) {
     clearTimeout(timer);
-    if (e.name === 'AbortError') throw new Error('Pollinations timed out after 25s');
+    if (e.name === 'AbortError') throw new Error('Pollinations timed out after 25 s');
     throw e;
   }
   clearTimeout(timer);
 
-  if (!resp.ok) throw new Error(`Pollinations ${resp.status}`);
-
-  const ct       = resp.headers.get('content-type') || 'image/jpeg';
-  const mimeType = ct.split(';')[0].trim();
-
-  // Read image bytes and base64-encode in chunks (avoids call-stack overflow on
-  // large images when using String.fromCharCode spread).
-  const buffer = await resp.arrayBuffer();
-  const bytes  = new Uint8Array(buffer);
-  let binary   = '';
-  const CHUNK  = 8192;
-  for (let i = 0; i < bytes.length; i += CHUNK) {
-    binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
-  }
-  const imageData = btoa(binary);
-
-  return { imageData, mimeType };
+  if (!resp.ok) throw new Error(`Pollinations returned ${resp.status}`);
+  return resp; // caller streams resp.body directly to the browser
 }
 
 /* ─── Hugging Face image client ───────────────────────────────────────────── */

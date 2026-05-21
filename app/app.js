@@ -525,7 +525,7 @@ function ceEsc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;
 const CE_API = 'https://xgrowth-api.xgrowth.workers.dev';
 
 // Image generation state
-const _imgGen = { selectedUrl: '', selectedIdx: -1, seeds: [] };
+const _imgGen = { selectedUrl: '', selectedIdx: -1, seeds: [], objectUrls: [] };
 
 // The 6 Pollinations models shown in the auto-grid (free, no key, client-side)
 // Only confirmed valid model IDs from image.pollinations.ai
@@ -1151,7 +1151,11 @@ async function ceImgGenerate(){
   const prompt = ($('ceImgPromptInput')?.value || '').trim();
   if(!prompt){ toast('Enter a prompt first'); return; }
 
-  _imgGen.seeds   = IMGGEN_GRID_MODELS.map(() => Math.floor(Math.random() * 1e9));
+  // Free any blob URLs from the previous generation
+  _imgGen.objectUrls.forEach(u => URL.revokeObjectURL(u));
+  _imgGen.objectUrls = [];
+
+  _imgGen.seeds       = IMGGEN_GRID_MODELS.map(() => Math.floor(Math.random() * 1e9));
   _imgGen.selectedUrl = '';
   _imgGen.selectedIdx = -1;
   $('ceImgDownloadBtn').disabled = true;
@@ -1163,40 +1167,57 @@ async function ceImgGenerate(){
 }
 
 /* Load one image via the Worker proxy and update its cell.
-   Previously used new Image() pointing directly at image.pollinations.ai, but
-   ad-blockers / privacy extensions block third-party image CDN domains in the
-   browser, causing onerror on every cell.  Routing through the Worker makes the
-   request server-to-server; the browser only sees a data: URL which is never
-   intercepted by extensions. */
+   The Worker fetches from Pollinations server-to-server (bypasses browser
+   ad-blockers) and streams the raw binary back.  We read it as a Blob and
+   create a same-origin blob: URL — never intercepted by any extension.
+   No base64 encoding anywhere = no Worker CPU time limit issues. */
 async function ceImgLoadOne(prompt, model, idx){
   const seed = _imgGen.seeds[idx] || Math.floor(Math.random() * 1e9);
   try {
-    const data = await xgFetch('/generate-image', {
-      prompt,
-      provider: 'pollinations',
-      model:    model.id,
-      seed,
+    // Raw fetch (not xgFetch) because the Worker returns image/jpeg binary, not JSON
+    const user = fbAuth?.currentUser;
+    if(!user) throw new Error('Sign in required');
+    const token = await user.getIdToken();
+
+    const resp = await fetch(CE_API + '/generate-image', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body:    JSON.stringify({ prompt, provider: 'pollinations', model: model.id, seed }),
     });
-    if(!data.imageData) throw new Error('No image data returned');
-    const dataUrl = `data:${data.mimeType || 'image/jpeg'};base64,${data.imageData}`;
+
+    if(!resp.ok){
+      let msg = 'HTTP ' + resp.status;
+      try { const j = await resp.json(); msg = j.error || msg; } catch {}
+      throw new Error(msg);
+    }
+
+    const blob      = await resp.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    _imgGen.objectUrls.push(objectUrl);
 
     const cell = $(`imgCell${idx}`);
-    if(!cell || !cell.classList.contains('loading')) return dataUrl; // replaced by a retry
+    if(!cell || !cell.classList.contains('loading')){
+      // Cell was replaced by a retry — release the URL immediately
+      URL.revokeObjectURL(objectUrl);
+      _imgGen.objectUrls = _imgGen.objectUrls.filter(u => u !== objectUrl);
+      return objectUrl;
+    }
     cell.className   = 'imggen-cell done';
-    cell.dataset.url = dataUrl;
+    cell.dataset.url = objectUrl;
     cell.innerHTML   = `
-      <img src="${dataUrl}" alt="${model.label}">
+      <img src="${objectUrl}" alt="${model.label}">
       <div class="imggen-label"><strong>${model.label}</strong><span>${model.tag}</span></div>`;
-    return dataUrl;
+    return objectUrl;
   } catch(e) {
     const cell = $(`imgCell${idx}`);
-    if(!cell || !cell.classList.contains('loading')) return; // replaced by a retry
+    if(!cell || !cell.classList.contains('loading')) return;
     cell.className = 'imggen-cell error';
     cell.innerHTML = `
       <div class="imggen-status">
         <span style="font-size:24px;opacity:.3">✕</span>
         <span class="imggen-status-lbl">${model.label}</span>
-        <button class="btn ghost" style="height:26px;padding:0 10px;font-size:11px;margin-top:6px"
+        <span class="imggen-status-lbl" style="font-size:10px;opacity:.45;margin-top:-4px">${ceEsc((e?.message||'').slice(0,60))}</span>
+        <button class="btn ghost" style="height:26px;padding:0 10px;font-size:11px;margin-top:4px"
           onclick="event.stopPropagation();ceImgRetryOne(${idx})">Retry</button>
       </div>`;
     throw e;
@@ -1237,29 +1258,16 @@ function ceImgSelectCell(idx){
 }
 
 /* Download the selected image.
-   Images now arrive as data: URLs (base64 from the Worker), so we convert the
-   data URL directly to a Blob rather than fetching an external URL. */
-async function ceImgDownload(){
+   selectedUrl is a blob: URL — just assign it directly to an <a> and click. */
+function ceImgDownload(){
   if(!_imgGen.selectedUrl){ toast('Tap an image to select it first'); return; }
   try {
-    let blob;
-    if(_imgGen.selectedUrl.startsWith('data:')){
-      // data:<mime>;base64,<b64data>
-      const [header, b64] = _imgGen.selectedUrl.split(',');
-      const mime  = header.match(/:(.*?);/)?.[1] || 'image/jpeg';
-      const bytes = atob(b64);
-      const arr   = new Uint8Array(bytes.length);
-      for(let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
-      blob = new Blob([arr], { type: mime });
-    } else {
-      const resp = await fetch(_imgGen.selectedUrl);
-      blob = await resp.blob();
-    }
     const a    = document.createElement('a');
-    a.href     = URL.createObjectURL(blob);
+    a.href     = _imgGen.selectedUrl; // blob: URL works natively as a download
     a.download = `xgrowth-insta-${Date.now()}.jpg`;
+    document.body.appendChild(a);
     a.click();
-    URL.revokeObjectURL(a.href);
+    document.body.removeChild(a);
   } catch {
     toast('Download failed — right-click the image and Save As');
   }
@@ -1268,6 +1276,9 @@ async function ceImgDownload(){
 function ceImgClose(){
   $('ceImgGenOverlay').classList.remove('show');
   document.body.style.overflow = '';
+  // Release blob URLs to free browser memory
+  _imgGen.objectUrls.forEach(u => URL.revokeObjectURL(u));
+  _imgGen.objectUrls = [];
 }
 
 /* ── Copy util ────────────────────────────────────────────────────────── */
