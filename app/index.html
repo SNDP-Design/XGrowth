@@ -142,8 +142,13 @@
 
     <!-- DASHBOARD / ANALYTICS -->
     <section data-view="dashboard">
-      <div class="topbar" style="margin-bottom:6px">
-        <h2 class="section">Analytics Dashboard</h2>
+
+      <!-- Header -->
+      <div class="dash-header">
+        <div>
+          <h2 class="section" style="margin-bottom:4px">Analytics Dashboard</h2>
+          <div id="syncStatus" class="sync synced"><span class="dot"></span><span id="syncLabel">Synced</span></div>
+        </div>
         <div class="row" style="align-items:center;gap:10px">
           <div class="range" id="rangeSel">
             <button data-r="7" class="active">7d</button>
@@ -151,126 +156,137 @@
             <button data-r="30">30d</button>
           </div>
           <button class="profile-btn" id="editProfile" type="button" aria-label="Edit profile">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/>
-            </svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
             <span>Profile</span>
           </button>
         </div>
       </div>
-      <p class="lede">Real metrics across every platform you publish on. Connect data manually or paste from your platform's analytics.</p>
 
-      <div class="grid cols-5">
-        <div class="card kpi">
-          <h3>Followers</h3>
-          <div class="v"><span id="kFollowers">0</span><span class="delta up" id="kFollowersDelta">+0%</span></div>
-          <div class="l" id="lFollowers">vs prior period</div>
+      <!-- KPI Strip -->
+      <div class="kpi-strip">
+        <div class="card kpi" style="--i:0">
+          <div class="kpi-label">Followers</div>
+          <div class="kpi-value"><span id="kFollowers" class="kpi-num">0</span><span class="delta up" id="kFollowersDelta">+0%</span></div>
+          <div class="kpi-sub" id="lFollowers">vs prior period</div>
           <svg class="spark" id="sparkFollowers"></svg>
         </div>
-        <div class="card kpi">
-          <h3>Impressions</h3>
-          <div class="v"><span id="kImpr">0</span><span class="delta up" id="kImprDelta">+0%</span></div>
-          <div class="l" id="lImpr">period total</div>
+        <div class="card kpi" style="--i:1">
+          <div class="kpi-label">Impressions</div>
+          <div class="kpi-value"><span id="kImpr" class="kpi-num">0</span><span class="delta up" id="kImprDelta">+0%</span></div>
+          <div class="kpi-sub" id="lImpr">period total</div>
           <svg class="spark" id="sparkImpr"></svg>
         </div>
-        <div class="card kpi">
-          <h3>Engagement Rate</h3>
-          <div class="v"><span id="kEng">0.0%</span><span class="delta flat" id="kEngDelta">+0.0pp</span></div>
-          <div class="l">Likes+RT+Replies / Impr</div>
+        <div class="card kpi" style="--i:2">
+          <div class="kpi-label">Engagement Rate</div>
+          <div class="kpi-value"><span id="kEng" class="kpi-num">0.0%</span><span class="delta flat" id="kEngDelta">+0.0pp</span></div>
+          <div class="kpi-sub">Likes + RT + Replies / Impr</div>
           <svg class="spark" id="sparkEng"></svg>
         </div>
-        <div class="card kpi">
-          <h3>Profile Visits</h3>
-          <div class="v"><span id="kVisits">0</span><span class="delta up" id="kVisitsDelta">+0%</span></div>
-          <div class="l" id="lVisits">period total</div>
+        <div class="card kpi" style="--i:3">
+          <div class="kpi-label">Profile Visits</div>
+          <div class="kpi-value"><span id="kVisits" class="kpi-num">0</span><span class="delta up" id="kVisitsDelta">+0%</span></div>
+          <div class="kpi-sub" id="lVisits">period total</div>
           <svg class="spark" id="sparkVisits"></svg>
         </div>
-        <div class="card kpi">
-          <h3>Reply Rate</h3>
-          <div class="v"><span id="kReply">0.00%</span><span class="delta flat" id="kReplyDelta">+0.0pp</span></div>
-          <div class="l">Replies / Impressions (top posts)</div>
+        <div class="card kpi" style="--i:4">
+          <div class="kpi-label">Reply Rate</div>
+          <div class="kpi-value"><span id="kReply" class="kpi-num">0.00%</span><span class="delta flat" id="kReplyDelta">+0.0pp</span></div>
+          <div class="kpi-sub">Replies / Impressions</div>
           <svg class="spark" id="sparkReply"></svg>
         </div>
       </div>
 
-      <div class="grid cols-3" style="margin-top:14px">
-        <div class="card">
-          <div class="copybar"><h3>Conversion Funnel</h3><span class="small muted" id="funnelRange">last 14 days</span></div>
-          <div class="funnel" id="funnel"></div>
-          <div class="small muted" style="margin-top:10px">Founder tip: if Visits → Leads is &lt;1%, your bio CTA needs work, not your hook.</div>
+      <!-- Main row: charts left + sidebar right -->
+      <div class="dash-row">
+        <div class="dash-charts">
+          <!-- Impressions bar chart -->
+          <div class="card" style="--i:5">
+            <div class="copybar">
+              <h3>Daily Impressions</h3>
+              <span class="small muted" id="impSummary"></span>
+            </div>
+            <div class="bar-row" id="barChart"></div>
+            <div class="legend"><span><i></i>Impressions per day</span></div>
+          </div>
+          <!-- Velocity + Funnel side by side -->
+          <div class="dash-eq" style="margin-top:14px">
+            <div class="card" style="--i:6">
+              <div class="copybar"><h3>Follower Velocity</h3><span class="small muted" id="velNote">net new / day</span></div>
+              <div class="bar-row" id="velChart"></div>
+              <div class="legend"><span><i></i>Daily net new</span><span id="velSummary" class="muted small"></span></div>
+            </div>
+            <div class="card" style="--i:7">
+              <div class="copybar"><h3>Conversion Funnel</h3><span class="small muted" id="funnelRange">last 14d</span></div>
+              <div class="funnel" id="funnel"></div>
+              <div class="small muted" style="margin-top:8px">Visits → Leads &lt;1%? Fix bio CTA first.</div>
+            </div>
+          </div>
         </div>
-        <div class="card">
-          <div class="copybar"><h3>Follower Growth Velocity</h3><span class="small muted" id="velNote">net new / day</span></div>
-          <div class="bar-row" id="velChart"></div>
-          <div class="legend"><span><i></i>Daily net new followers</span><span id="velSummary" class="muted"></span></div>
-        </div>
-        <div class="card">
-          <h3>Quick Actions</h3>
-          <div class="quick-list" id="quickActions">
-            <button class="qa" onclick="document.querySelector('button[data-view=\'content\']').click()">
-              <span class="qa-icon">✎</span>
-              <div><b>Generate a thread</b><div class="muted small">Hooks, full thread, replies</div></div>
-            </button>
-            <button class="qa" onclick="document.querySelector('button[data-view=\'auditor\']').click()">
-              <span class="qa-icon">🔍</span>
-              <div><b>Audit your tweets</b><div class="muted small">Score, hooks, A/B variants</div></div>
-            </button>
-            <button class="qa" onclick="document.getElementById('addPost').click()">
-              <span class="qa-icon">＋</span>
-              <div><b>Log a post</b><div class="muted small">Track impressions & ER</div></div>
-            </button>
-            <button class="qa" onclick="document.querySelector('button[data-view=\'reports\']').click()">
-              <span class="qa-icon">📊</span>
-              <div><b>Build weekly report</b><div class="muted small">Investor-ready snapshot</div></div>
-            </button>
-            <button class="qa" onclick="document.querySelector('button[data-view=\'growth\']').click()">
-              <span class="qa-icon">🧪</span>
-              <div><b>Growth experiments</b><div class="muted small">ICE-scored tactics for your stage</div></div>
-            </button>
+
+        <div class="dash-sidebar">
+          <!-- Quick Actions -->
+          <div class="card" style="--i:5">
+            <h3 style="margin-bottom:12px">Quick Actions</h3>
+            <div class="quick-list" id="quickActions">
+              <button class="qa" onclick="document.querySelector('button[data-view=\'content\']').click()">
+                <span class="qa-icon qa-content">✎</span>
+                <div><b>Generate a post</b><div class="muted small">5 platforms, threads, image gen</div></div>
+              </button>
+              <button class="qa" onclick="document.querySelector('button[data-view=\'growth\']').click()">
+                <span class="qa-icon qa-growth">🧪</span>
+                <div><b>Growth experiments</b><div class="muted small">ICE-scored tactics for your stage</div></div>
+              </button>
+              <button class="qa" onclick="document.querySelector('button[data-view=\'email\']').click()">
+                <span class="qa-icon qa-email">✉</span>
+                <div><b>Email sequence</b><div class="muted small">Onboarding, launch, nurture</div></div>
+              </button>
+              <button class="qa" onclick="document.getElementById('addPost').click()">
+                <span class="qa-icon qa-log">＋</span>
+                <div><b>Log a post</b><div class="muted small">Track impressions &amp; ER</div></div>
+              </button>
+              <button class="qa" onclick="document.querySelector('button[data-view=\'reports\']').click()">
+                <span class="qa-icon qa-report">📊</span>
+                <div><b>Weekly report</b><div class="muted small">Investor-ready snapshot</div></div>
+              </button>
+            </div>
+          </div>
+          <!-- Goal Progress -->
+          <div class="card" style="--i:8">
+            <h3>Goal Progress</h3>
+            <div id="goalList"></div>
+            <div class="upsell">
+              <div>
+                <b>Premium Audit · $49</b>
+                <div class="small">Hand-tuned thread review + 30-day calendar.</div>
+              </div>
+              <button class="btn" onclick="toast('Upsell flow coming soon.')">Upgrade</button>
+            </div>
           </div>
         </div>
       </div>
 
       <!-- AI Growth Pulse -->
-      <div class="card" style="margin-top:14px">
+      <div class="card dash-pulse" style="--i:9">
         <div class="copybar">
           <div>
-            <h3 style="margin:0 0 2px">AI Growth Pulse</h3>
+            <h3 style="margin:0 0 3px">AI Growth Pulse</h3>
             <span class="muted small">3 insights from your current metrics</span>
           </div>
           <button class="btn ghost" id="pulseBtn" onclick="runGrowthPulse()">Run analysis</button>
         </div>
-        <div id="pulseOut" class="pulse-out">Click "Run analysis" to get 3 AI-generated insights and this week's #1 action item — based on your logged metrics.</div>
+        <div id="pulseOut" class="pulse-out">Click "Run analysis" to get 3 AI-generated insights based on your logged metrics.</div>
       </div>
 
-      <div class="grid cols-3" style="margin-top:14px">
-        <div class="card" style="grid-column:span 2">
-          <div class="copybar"><h3>Daily Impressions (last 14 days)</h3><span class="small" id="impSummary"></span></div>
-          <div class="bar-row" id="barChart"></div>
-          <div class="legend"><span><i></i>Impressions per day</span></div>
-        </div>
-        <div class="card">
-          <h3>Goal Progress</h3>
-          <div id="goalList"></div>
-          <div class="upsell">
-            <div>
-              <b>Premium Audit · $49</b>
-              <div class="small">Hand-tuned thread review + 30-day calendar tailored to your niche.</div>
-            </div>
-            <button class="btn" onclick="toast('Upsell flow coming soon, saved to your wishlist.')">Upgrade</button>
-          </div>
-        </div>
-      </div>
-
+      <!-- Bottom: Posts + Campaigns -->
       <div class="grid cols-2" style="margin-top:14px">
-        <div class="card">
+        <div class="card" style="--i:10">
           <div class="copybar"><h3>Top Posts This Week</h3><button class="btn ghost" id="addPost">+ Log post</button></div>
           <div class="table-wrap"><table>
             <thead><tr><th>Post</th><th>Impr</th><th>WoW</th><th>Likes</th><th>Replies</th><th>RT</th><th>ER</th></tr></thead>
             <tbody id="postsBody"></tbody>
           </table></div>
         </div>
-        <div class="card">
+        <div class="card" style="--i:11">
           <h3>Campaign ROI</h3>
           <div class="table-wrap"><table>
             <thead><tr><th>Campaign</th><th>Spend</th><th>Leads</th><th>CPL</th><th>Status</th></tr></thead>
@@ -285,6 +301,7 @@
           </div>
         </div>
       </div>
+
     </section>
 
     <!-- CONTENT ENGINE -->

@@ -280,40 +280,52 @@ function rangeWindow(){
   return {r, label:`last ${r} days`, prevLabel:`prior ${r} days`};
 }
 
+/* ── Animated counter for KPI numbers ─────────────────────────────────── */
+function animCount(el, to, format, dur=700){
+  if(!el || isNaN(to)) return;
+  const start = performance.now();
+  function tick(now){
+    const t = Math.min((now-start)/dur, 1);
+    const ease = 1 - Math.pow(1-t, 4);
+    el.textContent = format(to * ease);
+    if(t < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
 function renderKPIs(){
   const m = state.metrics;
   if(!m.followers.length){ return; }
   const r = state.range || 7;
   const cur = m.followers.at(-1);
   const prev = m.followers.at(-1-r) || m.followers[0];
-  $('kFollowers').textContent = fmt(cur);
+
+  animCount($('kFollowers'), cur, v => fmt(Math.round(v)));
   setDelta('kFollowersDelta', pct(cur, prev));
-  $('lFollowers').textContent = `vs ${r} days ago`;
+  $('lFollowers').textContent = `vs ${r}d ago`;
 
   const impCur = sum(m.impressions.slice(-r));
   const impPrev = sum(m.impressions.slice(-r*2,-r)) || 1;
-  $('kImpr').textContent = fmt(impCur);
+  animCount($('kImpr'), impCur, v => fmt(Math.round(v)));
   setDelta('kImprDelta', pct(impCur, impPrev));
   $('lImpr').textContent = `${r}-day total`;
 
   const engCur = avg(m.engagement.slice(-r));
   const engPrev = avg(m.engagement.slice(-r*2,-r));
-  $('kEng').textContent = engCur.toFixed(1)+'%';
+  animCount($('kEng'), engCur, v => v.toFixed(1)+'%');
   $('kEngDelta').textContent = (engCur-engPrev>=0?'+':'') + (engCur-engPrev).toFixed(1)+'pp';
   $('kEngDelta').className = 'delta ' + (engCur>engPrev?'up':engCur<engPrev?'down':'flat');
 
   const visCur = sum(m.visits.slice(-r));
   const visPrev = sum(m.visits.slice(-r*2,-r)) || 1;
-  $('kVisits').textContent = fmt(visCur);
+  animCount($('kVisits'), visCur, v => fmt(Math.round(v)));
   setDelta('kVisitsDelta', pct(visCur, visPrev));
   $('lVisits').textContent = `${r}-day total`;
 
-  // Reply rate from logged posts
   const totalImpr = state.posts.reduce((a,p)=>a+p.impr,0);
   const totalReplies = state.posts.reduce((a,p)=>a+p.replies,0);
   const reply = totalImpr? (totalReplies/totalImpr*100) : 0;
-  $('kReply').textContent = reply.toFixed(2)+'%';
-  // Approximate prior reply rate from engagement series for delta visualization
+  animCount($('kReply'), reply, v => v.toFixed(2)+'%');
   const replyPrev = avg(m.engagement.slice(-r*2,-r))*0.18;
   $('kReplyDelta').textContent = (reply-replyPrev>=0?'+':'') + (reply-replyPrev).toFixed(2)+'pp';
   $('kReplyDelta').className = 'delta ' + (reply>replyPrev?'up':reply<replyPrev?'down':'flat');
@@ -322,11 +334,10 @@ function renderKPIs(){
   drawSpark('sparkImpr', m.impressions.slice(-r));
   drawSpark('sparkEng', m.engagement.slice(-r));
   drawSpark('sparkVisits', m.visits.slice(-r));
-  // Synthesize reply spark from engagement * 0.18 within range
   drawSpark('sparkReply', m.engagement.slice(-r).map(v=>+(v*0.18).toFixed(2)));
 
   const rn = $('rangeNote'); if(rn) rn.textContent = `vs prior ${r} days`;
-  $('funnelRange') && ($('funnelRange').textContent = `last ${r} days`);
+  if($('funnelRange')) $('funnelRange').textContent = `last ${r}d`;
 }
 
 function renderVelocity(){
@@ -335,13 +346,18 @@ function renderVelocity(){
   const f = m.followers.slice(-r-1);
   const deltas = []; for(let i=1;i<f.length;i++) deltas.push(f[i]-f[i-1]);
   const max = Math.max(...deltas.map(Math.abs),1);
-  $('velChart').innerHTML = deltas.map(v=>{
-    const h = (Math.abs(v)/max*100).toFixed(1);
+  // Render at height 0 first, then animate
+  $('velChart').innerHTML = deltas.map((v,i)=>{
     const color = v>=0 ? 'linear-gradient(180deg,#4ade80,#22c55e)' : 'linear-gradient(180deg,#f87171,#dc2626)';
-    return `<div class="bar" style="height:${h}%;background:${color}" data-v="${v>=0?'+':''}${v}"></div>`;
+    return `<div class="bar" data-target="${(Math.abs(v)/max*100).toFixed(1)}" style="height:0%;background:${color}" data-v="${v>=0?'+':''}${v}"></div>`;
   }).join('');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    $('velChart').querySelectorAll('.bar').forEach((b,i)=>{
+      setTimeout(()=>{ b.style.height = b.dataset.target+'%'; }, i*20);
+    });
+  }));
   const net = deltas.reduce((a,b)=>a+b,0);
-  const avgD = (net/deltas.length).toFixed(1);
+  const avgD = deltas.length ? (net/deltas.length).toFixed(1) : '0';
   $('velSummary').textContent = `Net ${net>=0?'+':''}${net} · Avg ${avgD}/day`;
 }
 
@@ -377,18 +393,33 @@ function setDelta(id, p){
 }
 
 function drawSpark(id, data){
-  const el = $(id); const w = el.clientWidth || 280, h = 50, pad = 4;
-  const min = Math.min(...data), max = Math.max(...data) || 1;
-  const xs = i => pad + (i*(w-pad*2))/(data.length-1);
-  const ys = v => h-pad - ((v-min)/(max-min||1))*(h-pad*2);
-  const pts = data.map((v,i)=>`${xs(i)},${ys(v)}`).join(' ');
+  const el = $(id);
+  if(!el || data.length < 2) return;
+  const w = el.clientWidth || 280, h = 52, padX = 2, padY = 6;
+  const min = Math.min(...data), max = Math.max(...data);
+  const range = max - min || 1;
+  const xs = i => padX + (i*(w-padX*2))/(data.length-1);
+  const ys = v => h - padY - ((v-min)/range)*(h-padY*2);
+  // Build smooth bezier path
+  const pts = data.map((v,i) => [xs(i), ys(v)]);
+  let d = `M${pts[0][0]},${pts[0][1]}`;
+  for(let i=1; i<pts.length; i++){
+    const cp1x = (pts[i-1][0]+pts[i][0])/2, cp1y = pts[i-1][1];
+    const cp2x = (pts[i-1][0]+pts[i][0])/2, cp2y = pts[i][1];
+    d += ` C${cp1x},${cp1y} ${cp2x},${cp2y} ${pts[i][0]},${pts[i][1]}`;
+  }
+  const areaD = d + ` L${pts[pts.length-1][0]},${h} L${pts[0][0]},${h} Z`;
+  const gid = 'sg'+id;
   el.innerHTML = `
-    <defs><linearGradient id="g${id}" x1="0" x2="0" y1="0" y2="1">
-      <stop offset="0%" stop-color="#ffffff" stop-opacity=".35"/>
-      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
-    </linearGradient></defs>
-    <polyline fill="none" stroke="#ededed" stroke-width="2" points="${pts}"/>
-    <polygon fill="url(#g${id})" points="${pts} ${xs(data.length-1)},${h} ${xs(0)},${h}"/>
+    <defs>
+      <linearGradient id="${gid}" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0%" stop-color="#fff" stop-opacity=".25"/>
+        <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <path d="${areaD}" fill="url(#${gid})"/>
+    <path d="${d}" fill="none" stroke="#e5e5e5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="${pts[pts.length-1][0]}" cy="${pts[pts.length-1][1]}" r="3" fill="#fff"/>
   `;
 }
 
@@ -396,11 +427,17 @@ function renderBars(){
   const r = state.range || 7;
   const data = state.metrics.impressions.slice(-r);
   if(!data.length) return;
-  const max = Math.max(...data);
-  $('barChart').innerHTML = data.map(v=>`<div class="bar" style="height:${(v/max*100).toFixed(1)}%" data-v="${fmt(v)}"></div>`).join('');
-  $('impSummary').textContent = `Total ${fmt(sum(data))} · Avg ${fmt(avg(data))}/day · ${r}d`;
-  const heading = document.querySelector('#barChart').closest('.card').querySelector('h3');
-  if(heading) heading.textContent = `Daily Impressions (last ${r} days)`;
+  const max = Math.max(...data, 1);
+  // Render with height 0, animate to actual heights
+  $('barChart').innerHTML = data.map(v=>
+    `<div class="bar" data-target="${(v/max*100).toFixed(1)}" style="height:0%" data-v="${fmt(v)}"></div>`
+  ).join('');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    $('barChart').querySelectorAll('.bar').forEach((b,i)=>{
+      setTimeout(()=>{ b.style.height = b.dataset.target+'%'; }, i*22);
+    });
+  }));
+  $('impSummary').textContent = `Total ${fmt(sum(data))} · Avg ${fmt(Math.round(avg(data)))}/day · ${r}d`;
 }
 
 /* Range selector wiring */
