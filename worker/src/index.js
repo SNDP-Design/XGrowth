@@ -2,13 +2,29 @@
  * XGrowth Content Engine — Cloudflare Worker proxy to Google Gemini.
  *
  * Endpoints:
- *   POST /generate  { topic, articleTitle, articleAngle?, platform, mode?,
- *                     voiceNiche?, voiceStyle?, inputMode? }
- *                   platform: "linkedin" | "x" | "threads" | "instagram" | "reddit"
- *                   mode:     "hot-take" | "story" | "teach" | "data" | "question" | "founder"
- *                   inputMode: "search" | "url" | "freewrite"
- *   POST /preview   { url }  — fetch a URL server-side, return { title, description }
- *   GET  /health    health check
+ *   POST /generate  Body shape depends on `kind`:
+ *
+ *     kind: "post" (default — Content Engine)
+ *       { topic, articleTitle, articleAngle?, platform, mode?,
+ *         voiceNiche?, voiceStyle?, inputMode? }
+ *
+ *     kind: "campaign"  (Campaign Builder)
+ *       { campaignType, hook, days, budget, channels[], niche?, voiceNiche?, voiceStyle? }
+ *
+ *     kind: "copy"      (Website Copy)
+ *       { name, what, bio, cta, niche?, voiceNiche?, voiceStyle? }
+ *
+ *     kind: "audit"     (Content Auditor)
+ *       { handle, posts: string[], niche? }
+ *
+ *     kind: "report"    (Weekly narrative)
+ *       { niche, metrics: { followersWoW, impressions7, engagement7, visits7, topPost? } }
+ *
+ *   POST /preview      { url }  — fetch a URL server-side, return { title, description }
+ *   GET  /health       health check (no auth)
+ *
+ * Auth: every non-health request requires `Authorization: Bearer <firebase-id-token>`.
+ * The token is verified against Firebase's JWKS — only signed-in XGrowth users can call.
  *
  * GEMINI_API_KEY lives ONLY as a Wrangler secret. Never sent to the browser.
  * CORS locked to known XGrowth origins.
@@ -25,6 +41,10 @@ const ALLOWED_ORIGINS = [
   'http://localhost:5500',
   'http://127.0.0.1:5500',
 ];
+
+const FIREBASE_PROJECT_ID = 'xgrowth-351de';
+const FIREBASE_ISSUER = `https://securetoken.google.com/${FIREBASE_PROJECT_ID}`;
+const FIREBASE_JWKS_URL = 'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com';
 
 // Try models in order; first one that responds wins.
 const GEMINI_MODELS = [
@@ -56,7 +76,7 @@ export default {
 
     const url = new URL(request.url);
 
-    // Health check
+    // Health check (no auth)
     if (url.pathname === '/' || url.pathname === '/health') {
       return json({ ok: true, service: 'xgrowth-api', endpoints: ['/generate', '/preview'] }, 200, origin, allowed);
     }
@@ -65,8 +85,21 @@ export default {
       return json({ error: 'Use POST' }, 405, origin, allowed);
     }
 
-    if (url.pathname !== '/generate' && url.pathname !== '/preview') {
+    const VALID_PATHS = ['/generate', '/generate-image', '/preview'];
+    if (!VALID_PATHS.includes(url.pathname)) {
       return json({ error: 'Not found' }, 404, origin, allowed);
+    }
+
+    // Auth — verify Firebase ID token
+    const authHeader = request.headers.get('Authorization') || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+    if (!token) {
+      return json({ error: 'Missing Authorization bearer token' }, 401, origin, allowed);
+    }
+    try {
+      await verifyFirebaseIdToken(token, ctx);
+    } catch (e) {
+      return json({ error: 'Auth failed: ' + (e.message || 'invalid token') }, 401, origin, allowed);
     }
 
     let body;
@@ -76,88 +109,138 @@ export default {
       return json({ error: 'Invalid JSON body' }, 400, origin, allowed);
     }
 
-    // ── /preview ──────────────────────────────────────────────────────────────
-    if (url.pathname === '/preview') {
-      const { url: articleUrl } = body;
-      if (!articleUrl || typeof articleUrl !== 'string') {
-        return json({ error: 'Missing url' }, 400, origin, allowed);
+    // ── /generate-image ───────────────────────────────────────────────────────
+    if (url.pathname === '/generate-image') {
+      const { prompt, provider = 'gemini' } = body;
+      if (!prompt || typeof prompt !== 'string') {
+        return json({ error: 'Missing prompt' }, 400, origin, allowed);
       }
       try {
-        const resp = await fetch(articleUrl, {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (compatible; XGrowthBot/1.0; +https://xgrowth.uno)',
-            'Accept': 'text/html,application/xhtml+xml',
-          },
-          redirect: 'follow',
-        });
-        if (!resp.ok) {
-          return json({ error: 'Could not fetch URL', status: resp.status }, 502, origin, allowed);
+        let result;
+        if (provider === 'hf-flux') {
+          if (!env.HF_TOKEN) return json({ error: 'HF_TOKEN secret not set — run: npx wrangler secret put HF_TOKEN' }, 500, origin, allowed);
+          result = await callHuggingFaceImage(env.HF_TOKEN, prompt);
+        } else {
+          if (!env.GEMINI_API_KEY) return json({ error: 'Server missing GEMINI_API_KEY secret' }, 500, origin, allowed);
+          result = await callGeminiImage(env.GEMINI_API_KEY, prompt);
         }
-        const ct = resp.headers.get('content-type') || '';
-        if (!ct.includes('html')) {
-          return json({ error: 'Not an HTML page' }, 400, origin, allowed);
-        }
-        const html = await resp.text();
-        const slice = html.slice(0, 60000); // parse first 60KB only
-
-        function extractMeta(patterns) {
-          for (const re of patterns) {
-            const m = slice.match(re);
-            if (m?.[1]) return m[1].trim();
-          }
-          return '';
-        }
-
-        const rawTitle = extractMeta([
-          /<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i,
-          /<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:title["']/i,
-          /<title[^>]*>([^<]+)<\/title>/i,
-        ]);
-        const rawDesc = extractMeta([
-          /<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']{10,})["']/i,
-          /<meta[^>]+content=["']([^"']{10,})["'][^>]+property=["']og:description["']/i,
-          /<meta[^>]+name=["']description["'][^>]+content=["']([^"']{10,})["']/i,
-          /<meta[^>]+content=["']([^"']{10,})["'][^>]+name=["']description["']/i,
-        ]);
-
-        const decode = s => s
-          .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
-          .replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&#x27;/g, "'")
-          .replace(/&nbsp;/g, ' ').trim();
-
-        return json({ ok: true, title: decode(rawTitle), description: decode(rawDesc) }, 200, origin, allowed);
-      } catch (e) {
-        return json({ error: 'Preview failed: ' + (e.message || 'unknown') }, 502, origin, allowed);
+        return json({ ok: true, ...result }, 200, origin, allowed);
+      } catch (err) {
+        return json({ error: 'Image generation failed: ' + (err.message || 'unknown') }, 502, origin, allowed);
       }
+    }
+
+    // ── /preview ──────────────────────────────────────────────────────────────
+    if (url.pathname === '/preview') {
+      return handlePreview(body, origin, allowed);
     }
 
     // ── /generate ─────────────────────────────────────────────────────────────
-    const { topic, articleTitle, articleAngle, platform, voiceNiche, voiceStyle, inputMode } = body;
-    const mode = body.mode || 'hot-take';
-
-    if (!articleTitle || typeof articleTitle !== 'string') {
-      return json({ error: 'Missing articleTitle' }, 400, origin, allowed);
-    }
-    if (!['linkedin', 'x', 'threads', 'instagram', 'reddit'].includes(platform)) {
-      return json({ error: 'platform must be linkedin | x | threads | instagram | reddit' }, 400, origin, allowed);
-    }
+    const kind = body.kind || 'post';
     if (!env.GEMINI_API_KEY) {
       return json({ error: 'Server missing GEMINI_API_KEY secret' }, 500, origin, allowed);
     }
 
-    const prompt = buildPrompt({ topic, articleTitle, articleAngle, platform, mode, voiceNiche, voiceStyle, inputMode });
-
+    let prompt, postProcess = (t) => t;
     try {
+      if (kind === 'post') {
+        const { topic, articleTitle, articleAngle, platform, voiceNiche, voiceStyle, inputMode, refineInstruction } = body;
+        const mode = body.mode || 'hot-take';
+        if (!articleTitle || typeof articleTitle !== 'string') {
+          return json({ error: 'Missing articleTitle' }, 400, origin, allowed);
+        }
+        if (!['linkedin', 'x', 'threads', 'instagram', 'reddit'].includes(platform)) {
+          return json({ error: 'platform must be linkedin | x | threads | instagram | reddit' }, 400, origin, allowed);
+        }
+        prompt = buildPostPrompt({ topic, articleTitle, articleAngle, platform, mode, voiceNiche, voiceStyle, inputMode, refineInstruction });
+        if (platform === 'x' && mode !== 'thread') postProcess = trimForX;
+        else if (platform === 'threads') postProcess = (t) => trimAtSentence(t, 500);
+        const { text, model } = await callGemini(env.GEMINI_API_KEY, prompt);
+        return json({ ok: true, text: postProcess(text), platform, mode, model }, 200, origin, allowed);
+      }
+
+      if (kind === 'campaign') {
+        prompt = buildCampaignPrompt(body);
+      } else if (kind === 'copy') {
+        prompt = buildCopyPrompt(body);
+      } else if (kind === 'audit') {
+        if (!Array.isArray(body.posts) || !body.posts.length) {
+          return json({ error: 'audit requires non-empty posts[]' }, 400, origin, allowed);
+        }
+        prompt = buildAuditPrompt(body);
+      } else if (kind === 'report') {
+        prompt = buildReportPrompt(body);
+      } else if (kind === 'brand-kit') {
+        prompt = buildBrandKitPrompt(body);
+      } else if (kind === 'image-prompt') {
+        prompt = buildImagePromptPrompt(body);
+      } else {
+        return json({ error: 'Unknown kind: ' + kind }, 400, origin, allowed);
+      }
+
       const { text, model } = await callGemini(env.GEMINI_API_KEY, prompt);
-      let final = text;
-      if (platform === 'x') final = trimForX(text);
-      else if (platform === 'threads') final = trimAtSentence(text, 500);
-      return json({ ok: true, text: final, platform, mode, model }, 200, origin, allowed);
+      return json({ ok: true, text, kind, model }, 200, origin, allowed);
     } catch (err) {
       return json({ error: 'Generation failed: ' + (err.message || 'unknown') }, 502, origin, allowed);
     }
   },
 };
+
+/* ─── /preview handler ────────────────────────────────────────────────────── */
+
+async function handlePreview(body, origin, allowed) {
+  const { url: articleUrl } = body;
+  if (!articleUrl || typeof articleUrl !== 'string') {
+    return json({ error: 'Missing url' }, 400, origin, allowed);
+  }
+  try {
+    const resp = await fetch(articleUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; XGrowthBot/1.0; +https://xgrowth.uno)',
+        'Accept': 'text/html,application/xhtml+xml',
+      },
+      redirect: 'follow',
+    });
+    if (!resp.ok) {
+      return json({ error: 'Could not fetch URL', status: resp.status }, 502, origin, allowed);
+    }
+    const ct = resp.headers.get('content-type') || '';
+    if (!ct.includes('html')) {
+      return json({ error: 'Not an HTML page' }, 400, origin, allowed);
+    }
+    const html = await resp.text();
+    const slice = html.slice(0, 60000);
+
+    const extractMeta = (patterns) => {
+      for (const re of patterns) {
+        const m = slice.match(re);
+        if (m?.[1]) return m[1].trim();
+      }
+      return '';
+    };
+
+    const rawTitle = extractMeta([
+      /<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i,
+      /<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:title["']/i,
+      /<title[^>]*>([^<]+)<\/title>/i,
+    ]);
+    const rawDesc = extractMeta([
+      /<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']{10,})["']/i,
+      /<meta[^>]+content=["']([^"']{10,})["'][^>]+property=["']og:description["']/i,
+      /<meta[^>]+name=["']description["'][^>]+content=["']([^"']{10,})["']/i,
+      /<meta[^>]+content=["']([^"']{10,})["'][^>]+name=["']description["']/i,
+    ]);
+
+    const decode = s => s
+      .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+      .replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&#x27;/g, "'")
+      .replace(/&nbsp;/g, ' ').trim();
+
+    return json({ ok: true, title: decode(rawTitle), description: decode(rawDesc) }, 200, origin, allowed);
+  } catch (e) {
+    return json({ error: 'Preview failed: ' + (e.message || 'unknown') }, 502, origin, allowed);
+  }
+}
 
 /* ─── trim helpers ────────────────────────────────────────────────────────── */
 
@@ -176,7 +259,6 @@ function trimAtSentence(text, limit) {
 
 function trimForX(text) {
   if (!text || text.length <= 280) return text;
-  // Preserve URL if it sits on its own line at the end
   const lines = text.split('\n');
   let urlIdx = -1;
   for (let i = lines.length - 1; i >= 0; i--) {
@@ -200,7 +282,7 @@ function corsHeaders(origin, allowed) {
   return {
     'Access-Control-Allow-Origin': allowed ? origin : 'null',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Max-Age': '86400',
     Vary: 'Origin',
   };
@@ -213,9 +295,155 @@ function json(data, status, origin, allowed) {
   });
 }
 
-/* ─── prompt builder ──────────────────────────────────────────────────────── */
+/* ─── Firebase ID-token verification ─────────────────────────────────────── */
 
-function buildPrompt({ topic, articleTitle, articleAngle, platform, mode, voiceNiche, voiceStyle, inputMode }) {
+// Cache the x509 cert map in module scope for the life of the isolate.
+let _certCache = { keys: null, expiresAt: 0 };
+
+async function loadFirebaseCerts() {
+  const now = Date.now();
+  if (_certCache.keys && now < _certCache.expiresAt) return _certCache.keys;
+
+  const resp = await fetch(FIREBASE_JWKS_URL);
+  if (!resp.ok) throw new Error('Could not fetch Firebase certs');
+  const data = await resp.json();
+
+  // Cache-Control: public, max-age=N — honour it (default 1h)
+  const cc = resp.headers.get('Cache-Control') || '';
+  const m = cc.match(/max-age=(\d+)/);
+  const ttl = m ? parseInt(m[1], 10) * 1000 : 3600_000;
+  _certCache = { keys: data, expiresAt: now + ttl };
+  return data;
+}
+
+async function verifyFirebaseIdToken(token, ctx) {
+  const parts = token.split('.');
+  if (parts.length !== 3) throw new Error('malformed token');
+
+  const [headerB64, payloadB64, sigB64] = parts;
+  const header = JSON.parse(atobUrl(headerB64));
+  const payload = JSON.parse(atobUrl(payloadB64));
+
+  // Claim checks first (cheap, before crypto)
+  const now = Math.floor(Date.now() / 1000);
+  if (payload.exp && payload.exp < now) throw new Error('token expired');
+  if (payload.iat && payload.iat > now + 60) throw new Error('token issued in future');
+  if (payload.aud !== FIREBASE_PROJECT_ID) throw new Error('wrong audience');
+  if (payload.iss !== FIREBASE_ISSUER) throw new Error('wrong issuer');
+  if (!payload.sub) throw new Error('missing sub');
+  if (header.alg !== 'RS256') throw new Error('unsupported alg: ' + header.alg);
+
+  // Signature verification
+  const certs = await loadFirebaseCerts();
+  const pem = certs[header.kid];
+  if (!pem) throw new Error('unknown kid');
+
+  const key = await importX509Pem(pem);
+  const data = new TextEncoder().encode(`${headerB64}.${payloadB64}`);
+  const sig = b64UrlToBytes(sigB64);
+  const ok = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', key, sig, data);
+  if (!ok) throw new Error('bad signature');
+
+  return payload; // uid in payload.sub, email in payload.email
+}
+
+function atobUrl(s) {
+  s = s.replace(/-/g, '+').replace(/_/g, '/');
+  while (s.length % 4) s += '=';
+  return atob(s);
+}
+
+function b64UrlToBytes(s) {
+  const bin = atobUrl(s);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+async function importX509Pem(pem) {
+  // pem is an X.509 cert in PEM form — extract the SPKI public key.
+  const b64 = pem
+    .replace(/-----BEGIN CERTIFICATE-----/, '')
+    .replace(/-----END CERTIFICATE-----/, '')
+    .replace(/\s+/g, '');
+  const der = b64ToBytes(b64);
+  const spki = extractSpkiFromX509(der);
+  return crypto.subtle.importKey(
+    'spki',
+    spki,
+    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+    false,
+    ['verify'],
+  );
+}
+
+function b64ToBytes(b64) {
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+// Minimal ASN.1 walk: find the SubjectPublicKeyInfo inside an X.509 cert.
+// X.509 = SEQUENCE { tbsCertificate SEQUENCE { version, serial, sigAlg, issuer, validity, subject, SPKI, ... }, sigAlg, sig }
+// We just need to skip into tbsCertificate and grab the 7th element (SPKI).
+function extractSpkiFromX509(der) {
+  const r = new DerReader(der);
+  r.openSequence();                  // outer cert
+  const tbsStart = r.pos;
+  r.openSequence();                  // tbsCertificate
+  // version [0] EXPLICIT (optional)
+  if (r.peekTag() === 0xa0) r.skipElement();
+  r.skipElement(); // serial
+  r.skipElement(); // signature alg
+  r.skipElement(); // issuer
+  r.skipElement(); // validity
+  r.skipElement(); // subject
+  const spkiStart = r.pos;
+  r.skipElement(); // SubjectPublicKeyInfo
+  return der.slice(spkiStart, r.pos);
+}
+
+class DerReader {
+  constructor(buf) { this.buf = buf; this.pos = 0; }
+  peekTag() { return this.buf[this.pos]; }
+  readLength() {
+    let len = this.buf[this.pos++];
+    if (len & 0x80) {
+      const n = len & 0x7f;
+      len = 0;
+      for (let i = 0; i < n; i++) len = (len << 8) | this.buf[this.pos++];
+    }
+    return len;
+  }
+  openSequence() {
+    if (this.buf[this.pos++] !== 0x30) throw new Error('expected SEQUENCE');
+    this.readLength();
+  }
+  skipElement() {
+    this.pos++;                      // tag
+    const len = this.readLength();
+    this.pos += len;
+  }
+}
+
+/* ─── prompt builders ─────────────────────────────────────────────────────── */
+
+function voiceTail({ voiceNiche, voiceStyle }) {
+  return voiceNiche
+    ? `\nFOUNDER CONTEXT: ${voiceNiche}${voiceStyle ? ` — preferred tone: ${voiceStyle}` : ''}`
+    : '';
+}
+
+const HARD_RULES = `HARD RULES — break ANY of these and the output is unusable:
+- Be SPECIFIC to the actual inputs above. No generic advice.
+- NO clichés: "in today's fast-paced world", "game-changer", "moving the needle", "synergy", "leveraging", "let's dive in", "thoughts?", "the future of X is Y".
+- NO meta-commentary ("Here's a campaign about…", "I wanted to share…").
+- NO emojis.
+- NO bold/italics markdown for emphasis on prose lines (headers with ## are fine).
+- Sound like a smart human operator, not a content marketer.`;
+
+function buildPostPrompt({ topic, articleTitle, articleAngle, platform, mode, voiceNiche, voiceStyle, inputMode, refineInstruction }) {
   const isWrite = inputMode === 'freewrite';
 
   const platformGuides = {
@@ -228,7 +456,22 @@ Structure:
 - 2 hashtags max on the final line
 - NO URLs anywhere in the post.`,
 
-    x: `Write a single tweet. HARD CONSTRAINT: 280 characters TOTAL — every character counts.
+    x: mode === 'thread'
+      ? `Write an X (Twitter) thread of exactly 6–8 tweets. HARD CONSTRAINTS:
+- Format EXACTLY like this — one blank line between tweets, nothing else:
+  1/ [tweet text]
+
+  2/ [tweet text]
+
+  3/ [tweet text]
+  (continue…)
+- Tweet 1: a hook that makes someone stop scrolling. A sharp claim, stat, or question. Max 220 chars.
+- Tweets 2–N: each one builds on the last, delivers one specific idea, stands alone.
+- Final tweet: the key takeaway or a soft CTA. No "follow me for more".
+- EVERY tweet MUST be under 280 characters. COUNT before returning.
+- NO hashtags. NO "thread 🧵". NO introductory tweet ("I want to share…").
+- Return ONLY the numbered tweets. No preamble, no label, no "Here is your thread:".`
+      : `Write a single tweet. HARD CONSTRAINT: 280 characters TOTAL — every character counts.
 - 1–2 punchy lines with a specific take
 - NO hashtags, NO "thoughts?", NO threads, NO URLs
 - BEFORE returning, COUNT your characters. If over 280, rewrite shorter.`,
@@ -264,7 +507,6 @@ BODY:
     'data':       'Lead with the most concrete number or stat (from the content, or a plausible extrapolation). Build the entire post around that anchor.',
     'question':   'Pose one sharp, thought-provoking question this content raises. Briefly explain why it matters. Make readers stop and think.',
     'founder':    "Write like a founder sharing a real insight while building in public. Personal, slightly vulnerable, honest about what you're learning.",
-    // backward-compat with old mode names
     'default':    'Smart, specific, human. Like an experienced operator with a real point of view.',
     'shorter':    'Make it noticeably shorter and tighter. Cut every word that does not earn its place.',
     'contrarian': 'Take a sharp contrarian angle. Push back on the conventional read. Be specific about what others are missing.',
@@ -272,9 +514,7 @@ BODY:
 
   const guide  = platformGuides[platform] || platformGuides.linkedin;
   const tone   = typeGuides[mode] || typeGuides['hot-take'];
-  const voice  = voiceNiche
-    ? `\nFOUNDER CONTEXT: ${voiceNiche}${voiceStyle ? ` — preferred tone: ${voiceStyle}` : ''}`
-    : '';
+  const voice  = voiceTail({ voiceNiche, voiceStyle });
 
   const content = isWrite
     ? `FOUNDER'S ROUGH NOTES / THOUGHTS:\n${articleTitle}`
@@ -302,7 +542,361 @@ HARD RULES — break ANY of these and the post is unusable:
 - First person, present tense.
 - Sound like a smart human, not a content marketer.
 
-Return ONLY the post content. No preamble. No explanation. No quote marks. Just the content.`;
+Return ONLY the post content. No preamble. No explanation. No quote marks. Just the content.${refineInstruction ? `\n\nREFINEMENT INSTRUCTION (apply this to your output): ${refineInstruction}` : ''}`;
+}
+
+function buildCampaignPrompt(body) {
+  const {
+    campaignType = 'Launch',
+    hook = 'Free 14-day trial',
+    days = 14,
+    budget = 0,
+    channels = ['X'],
+    niche = 'SaaS',
+    voiceNiche, voiceStyle,
+  } = body;
+
+  return `You are a senior growth marketer writing a real, runnable campaign brief for a founder using XGrowth. Audience: SaaS founders, indie hackers, digital-product makers.${voiceTail({ voiceNiche, voiceStyle })}
+
+CAMPAIGN INPUTS:
+- Type: ${campaignType}
+- Hook: ${hook}
+- Duration: ${days} days
+- Budget: $${budget}
+- Channels: ${channels.join(', ') || 'X'}
+- Niche / product: ${niche}
+
+Produce a complete campaign brief in markdown with these exact sections in this order:
+
+## Campaign: ${campaignType}
+One-line summary, then Hook / Channels / Duration / Budget as plain lines.
+
+## Audience Segments
+3 segments: Cold, Warm, Hot. One specific sentence each — say WHO they are and how to reach them.
+
+## Timeline
+Week-by-week plan (${days <= 14 ? '2 weeks' : Math.ceil(days / 7) + ' weeks'}). For each week list 3–5 concrete actions across the chosen channels.
+
+## KPIs
+5 numeric targets: Impressions, Replies/Comments, Profile visits, Leads (email/demo), CPL. Use the duration and budget to make realistic estimates.
+
+## Email Sequence
+5 numbered emails. For each: Subject line + 1-sentence body summary. Make them sequential (teaser → launch → demo → case → last call).
+
+## Ad Copy
+3 ad variants (A/B/C). Each: 1-line hook + CTA. Each must take a different angle.
+
+## Landing Page Outline
+Hero (H1 + subhead + CTA), Proof (3 bullets), FAQ (3 Qs with 1-line answers). NOT raw HTML — just the copy.
+
+## Next Steps
+3 concrete actions the founder should do today to start the campaign.
+
+${HARD_RULES}
+- NO HTML code blocks. Plain markdown only.
+- NO placeholder text like "[insert]" or "[your X here]" — write real specific copy.
+
+Return ONLY the markdown brief. No preamble.`;
+}
+
+function buildCopyPrompt(body) {
+  const {
+    name = 'YourStartup',
+    what = 'a digital product',
+    bio = 'Founder and builder.',
+    cta = 'Get started',
+    niche = '',
+    voiceNiche, voiceStyle,
+  } = body;
+
+  return `You are a senior conversion copywriter writing landing-page copy for a startup. Output should be markdown, scannable, ready to drop into Framer or a static site.${voiceTail({ voiceNiche, voiceStyle })}
+
+PRODUCT INPUTS:
+- Name: ${name}
+- What it does: ${what}
+- Founder bio: ${bio}
+- Primary CTA text: ${cta}
+${niche ? `- Niche: ${niche}` : ''}
+
+Produce these sections in this exact order:
+
+## Hero
+# [H1 — one concrete promise, max 8 words]
+[Subhead — 1 sentence, explains the value to a skeptical operator. Max 20 words.]
+[${cta}]
+
+## About
+2–3 sentences. First-person founder voice. Mention bio + why this product exists. No platitudes.
+
+## How it works
+3 numbered steps. Each: bold one-line action, then one supporting sentence.
+
+## Features
+3 bullets. Each: bold feature name (max 4 words), then one specific benefit sentence with a number or concrete outcome.
+
+## Social Proof
+2 short fake-but-plausible testimonials. Format: "[Quote]" — Name, Role.
+
+## FAQ
+4 Qs with short specific answers (1–2 sentences each). Pick the 4 real objections a buyer would have.
+
+## CTA
+A second CTA line + trust microcopy ("No card. Cancel anytime." or similar).
+
+${HARD_RULES}
+- NO HTML or code blocks.
+- NO "[insert ___]" placeholders — write real copy.
+- Headlines must promise outcomes, not describe features.
+
+Return ONLY the markdown. No preamble.`;
+}
+
+function buildAuditPrompt(body) {
+  const { handle = '@you', posts = [], niche = '' } = body;
+  const trimmed = posts.slice(0, 5).map((p, i) => `Post ${i + 1} (${p.length} chars): ${p}`).join('\n\n');
+
+  return `You are a senior social media editor doing a posting audit for a founder. You give blunt, useful feedback — no flattery, no platitudes.${niche ? `\nNICHE: ${niche}` : ''}
+
+HANDLE: ${handle}
+
+POSTS TO REVIEW:
+${trimmed}
+
+Produce a markdown audit with these exact sections:
+
+## Scorecard
+For each post: "Post N: SCORE/100 (LENGTH chars) — one-line verdict".
+After the list: "Avg: X/100".
+
+## Hook Diagnosis
+For each post: "Post N: " then one sentence diagnosing the hook (what works, what doesn't, what to change).
+
+## A/B Rewrites
+For each post, write 2 stronger rewrites labeled A and B. Each rewrite must be a complete post under the same length as the original. A should be a sharper hook variant; B should be a contrarian or specific-number variant. Quote them.
+
+## Patterns
+3 bullet points spotting patterns across the posts (e.g. "all start with 'I' — vary openers", "no specific numbers anywhere", "weak closers").
+
+## 7-Day Action Plan
+Mon–Sun, one concrete posting action per day, tailored to the patterns you spotted.
+
+${HARD_RULES}
+- Scores must reflect real differences — don't give everything 70/100.
+- Diagnoses must reference the actual words/structure of the post, not generic advice.
+
+Return ONLY the markdown audit. No preamble.`;
+}
+
+function buildBrandKitPrompt(body) {
+  const {
+    what = 'a digital product',
+    who = 'founders and indie makers',
+    bio = '',
+    platform = 'X / Twitter',
+    tone = 'direct and casual',
+  } = body;
+
+  return `You are a brand strategist building a personal brand kit for a founder. Everything you write must be specific, usable, and ready to publish — no placeholders, no "you could try..." hedging.
+
+FOUNDER INPUTS:
+- What they build: ${what}
+- Who they serve: ${who}
+- Background: ${bio || '(not provided)'}
+- Primary platform: ${platform}
+- Brand tone: ${tone}
+
+Produce a complete Brand Kit in this exact markdown structure:
+
+## Positioning Statement
+One sentence: "I help [specific who] [achieve specific outcome] [without specific pain / in specific way]."
+Make it concrete enough that the founder could use it as their first line in any bio.
+
+## X Bio (160 chars max)
+Write a ready-to-paste X bio. COUNT the characters before returning — must be 160 or under.
+Format: what you do, who for, and one proof point or personality hook. NO "helping", NO "passionate about".
+
+## LinkedIn Headline (220 chars max)
+Write a ready-to-paste LinkedIn headline. Format: role | specific value prop | one credibility anchor.
+
+## Content Pillars
+List exactly 4 content pillars — the topics this founder should own and post about consistently.
+For each: bold pillar name (3–5 words) + one sentence on what angle to take.
+
+## Ideal Customer Profile
+Describe the ONE person who will get the most value, in plain language. Cover: who they are, what they struggle with day-to-day, what success looks like for them, and why this founder's product/perspective is the right fit.
+
+## Brand Voice
+Line 1: "We are: [3 adjectives that define the tone]"
+Line 2: "We are not: [3 adjectives that would kill the brand]"
+Line 3: One sentence rule for what makes this voice distinct (e.g. "Always lead with receipts, never with advice.")
+
+${HARD_RULES}
+- Every bio/headline must be READY TO PASTE — no brackets, no "your name here".
+- Content pillars must be specific to the niche, not generic ("Marketing", "Growth").
+- Positioning statement must name a specific outcome, not a vague benefit.
+
+Return ONLY the markdown. No preamble.`;
+}
+
+function buildImagePromptPrompt(body) {
+  const { caption = '', niche = '' } = body;
+  return `You are a visual creative director generating a Pollinations.ai image prompt for an Instagram post.
+
+INSTAGRAM CAPTION:
+${caption.slice(0, 800)}
+${niche ? `\nNICHE / PRODUCT: ${niche}` : ''}
+
+Generate ONE image prompt for a 1080×1080 Instagram visual that matches this post's theme.
+
+Rules:
+- Describe the VISUAL SCENE concretely: subject, composition, lighting, background, color palette
+- Start with the photographic style: "dark minimal product photography", "clean flatlay", "cinematic close-up", etc.
+- Include lighting quality, background mood, camera angle, depth of field
+- NO text, NO logos, NO faces, NO UI screenshots
+- Avoid abstract words: "success", "growth", "innovation"
+- 15–40 words total, specific and vivid
+
+Good prompt examples:
+- "dark minimal flatlay, MacBook on matte black surface, soft rim lighting, deep shadows, professional product photography, 4K detail"
+- "cinematic smartphone glowing in darkness, blue-purple gradient halo, neon reflections, shallow depth of field, editorial feel"
+- "clean white desk workspace, coffee, notebook, natural window light, flat-lay, high contrast, commercial photography"
+
+Return ONLY the image prompt. No quotes, no explanation, no preamble.`;
+}
+
+function buildReportPrompt(body) {
+  const { niche = 'your product', metrics = {} } = body;
+  const {
+    followersWoW = 0,
+    impressions7 = 0,
+    engagement7 = 0,
+    visits7 = 0,
+    topPost = null,
+  } = metrics;
+
+  return `You are a sharp growth analyst writing the narrative summary for a founder's weekly report. Audience: a busy founder skimming on a Sunday night.
+
+NICHE: ${niche}
+
+THIS WEEK'S NUMBERS:
+- Followers WoW: ${followersWoW.toFixed(1)}%
+- Impressions (7d): ${impressions7}
+- Engagement rate (7d): ${engagement7.toFixed(2)}%
+- Profile visits (7d): ${visits7}
+${topPost ? `- Top post: "${topPost.text}" — ${topPost.impr} impressions, ${topPost.likes} likes` : '- No top post logged this week'}
+
+Write a 2-paragraph "What happened this week" narrative (around 100–140 words total):
+
+Paragraph 1: What the numbers actually mean. Don't restate them — interpret them. Was this a good week or not, and why? If the top post outperformed, name the likely reason.
+
+Paragraph 2: The one thing the founder should focus on next week, with a concrete tactic (not "post more"). Specific enough that they could act on it tomorrow.
+
+${HARD_RULES}
+- Do NOT add headers or bullets — pure prose, two paragraphs separated by a blank line.
+- Do NOT restate the raw numbers (they're shown separately).
+- If a metric is 0 or missing, treat it as "no signal yet" not "great success".
+
+Return ONLY the two paragraphs. No preamble, no headers.`;
+}
+
+/* ─── Hugging Face image client ───────────────────────────────────────────── */
+
+const HF_MODELS = {
+  'hf-flux': 'black-forest-labs/FLUX.1-schnell',
+};
+
+async function callHuggingFaceImage(token, prompt) {
+  const modelId = HF_MODELS['hf-flux'];
+  const resp = await fetch(`https://api-inference.huggingface.co/models/${modelId}`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      'Accept': 'image/png,image/jpeg,image/*',
+    },
+    body: JSON.stringify({ inputs: prompt, parameters: { width: 1024, height: 1024 } }),
+  });
+
+  if (!resp.ok) {
+    const t = await resp.text();
+    // Model still loading — common on cold start
+    if (resp.status === 503) throw new Error('Model loading, retry in ~20s');
+    throw new Error(`HF API ${resp.status}: ${t.slice(0, 150)}`);
+  }
+
+  const mimeType = resp.headers.get('Content-Type') || 'image/jpeg';
+  const buffer = await resp.arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+
+  // Convert binary to base64 in chunks to avoid call-stack overflow
+  let binary = '';
+  const chunk = 8192;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+  }
+  const imageData = btoa(binary);
+  return { imageData, mimeType };
+}
+
+/* ─── Gemini image client ─────────────────────────────────────────────────── */
+
+// Models to try in order for image generation (free tier)
+const GEMINI_IMAGE_MODELS = [
+  'gemini-2.0-flash-preview-image-generation',
+  'gemini-2.0-flash-exp-image-generation',
+  'gemini-2.0-flash-exp',
+];
+
+async function callGeminiImage(apiKey, prompt) {
+  const body = JSON.stringify({
+    contents: [{ role: 'user', parts: [{ text: `Generate a high-quality image: ${prompt}` }] }],
+    generationConfig: {
+      responseModalities: ['IMAGE', 'TEXT'],
+      temperature: 1,
+    },
+    safetySettings: [
+      { category: 'HARM_CATEGORY_HARASSMENT',       threshold: 'BLOCK_ONLY_HIGH' },
+      { category: 'HARM_CATEGORY_HATE_SPEECH',       threshold: 'BLOCK_ONLY_HIGH' },
+      { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_ONLY_HIGH' },
+      { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_ONLY_HIGH' },
+    ],
+  });
+
+  const errors = [];
+  for (const model of GEMINI_IMAGE_MODELS) {
+    try {
+      const url = `${GEMINI_BASE}${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
+      const resp = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body,
+      });
+
+      if (!resp.ok) {
+        const t = await resp.text();
+        errors.push(`${model}: ${resp.status} ${t.slice(0, 120)}`);
+        continue;
+      }
+
+      const data = await resp.json();
+      const parts = data.candidates?.[0]?.content?.parts || [];
+
+      // Find the image part
+      const imgPart = parts.find(p => p.inlineData?.mimeType?.startsWith('image/'));
+      if (!imgPart) {
+        const blockReason = data.promptFeedback?.blockReason;
+        if (blockReason) throw new Error(`Blocked by safety: ${blockReason}`);
+        errors.push(`${model}: no image in response`);
+        continue;
+      }
+
+      return { imageData: imgPart.inlineData.data, mimeType: imgPart.inlineData.mimeType };
+    } catch (e) {
+      errors.push(`${model}: ${e.message || e}`);
+    }
+  }
+
+  throw new Error(`All image models failed. ${errors.join(' | ')}`);
 }
 
 /* ─── Gemini client ────────────────────────────────────────────────────────── */
@@ -314,7 +908,6 @@ async function callGemini(apiKey, prompt) {
       temperature: 0.85,
       topP: 0.95,
       maxOutputTokens: 2048,
-      // Disable thinking tokens — they eat the output budget for writing tasks
       thinkingConfig: { thinkingBudget: 0 },
     },
     safetySettings: [

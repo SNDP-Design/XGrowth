@@ -120,6 +120,7 @@ nav.addEventListener('click', e=>{
   const v = b.dataset.view;
   document.querySelectorAll('main > section').forEach(s=>s.classList.add('hide'));
   document.querySelector(`section[data-view="${v}"]`).classList.remove('hide');
+  if(v === 'brand') brandKitAutoFill();
 });
 
 /* ========= Welcome / Profile ========= */
@@ -480,12 +481,36 @@ function ceEsc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;
 /* ── CE state ───────────────────────────────────────────────────────────── */
 const CE_API = 'https://xgrowth-api.xgrowth.workers.dev';
 
+// Image generation state
+const _imgGen = { url: '', seed: 0 };
+
+// Authed POST to the Worker. Attaches the user's Firebase ID token.
+async function xgFetch(path, payload){
+  const user = fbAuth?.currentUser;
+  if(!user) throw new Error('Sign in required');
+  const token = await user.getIdToken();
+  const resp = await fetch(CE_API + path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    body: JSON.stringify(payload || {}),
+  });
+  let data = null;
+  try { data = await resp.json(); } catch {}
+  if(!resp.ok || !data?.ok){
+    const err = data?.error || ('HTTP ' + resp.status);
+    throw new Error(err);
+  }
+  return data;
+}
+
 const _ce = {
   inputMode: 'search',
   topic: '',
   article: null,
   platform: 'linkedin',
   postType: 'hot-take',
+  threadMode: false,
+  refineInstruction: '',
   posts: {},
   voice: { style: 'casual', niche: '' },
   history: [],
@@ -620,13 +645,10 @@ async function ceFetchUrlPreview(){
   const btn = $('ceUrlBtn');
   if(btn){ btn.disabled=true; btn.innerHTML='<span class="ce-spinner"></span>Fetching…'; }
   try {
-    const resp = await fetch(CE_API+'/preview',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})});
-    if(resp.ok){
-      const data = await resp.json();
-      if(data.ok && data.title){ $('ceUrlTitle').value=data.title; $('ceUrlContext').value=data.description||''; }
-      else toast('Could not extract title — enter it manually');
-    } else { toast('Could not fetch article — enter details manually'); }
-  } catch { toast('Network error — enter details manually'); }
+    const data = await xgFetch('/preview', { url });
+    if(data.title){ $('ceUrlTitle').value=data.title; $('ceUrlContext').value=data.description||''; }
+    else toast('Could not extract title — enter it manually');
+  } catch(e){ toast(e.message?.includes('Sign in') ? 'Sign in first' : 'Could not fetch — enter details manually'); }
   $('ceUrlPreview').style.display='block';
   if(btn){ btn.disabled=false; btn.innerHTML='Get article →'; }
 }
@@ -661,11 +683,16 @@ async function ceGenerateFromWrite(){
 
 function ceShowControls(){
   $('ceTypeRow').style.display=''; $('cePlatformTabs').style.display=''; $('ceEmpty').style.display='none';
+  const xRow = $('ceXModeRow');
+  if(xRow) xRow.style.display = _ce.platform === 'x' ? '' : 'none';
 }
 function ceResetOutput(){
   $('ceTypeRow').style.display='none'; $('cePlatformTabs').style.display='none';
+  const xRow = $('ceXModeRow'); if(xRow) xRow.style.display='none';
   $('ceTrendContext').style.display='none'; $('ceEmpty').style.display=''; $('ceGenerated').innerHTML='';
   ['linkedin','x','threads','instagram','reddit'].forEach(p => { _ce.posts[p] = {text:'',loading:false,generated:false}; });
+  _ce.threadMode = false;
+  document.querySelectorAll('.ce-xmode-btn').forEach(b => b.classList.toggle('active', b.dataset.xmode==='single'));
 }
 
 /* ── Platform + type switching ────────────────────────────────────────── */
@@ -673,13 +700,34 @@ function ceResetOutput(){
 function ceSwitchPlatform(platform){
   _ce.platform = platform;
   document.querySelectorAll('.ce-plat-tab').forEach(b => b.classList.toggle('active', b.dataset.plat===platform));
+  // Show Single/Thread toggle only on X
+  const xRow = $('ceXModeRow');
+  if(xRow) xRow.style.display = platform === 'x' ? '' : 'none';
+  // Reset thread mode when leaving X
+  if(platform !== 'x' && _ce.threadMode){
+    _ce.threadMode = false;
+    document.querySelectorAll('.ce-xmode-btn').forEach(b => b.classList.toggle('active', b.dataset.xmode === 'single'));
+  }
   if(_ce.article && !_ce.posts[platform].generated && !_ce.posts[platform].loading){
     ceGenerateCurrent(_ce._pickedAt);
   } else { ceRenderCurrentPost(); }
 }
 
+function ceSetXMode(mode){
+  const isThread = mode === 'thread';
+  if(_ce.threadMode === isThread) return;
+  _ce.threadMode = isThread;
+  document.querySelectorAll('.ce-xmode-btn').forEach(b => b.classList.toggle('active', b.dataset.xmode === mode));
+  // Clear cached post and regenerate
+  if(_ce.article){
+    _ce.posts['x'] = { text: '', loading: false, generated: false };
+    ceGenerateCurrent(_ce._pickedAt);
+  }
+}
+
 function ceSetType(type){
   _ce.postType = type;
+  _ce.refineInstruction = ''; // clear any active refine nudge
   document.querySelectorAll('.ce-type-chip').forEach(b => b.classList.toggle('active', b.dataset.type===type));
   if(_ce.article){
     _ce.posts[_ce.platform] = {text:'',loading:false,generated:false};
@@ -705,19 +753,29 @@ async function ceGenerateCurrent(pickedAt){
 
 async function ceCallAPI(platform, article, type){
   try {
-    const resp = await fetch(CE_API+'/generate',{
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        topic: _ce.topic, articleTitle: article.title, articleAngle: article.angle||'',
-        platform, mode: type, voiceNiche: _ce.voice.niche||'', voiceStyle: _ce.voice.style||'casual',
-        inputMode: article.inputMode||'search',
-      })
-    });
-    if(!resp.ok){ console.warn('CE API',resp.status); return ceFallback(platform,article); }
-    const data = await resp.json();
-    if(data.ok && data.text) return data.text;
-    return ceFallback(platform,article);
+    const mode = (platform === 'x' && _ce.threadMode) ? 'thread' : type;
+    const payload = {
+      kind: 'post',
+      topic: _ce.topic, articleTitle: article.title, articleAngle: article.angle||'',
+      platform, mode, voiceNiche: _ce.voice.niche||'', voiceStyle: _ce.voice.style||'casual',
+      inputMode: article.inputMode||'search',
+    };
+    if(_ce.refineInstruction) payload.refineInstruction = _ce.refineInstruction;
+    const data = await xgFetch('/generate', payload);
+    return data.text || ceFallback(platform,article);
   } catch(e){ console.warn('CE API error',e); return ceFallback(platform,article); }
+}
+
+// Regenerate current platform's post (optionally with a refine instruction)
+function ceRegenerate(instruction){
+  _ce.refineInstruction = instruction || '';
+  _ce.posts[_ce.platform] = { text:'', loading:false, generated:false };
+  ceGenerateCurrent(_ce._pickedAt);
+}
+
+// Clear refine instruction and regenerate fresh
+function ceRegenerateFresh(){
+  ceRegenerate('');
 }
 
 function ceFallback(platform, article){
@@ -756,7 +814,19 @@ function cePostCard(platform, loading, text){
       <div><div class="ce-style-label" style="margin-bottom:6px">Caption</div><p class="ce-insta-caption">${ceEsc(caption)}</p><button class="btn ghost" style="height:30px;padding:0 12px;font-size:12px;margin-top:8px" data-ce-copy="${ceEsc(caption)}" onclick="ceCopyAttr(this)">Copy caption</button></div>
       ${hashtags?`<div><div class="ce-style-label" style="margin-bottom:6px">Hashtags</div><p class="ce-insta-hashtags">${ceEsc(hashtags)}</p><button class="btn ghost" style="height:30px;padding:0 12px;font-size:12px;margin-top:8px" data-ce-copy="${ceEsc(hashtags)}" onclick="ceCopyAttr(this)">Copy hashtags</button></div>`:''}
     </div>
-    <div class="ce-post-foot"><span class="ce-count">${text.length} chars</span><div class="ce-post-actions"><button class="btn ghost" data-ce-copy="${ceEsc(text)}" onclick="ceCopyAttr(this)">Copy all</button><a class="btn publish" href="https://www.instagram.com/" target="_blank" rel="noopener noreferrer">Open Instagram ↗</a></div></div></div>`;
+    <button class="ce-imggen-generate-btn" onclick="ceOpenImageModal()" style="margin:4px 0 0">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+      Generate image
+    </button>
+    <div class="ce-post-foot"><span class="ce-count">${text.length} chars</span><div class="ce-post-actions"><button class="btn ghost" data-ce-copy="${ceEsc(text)}" onclick="ceCopyAttr(this)">Copy all</button><a class="btn publish" href="https://www.instagram.com/" target="_blank" rel="noopener noreferrer">Open Instagram ↗</a></div></div>
+    ${ceRefineBar()}</div>`;
+  }
+
+  // X thread rendering — detect thread format (2+ numbered chunks)
+  if(platform==='x' && _ce.threadMode){
+    const tweets = ceParseThread(text);
+    if(tweets.length >= 2) return ceThreadCard(tweets);
+    // Fall through to single-tweet renderer if parsing failed
   }
 
   if(platform==='reddit'){
@@ -767,7 +837,8 @@ function cePostCard(platform, loading, text){
       ${title?`<div class="ce-reddit-section"><label>Post title</label><p>${ceEsc(title)}</p><button class="btn ghost" style="height:28px;padding:0 10px;font-size:12px;margin-top:8px" data-ce-copy="${ceEsc(title)}" onclick="ceCopyAttr(this)">Copy title</button></div>`:''}
       ${body?`<div class="ce-reddit-section"><label>Post body</label><p class="ce-post-text" style="font-size:14px">${ceEsc(body)}</p><button class="btn ghost" style="height:28px;padding:0 10px;font-size:12px;margin-top:8px" data-ce-copy="${ceEsc(body)}" onclick="ceCopyAttr(this)">Copy body</button></div>`:''}
     </div>
-    <div class="ce-post-foot"><span class="ce-count">${text.length} chars</span><div class="ce-post-actions"><button class="btn ghost" data-ce-copy="${ceEsc(text)}" onclick="ceCopyAttr(this)">Copy all</button><a class="btn publish" href="https://www.reddit.com/submit" target="_blank" rel="noopener noreferrer">Post on Reddit ↗</a></div></div></div>`;
+    <div class="ce-post-foot"><span class="ce-count">${text.length} chars</span><div class="ce-post-actions"><button class="btn ghost" data-ce-copy="${ceEsc(text)}" onclick="ceCopyAttr(this)">Copy all</button><a class="btn publish" href="https://www.reddit.com/submit" target="_blank" rel="noopener noreferrer">Post on Reddit ↗</a></div></div>
+    ${ceRefineBar()}</div>`;
   }
 
   const limit = info.limit, len = text.length;
@@ -779,10 +850,83 @@ function cePostCard(platform, loading, text){
 
   return `<div class="ce-post" data-platform="${platform}"><div class="ce-post-head"><span class="ce-post-platform">${info.svg} ${info.label}</span><span class="ce-ai-badge">AI</span></div>
   <p class="ce-post-text">${ceEsc(text)}</p>
-  <div class="ce-post-foot"><span class="ce-count ${limit&&len>limit?'over':''}">${len}${limit?'/'+limit:''} chars</span><div class="ce-post-actions"><button class="btn ghost" data-ce-copy="${ceEsc(text)}" onclick="ceCopyAttr(this)">Copy</button><a class="btn publish" href="${postUrl}" target="_blank" rel="noopener noreferrer">Post on ${info.label} ↗</a></div></div></div>`;
+  <div class="ce-post-foot"><span class="ce-count ${limit&&len>limit?'over':''}">${len}${limit?'/'+limit:''} chars</span><div class="ce-post-actions"><button class="btn ghost" data-ce-copy="${ceEsc(text)}" onclick="ceCopyAttr(this)">Copy</button><a class="btn publish" href="${postUrl}" target="_blank" rel="noopener noreferrer">Post on ${info.label} ↗</a></div></div>
+  ${ceRefineBar()}</div>`;
 }
 
 /* ── Parsers ──────────────────────────────────────────────────────────── */
+
+const CE_REFINE_CHIPS = [
+  { label:'Shorter',           instruction:'Make it noticeably shorter. Cut every word that doesn\'t earn its place.' },
+  { label:'Punchier hook',     instruction:'Rewrite with a stronger, more arresting opening line. Hook within the first 6 words.' },
+  { label:'Add a story',       instruction:'Reframe as a short personal narrative: setup, tension, resolution. First person.' },
+  { label:'Lead with data',    instruction:'Open with the most concrete number or stat. Anchor the whole post around it.' },
+  { label:'More casual',       instruction:'Make the tone conversational, like texting a smart friend. Loosen the register.' },
+];
+
+function ceRefineBar(){
+  const chips = CE_REFINE_CHIPS.map(c =>
+    `<button class="ce-refine-chip" onclick="ceRegenerate(${JSON.stringify(c.instruction)})">${c.label}</button>`
+  ).join('');
+  return `<div class="ce-refine-bar">
+    <button class="ce-regen-btn" onclick="ceRegenerateFresh()" title="New variation">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+      Regenerate
+    </button>
+    <div class="ce-refine-chips">${chips}</div>
+  </div>`;
+}
+
+function ceParseThread(text){
+  // Split on "N/" markers at line start or after blank line
+  const tweets = [];
+  const parts = text.split(/\n\s*\n/);
+  for(const part of parts){
+    const cleaned = part.replace(/^\d+\/\s*/,'').trim();
+    if(cleaned) tweets.push(cleaned);
+  }
+  // Fallback: if parsing gave only 1 chunk, try inline split
+  if(tweets.length <= 1){
+    const inline = text.split(/(?=\n\d+\/)/).map(s => s.replace(/^\n?\d+\/\s*/,'').trim()).filter(Boolean);
+    if(inline.length > 1) return inline;
+  }
+  return tweets;
+}
+
+function ceThreadCard(tweets){
+  const xInfo = CE_PLAT_INFO.x;
+  const allText = tweets.join('\n\n');
+  const tweetHtml = tweets.map((t, i) => {
+    const len = t.length;
+    const over = len > 280;
+    return `<div class="ce-thread-tweet">
+      <div class="ce-thread-tweet-head">
+        <span class="ce-thread-num">${i+1} / ${tweets.length}</span>
+        <button class="btn ghost ce-thread-copy" data-ce-copy="${ceEsc(t)}" onclick="ceCopyAttr(this)">Copy</button>
+      </div>
+      <p class="ce-thread-tweet-text">${ceEsc(t)}</p>
+      <div class="ce-thread-tweet-foot">
+        <span class="ce-thread-char${over?' over':''}">
+          ${len} / 280${over?' — over limit':''}
+        </span>
+      </div>
+    </div>`;
+  }).join('<div class="ce-thread-connector"></div>');
+
+  return `<div class="ce-post" data-platform="x">
+    <div class="ce-post-head">
+      <span class="ce-post-platform">${xInfo.svg} ${xInfo.label} thread</span>
+      <span class="ce-ai-badge">AI</span>
+    </div>
+    <div class="ce-thread">${tweetHtml}</div>
+    <div class="ce-thread-actions">
+      <button class="btn ghost" style="font-size:13px;height:36px" data-ce-copy="${ceEsc(allText)}" onclick="ceCopyAttr(this)">Copy all tweets</button>
+      <span style="flex:1"></span>
+      <span style="font-size:12px;color:var(--muted);align-self:center">${tweets.length} tweets · ${allText.length} chars total</span>
+    </div>
+    ${ceRefineBar()}
+  </div>`;
+}
 
 function ceParseInstagram(text){
   const cm = text.match(/CAPTION:\s*([\s\S]+?)(?:\n\n+HASHTAGS:|$)/i);
@@ -892,6 +1036,143 @@ async function ceLoadVoice(){
 }
 
 function ceInit(){ ceLoadHistory(); ceLoadVoice(); }
+
+/* ── Image generation ─────────────────────────────────────────────────────── */
+
+async function ceOpenImageModal(){
+  const caption = _ce.posts['instagram']?.text || '';
+  _imgGen.url = '';
+  _imgGen.seed = Math.floor(Math.random() * 1e9);
+  $('ceImgGenOverlay').classList.add('show');
+  document.body.style.overflow = 'hidden';
+  $('ceImgPromptInput').value = '';
+  $('ceImgDownloadBtn').disabled = true;
+  $('ceImgRegenerateBtn').disabled = true;
+  ceImgSetPreview('loading', 'Writing visual prompt…');
+
+  try {
+    const data = await xgFetch('/generate', {
+      kind: 'image-prompt',
+      caption,
+      niche: state.profile?.niche || '',
+    });
+    $('ceImgPromptInput').value = data.text || '';
+    ceImgGenerate();
+  } catch(e) {
+    ceImgSetPreview('empty');
+    toast('Could not generate prompt — enter one manually');
+  }
+}
+
+function ceImgSetPreview(mode, msg){
+  const el = $('ceImgPreview');
+  if(!el) return;
+  if(mode === 'loading'){
+    el.innerHTML = `<div class="imggen-loading"><span class="ce-spinner"></span><span>${msg||'Generating…'}</span></div>`;
+  } else if(mode === 'empty'){
+    el.innerHTML = '<span>Image will appear here</span>';
+  }
+  // 'done' mode: caller appends the img element directly
+}
+
+async function ceImgGenerate(){
+  const prompt = ($('ceImgPromptInput')?.value || '').trim();
+  if(!prompt){ toast('Enter a prompt first'); return; }
+  const model = $('ceImgModel')?.value || 'gemini-flash';
+
+  ceImgSetPreview('loading', 'Generating image…');
+  $('ceImgGenBtn').disabled = true;
+  $('ceImgDownloadBtn').disabled = true;
+  $('ceImgRegenerateBtn').disabled = true;
+
+  const SERVER_SIDE_MODELS = { 'gemini-flash': 'gemini', 'hf-flux': 'hf-flux' };
+  if(model in SERVER_SIDE_MODELS){
+    // Server-side: Worker calls Gemini or HF, returns base64
+    try {
+      const data = await xgFetch('/generate-image', { prompt, provider: SERVER_SIDE_MODELS[model] });
+      const dataUrl = `data:${data.mimeType};base64,${data.imageData}`;
+      _imgGen.url = dataUrl;
+      const img = new Image();
+      img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block';
+      img.onload = () => {
+        const preview = $('ceImgPreview');
+        if(!preview) return;
+        preview.innerHTML = '';
+        preview.appendChild(img);
+        $('ceImgGenBtn').disabled = false;
+        $('ceImgDownloadBtn').disabled = false;
+        $('ceImgRegenerateBtn').disabled = false;
+      };
+      img.src = dataUrl;
+    } catch(e){
+      ceImgSetPreview('empty');
+      $('ceImgGenBtn').disabled = false;
+      const hint = e.message?.includes('HF_TOKEN') ? 'Set HF_TOKEN in your Worker first' :
+                   e.message?.includes('loading') ? 'Model loading — wait 20s and retry' :
+                   'Try a different model or edit the prompt';
+      toast(hint);
+    }
+  } else {
+    // Client-side: load Pollinations URL directly
+    _imgGen.seed = Math.floor(Math.random() * 1e9);
+    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1080&height=1080&model=${model}&nologo=true&seed=${_imgGen.seed}`;
+    _imgGen.url = url;
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block';
+    img.onload = () => {
+      const preview = $('ceImgPreview');
+      if(!preview) return;
+      preview.innerHTML = '';
+      preview.appendChild(img);
+      $('ceImgGenBtn').disabled = false;
+      $('ceImgDownloadBtn').disabled = false;
+      $('ceImgRegenerateBtn').disabled = false;
+    };
+    img.onerror = () => {
+      ceImgSetPreview('empty');
+      $('ceImgGenBtn').disabled = false;
+      toast('Generation failed — try editing the prompt');
+    };
+    img.src = url;
+  }
+}
+
+function ceImgRegenerate(){
+  // Same prompt, new seed
+  ceImgGenerate();
+}
+
+async function ceImgDownload(){
+  if(!_imgGen.url){ toast('Generate an image first'); return; }
+  try {
+    const a = document.createElement('a');
+    if(_imgGen.url.startsWith('data:')){
+      // Gemini base64 data URL — convert to blob directly
+      const res = await fetch(_imgGen.url);
+      const blob = await res.blob();
+      a.href = URL.createObjectURL(blob);
+      a.download = `xgrowth-insta-${Date.now()}.png`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    } else {
+      // Pollinations URL — fetch blob
+      const resp = await fetch(_imgGen.url);
+      const blob = await resp.blob();
+      a.href = URL.createObjectURL(blob);
+      a.download = `xgrowth-insta-${Date.now()}.png`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+  } catch {
+    toast('Download failed — right-click the image to save');
+  }
+}
+
+function ceImgClose(){
+  $('ceImgGenOverlay').classList.remove('show');
+  document.body.style.overflow = '';
+}
 
 /* ── Copy util ────────────────────────────────────────────────────────── */
 
@@ -1023,12 +1304,34 @@ const CE_TREND_GENERIC = [
 ];
 
 
-function genCampaign(){
+async function genCampaign(){
   const t = val('cmType'); const hook = val('cmHook')||'Free 14-day trial'; const days = +val('cmDays')||14; const budget=+val('cmBudget')||0;
   const channels = [];
   if($('chX').checked) channels.push('X');
   if($('chLI').checked) channels.push('LinkedIn');
   if($('chEmail').checked) channels.push('Email');
+
+  const outEl = $('campaignOut');
+  outEl.innerHTML = '<span class="ce-spinner"></span> Building your campaign…';
+  try {
+    const data = await xgFetch('/generate', {
+      kind: 'campaign',
+      campaignType: t, hook, days, budget,
+      channels: channels.length ? channels : ['X'],
+      niche: state.profile?.niche || '',
+      voiceNiche: _ce.voice?.niche || '', voiceStyle: _ce.voice?.style || '',
+    });
+    outEl.textContent = data.text;
+    state.campaigns.unshift({name:`${t}, ${new Date().toLocaleDateString()}`, spend:budget, leads:0, status:'Planned'});
+    save(); renderCampaigns();
+    toast('Campaign built & logged');
+    return;
+  } catch(e){
+    console.warn('Campaign API failed, falling back', e);
+    toast('Using template fallback — ' + (e.message||'API error'));
+  }
+
+  // Template fallback (offline / quota / error)
   const week = (n)=>`Week ${n}`;
   const out = `## Campaign: ${t}
 Hook: ${hook}
@@ -1094,11 +1397,65 @@ ${days>14? `${week(3)}: Case-study post + retargeting copy + email (#4)\n${week(
   toast('Campaign built & logged');
 }
 
-function genCopy(){
+/* ========= Brand Kit ========= */
+async function genBrandKit(){
+  // Auto-fill from profile if fields are empty
+  const prof = state.profile || {};
+  if(!val('bkWhat') && prof.niche) $('bkWhat').value = prof.niche;
+
+  const what = val('bkWhat') || prof.niche || '';
+  const who  = val('bkWho')  || prof.target || '';
+  const bio  = val('bkBio')  || '';
+  const platform = val('bkPlatform') || 'X / Twitter';
+  const tone     = val('bkTone')     || 'direct and casual';
+
+  if(!what){ toast('Tell me what you build first'); $('bkWhat')?.focus(); return; }
+
+  const outEl = $('brandKitOut');
+  outEl.innerHTML = '<span class="ce-spinner"></span> Building your Brand Kit…';
+
+  try {
+    const data = await xgFetch('/generate', {
+      kind: 'brand-kit', what, who, bio, platform, tone,
+    });
+    outEl.textContent = data.text;
+    toast('Brand Kit ready');
+  } catch(e) {
+    outEl.textContent = 'Generation failed — ' + (e.message || 'try again');
+    toast('Brand Kit failed: ' + (e.message || 'API error'));
+  }
+}
+
+// Pre-fill Brand Kit inputs whenever the user navigates to the brand view
+function brandKitAutoFill(){
+  const prof = state.profile || {};
+  if(prof.niche  && !val('bkWhat')) $('bkWhat').value = prof.niche;
+  if(prof.target && !val('bkWho'))  $('bkWho').value  = prof.target;
+}
+
+async function genCopy(){
   const n=val('wName')||'YourStartup';
   const w=val('wWhat')||'AI bookkeeping copilot for SMBs';
   const bio=val('wBio')||'Founder. Builder. Shipper.';
   const cta=val('wCTA')||'Book a 15-min demo';
+
+  const outEl = $('copyOut');
+  outEl.innerHTML = '<span class="ce-spinner"></span> Writing your landing-page copy…';
+  try {
+    const data = await xgFetch('/generate', {
+      kind: 'copy',
+      name: n, what: w, bio, cta,
+      niche: state.profile?.niche || '',
+      voiceNiche: _ce.voice?.niche || '', voiceStyle: _ce.voice?.style || '',
+    });
+    outEl.textContent = data.text;
+    toast('Copy generated');
+    return;
+  } catch(e){
+    console.warn('Copy API failed, falling back', e);
+    toast('Using template fallback — ' + (e.message||'API error'));
+  }
+
   const out = `## Hero
 # ${w}.
 ${n} helps you cut marketing busywork by 80%, without an agency.
@@ -1139,10 +1496,27 @@ ${bio} I built ${n} after watching teams lose weeks to manual ops. Now ${n} runs
   toast('Copy generated');
 }
 
-function genAudit(){
+async function genAudit(){
   const handle = val('aHandle')||'@yourhandle';
-  const tweets = (val('aTweets')||'').split('\n').map(s=>s.trim()).filter(Boolean).slice(0,3);
+  const tweets = (val('aTweets')||'').split('\n').map(s=>s.trim()).filter(Boolean).slice(0,5);
   if(!tweets.length){ $('auditOut').textContent='Paste at least one tweet on the left.'; return; }
+
+  const outEl = $('auditOut');
+  outEl.innerHTML = '<span class="ce-spinner"></span> Auditing your posts…';
+  try {
+    const data = await xgFetch('/generate', {
+      kind: 'audit',
+      handle, posts: tweets,
+      niche: state.profile?.niche || '',
+    });
+    outEl.textContent = data.text;
+    toast('Audit ready');
+    return;
+  } catch(e){
+    console.warn('Audit API failed, falling back', e);
+    toast('Using template fallback — ' + (e.message||'API error'));
+  }
+
   const score = (t)=>{
     let s=50;
     if(/^[A-Z]/.test(t)) s+=2;
@@ -1204,15 +1578,38 @@ function diagnose(t){
 function shortify(t){ return JSON.stringify(t.length>120? t.slice(0,117)+'…' : t); }
 
 /* ========= Reports / Exports ========= */
-function buildReport(){
+async function buildReport(){
   const m = state.metrics;
   const cur = m.followers.at(-1)||0, prev = m.followers.at(-8)||cur;
   const impr7 = sum(m.impressions.slice(-7));
   const eng7 = avg(m.engagement.slice(-7));
+  const visits7 = sum(m.visits.slice(-7));
   const top = state.posts.slice().sort((a,b)=>b.impr-a.impr)[0];
+
+  $('reportOut').innerHTML = '<span class="ce-spinner"></span> Building your weekly snapshot…';
+
+  // Fetch AI narrative (best-effort; report still works without it)
+  let narrative = '';
+  try {
+    const data = await xgFetch('/generate', {
+      kind: 'report',
+      niche: state.profile?.niche || 'your product',
+      metrics: {
+        followersWoW: pct(cur, prev),
+        impressions7: impr7,
+        engagement7: eng7,
+        visits7,
+        topPost: top ? { text: top.text, impr: top.impr, likes: top.likes } : null,
+      },
+    });
+    narrative = (data.text||'').trim();
+  } catch(e){
+    console.warn('Report narrative skipped', e);
+  }
+
   const md = `# Weekly Snapshot, ${state.profile?.niche||'Your Startup'}
 Date: ${new Date().toISOString().slice(0,10)}
-
+${narrative ? `\n## What Happened This Week\n${narrative}\n` : ''}
 ## Headlines
 - Followers: ${fmt(cur)} (${(pct(cur,prev)).toFixed(1)}% WoW)
 - Impressions (7d): ${fmt(impr7)}
