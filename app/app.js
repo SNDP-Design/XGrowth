@@ -122,6 +122,8 @@ nav.addEventListener('click', e=>{
   document.querySelectorAll('main > section').forEach(s=>s.classList.add('hide'));
   document.querySelector(`section[data-view="${v}"]`).classList.remove('hide');
   if(v === 'brand') brandKitAutoFill();
+  if(v === 'icp')   icpAutoFill();
+  if(v === 'ph')    phAutoFill();
   if(v === 'email') emailAutoFill();
   if(v === 'growth') growthAutoFill();
   if(v === 'library') renderLibrary();
@@ -1437,6 +1439,71 @@ function brandKitAutoFill(){
   if(prof.target && !val('bkWho'))  $('bkWho').value  = prof.target;
 }
 
+/* ========= ICP Builder ========= */
+function icpAutoFill(){
+  const p = state.profile || {};
+  if(p.niche   && !val('icpName')) $('icpName').value  = p.niche;
+  if(p.niche   && !val('icpWhat')) $('icpWhat').value  = p.niche;
+  if(p.target  && !val('icpCustomers')) $('icpCustomers').value = p.target;
+}
+
+async function genIcp(){
+  const name      = val('icpName')      || state.profile?.niche || 'your product';
+  const what      = val('icpWhat')      || '';
+  const problem   = val('icpProblem')   || '';
+  const price     = val('icpPrice')     || '';
+  const customers = val('icpCustomers') || '';
+
+  const outEl = $('icpOut');
+  outEl.innerHTML = '<span class="ce-spinner"></span> Building your customer profiles…';
+  try {
+    const data = await xgFetch('/generate', {
+      kind: 'icp',
+      name, what, problem, price, customers,
+      niche: state.profile?.niche || '',
+    });
+    outEl.textContent = data.text;
+    toast('ICP profiles ready');
+  } catch(e) {
+    console.warn('ICP API failed', e);
+    toast('AI unavailable — check connection');
+    outEl.textContent = `Could not reach AI: ${e.message}`;
+  }
+}
+
+/* ========= Product Hunt Launch Kit ========= */
+function phAutoFill(){
+  const p = state.profile || {};
+  if(p.niche && !val('phName'))     $('phName').value     = p.niche;
+  if(p.niche && !val('phOneliner')) $('phOneliner').value = p.niche;
+  if(p.target && !val('phAudience')) $('phAudience').value = p.target;
+}
+
+async function genPhLaunch(){
+  const name     = val('phName')     || state.profile?.niche || 'your product';
+  const oneliner = val('phOneliner') || '';
+  const what     = val('phWhat')     || '';
+  const audience = val('phAudience') || '';
+  const features = val('phFeatures') || '';
+  const goal     = val('phGoal')     || 'top-5 product of the day';
+
+  const outEl = $('phOut');
+  outEl.innerHTML = '<span class="ce-spinner"></span> Assembling your launch kit…';
+  try {
+    const data = await xgFetch('/generate', {
+      kind: 'ph-launch',
+      name, oneliner, what, audience, features, goal,
+      niche: state.profile?.niche || '',
+    });
+    outEl.textContent = data.text;
+    toast('Launch kit ready');
+  } catch(e) {
+    console.warn('PH Launch API failed', e);
+    toast('AI unavailable — check connection');
+    outEl.textContent = `Could not reach AI: ${e.message}`;
+  }
+}
+
 /* ========= Growth Lab ========= */
 function growthAutoFill(){
   const p = state.profile || {};
@@ -1597,7 +1664,7 @@ function setLibFilter(f){
   renderLibrary();
 }
 
-const LIB_TYPE_LABELS = { email:'Email', campaign:'Campaign', copy:'Website Copy', brand:'Brand Kit', growth:'Growth Lab' };
+const LIB_TYPE_LABELS = { email:'Email', campaign:'Campaign', copy:'Website Copy', brand:'Brand Kit', growth:'Growth Lab', icp:'ICP', ph:'PH Launch' };
 
 function renderLibrary(){
   const el = $('libItems'); if(!el) return;

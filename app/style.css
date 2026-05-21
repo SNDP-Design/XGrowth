@@ -350,6 +350,8 @@
   .lib-badge-copy{background:rgba(34,197,94,.12);color:#4ade80;border:1px solid rgba(34,197,94,.2)}
   .lib-badge-brand{background:rgba(251,191,36,.12);color:#fbbf24;border:1px solid rgba(251,191,36,.2)}
   .lib-badge-growth{background:rgba(249,115,22,.12);color:#fb923c;border:1px solid rgba(249,115,22,.2)}
+  .lib-badge-icp{background:rgba(20,184,166,.12);color:#2dd4bf;border:1px solid rgba(20,184,166,.2)}
+  .lib-badge-ph{background:rgba(239,68,68,.12);color:#f87171;border:1px solid rgba(239,68,68,.2)}
   .lib-preview{font-size:13px;line-height:1.55;color:var(--muted);white-space:pre-wrap;word-break:break-word;margin:0;max-height:140px;overflow:hidden;position:relative}
   .lib-preview::after{content:'';position:absolute;bottom:0;left:0;right:0;height:32px;background:linear-gradient(transparent,var(--panel))}
   .lib-actions{display:flex;gap:8px;margin-top:2px}

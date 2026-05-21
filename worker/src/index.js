@@ -180,6 +180,10 @@ export default {
         prompt = buildGrowthExperimentsPrompt(body);
       } else if (kind === 'pulse') {
         prompt = buildPulsePrompt(body);
+      } else if (kind === 'icp') {
+        prompt = buildIcpPrompt(body);
+      } else if (kind === 'ph-launch') {
+        prompt = buildPhLaunchPrompt(body);
       } else {
         return json({ error: 'Unknown kind: ' + kind }, 400, origin, allowed);
       }
@@ -803,6 +807,123 @@ ${HARD_RULES}
 - If a metric is 0 or missing, treat it as "no signal yet" not "great success".
 
 Return ONLY the two paragraphs. No preamble, no headers.`;
+}
+
+function buildIcpPrompt(body) {
+  const {
+    name = 'your product',
+    what = 'a SaaS tool',
+    problem = 'a painful workflow problem',
+    customers = '',
+    price = '',
+    niche = '',
+  } = body;
+
+  return `You are a senior customer research strategist who has run 500+ discovery interviews for B2B SaaS products. You build ICPs that founders can act on immediately — not slide-deck archetypes but real humans with specific behaviors, exact objection language, and clear acquisition paths.
+
+Build 3 Ideal Customer Profiles for:
+PRODUCT: ${name}
+WHAT IT DOES: ${what}
+PROBLEM SOLVED: ${problem}
+${price ? `PRICE POINT: ${price}` : ''}
+${customers ? `CURRENT CUSTOMERS (use as signal): ${customers}` : 'CURRENT CUSTOMERS: None yet — extrapolate from the product and problem.'}
+${niche ? `NICHE: ${niche}` : ''}
+
+Format EACH ICP EXACTLY like this:
+
+---
+## ICP [N]: [First name + job title — e.g. "Alex — Solo SaaS Founder"]
+
+**Role:** [Specific title + company type and stage]
+**Company size:** [Headcount + revenue range]
+**Background:** [2–3 sentences — career path and how they arrived at this role]
+
+**The one thing they're measured on:** [Single most important outcome]
+
+**Biggest pains (in their own words):**
+- "[Most urgent pain — quoted in their voice, not product category language]"
+- "[Second pain]"
+- "[Third pain]"
+
+**Job to be done:**
+When [triggering situation], I want to [motivation] so I can [outcome].
+
+**Buying behavior:**
+[2–3 sentences: how they evaluate tools — trial first? committee approval? how long? deal-breakers?]
+
+**Objections they'll say out loud:**
+- "[Exact objection in their words]"
+- "[Another objection]"
+- "[Another objection]"
+
+**Where to find them:**
+- [Platform / community + what they're doing there]
+- [Second channel + behavior]
+
+**The one message that unlocks them:** [One sentence — the framing that makes this persona immediately say "that's me"]
+---
+
+${HARD_RULES}
+- Each ICP must be genuinely distinct — different motivations, buying behaviors, and objection language, not just different titles.
+- Use customers as signal; if blank, extrapolate from product + problem.
+- Do NOT add any text before ICP 1 or after ICP 3.`;
+}
+
+function buildPhLaunchPrompt(body) {
+  const {
+    name = 'your product',
+    oneliner = 'a great product',
+    what = 'it solves a painful problem',
+    audience = 'founders and makers',
+    features = '',
+    goal = 'top-5 product of the day',
+    niche = '',
+  } = body;
+
+  return `You are a Product Hunt launch strategist who has helped 30+ products hit Top 5 on launch day. You know the PH meta cold: clarity and personality beat hype. Voters upvote things that feel human and useful, not things that feel like press releases.
+
+Create a complete Product Hunt launch kit for:
+PRODUCT: ${name}
+ONE-LINER: ${oneliner}
+WHAT IT DOES: ${what}
+TARGET USER: ${audience}
+${features ? `TOP FEATURES / DIFFERENTIATORS: ${features}` : ''}
+LAUNCH GOAL: ${goal}
+${niche ? `NICHE CONTEXT: ${niche}` : ''}
+
+Generate EXACTLY these sections in order, no extra commentary:
+
+## Tagline
+[One tagline only. Under 60 characters — count every character. Benefit-first, specific, no buzzwords, no "the X for Y" template unless it's genuinely the clearest option.]
+
+## Description (260 chars)
+[Body text for the PH listing. 260 characters or fewer — count carefully. Jargon-free, punchy. Read it aloud: if it sounds like ad copy, rewrite it.]
+
+## First Maker Comment
+[250–320 words. The "why I built this" story that gets people to care. Open with the specific frustration that started this. Who it's for. What makes it different from alternatives. End with a direct ask: "Would love your feedback on [specific thing] in the comments." Personal, direct, zero hype.]
+
+## Top 5 Questions Voters Will Ask + Answers
+The 5 most likely comment questions, with sharp honest answers.
+
+Q: [Question]
+A: [1–3 sentence answer, conversational]
+
+[Repeat for all 5]
+
+## Day-of Checklist
+- [ ] [Specific action with a time e.g. "12:01 AM PT — submit the listing"]
+[8–10 items, covering: submission timing, assets, supporter outreach, comment monitoring, social amplification]
+
+## Supporter Outreach Message
+[Under 80 words. To send to early supporters / email list. Feels personal, not blast. Specific ask: what to do and why it matters. No "I'd really appreciate it if you could…" energy.]
+
+## 48h Follow-up Tweet (if top 5)
+[Under 280 characters. Post if you rank well. Gratitude + one forward-looking hook. No brag — just momentum. Include number of upvotes as placeholder: {votes}]
+
+${HARD_RULES}
+- Tagline: count every character — must be under 60.
+- Description: 260 chars or fewer — count carefully before outputting.
+- Do NOT add any text before the Tagline section or after the Follow-up Tweet.`;
 }
 
 function buildGrowthExperimentsPrompt(body) {
