@@ -1147,7 +1147,8 @@ function ceImgRenderGrid(phase){
     </div>`).join('');
 }
 
-/* Fire all 6 in parallel */
+/* Load all 6 SEQUENTIALLY — Pollinations allows only 1 concurrent request per IP.
+   Parallel requests beyond the first all return 402. Each cell reveals as it finishes. */
 async function ceImgGenerate(){
   const prompt = ($('ceImgPromptInput')?.value || '').trim();
   if(!prompt){ toast('Enter a prompt first'); return; }
@@ -1161,7 +1162,15 @@ async function ceImgGenerate(){
   $('ceImgGenBtn').disabled = true;
   ceImgRenderGrid('loading');
 
-  await Promise.allSettled(IMGGEN_GRID_MODELS.map((m, i) => ceImgLoadOne(prompt, m, i)));
+  for(let i = 0; i < IMGGEN_GRID_MODELS.length; i++){
+    // Mark the active cell so the user can see which one is generating
+    const cell = $(`imgCell${i}`);
+    if(cell){
+      const lbl = cell.querySelector('.imggen-status-lbl');
+      if(lbl) lbl.textContent = IMGGEN_GRID_MODELS[i].label + '…';
+    }
+    await ceImgLoadOne(prompt, IMGGEN_GRID_MODELS[i], i).catch(() => {});
+  }
   $('ceImgGenBtn').disabled = false;
 }
 
