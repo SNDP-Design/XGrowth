@@ -1162,63 +1162,45 @@ async function ceImgGenerate(){
   $('ceImgGenBtn').disabled = false;
 }
 
-/* Load one Pollinations image and update its cell */
-function ceImgLoadOne(prompt, model, idx){
-  return new Promise((resolve, reject) => {
-    const seed = _imgGen.seeds[idx] || Math.floor(Math.random() * 1e9);
-    const url  = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}` +
-                 `?width=1080&height=1080&model=${model.id}&nologo=true&seed=${seed}`;
-    const img  = new Image();
-    // ⚠️  Do NOT set crossOrigin here — Pollinations CDN sometimes omits CORS headers
-    // on cached responses, which causes the browser to fire onerror even when the image
-    // is perfectly valid. Download uses a separate fetch() call which handles CORS fine.
+/* Load one image via the Worker proxy and update its cell.
+   Previously used new Image() pointing directly at image.pollinations.ai, but
+   ad-blockers / privacy extensions block third-party image CDN domains in the
+   browser, causing onerror on every cell.  Routing through the Worker makes the
+   request server-to-server; the browser only sees a data: URL which is never
+   intercepted by extensions. */
+async function ceImgLoadOne(prompt, model, idx){
+  const seed = _imgGen.seeds[idx] || Math.floor(Math.random() * 1e9);
+  try {
+    const data = await xgFetch('/generate-image', {
+      prompt,
+      provider: 'pollinations',
+      model:    model.id,
+      seed,
+    });
+    if(!data.imageData) throw new Error('No image data returned');
+    const dataUrl = `data:${data.mimeType || 'image/jpeg'};base64,${data.imageData}`;
 
-    // Timeout safety net — mark as failed after 45s so the cell doesn't spin forever
-    const timer = setTimeout(() => {
-      img.src = '';
-      const cell = $(`imgCell${idx}`);
-      if(cell && cell.classList.contains('loading')){
-        cell.className = 'imggen-cell error';
-        cell.innerHTML = `
-          <div class="imggen-status">
-            <span style="font-size:24px;opacity:.3">⏱</span>
-            <span class="imggen-status-lbl">${model.label} timed out</span>
-            <button class="btn ghost" style="height:26px;padding:0 10px;font-size:11px;margin-top:6px"
-              onclick="event.stopPropagation();ceImgRetryOne(${idx})">Retry</button>
-          </div>`;
-      }
-      reject(new Error('timeout'));
-    }, 45000);
-
-    img.onload = () => {
-      clearTimeout(timer);
-      const cell = $(`imgCell${idx}`);
-      if(!cell) return resolve(url);
-      cell.className   = 'imggen-cell done';
-      cell.dataset.url = url;
-      cell.innerHTML   = `
-        <img src="${url}" alt="${model.label}">
-        <div class="imggen-label"><strong>${model.label}</strong><span>${model.tag}</span></div>`;
-      resolve(url);
-    };
-
-    img.onerror = () => {
-      clearTimeout(timer);
-      const cell = $(`imgCell${idx}`);
-      if(!cell) return reject();
-      cell.className = 'imggen-cell error';
-      cell.innerHTML = `
-        <div class="imggen-status">
-          <span style="font-size:24px;opacity:.3">✕</span>
-          <span class="imggen-status-lbl">${model.label}</span>
-          <button class="btn ghost" style="height:26px;padding:0 10px;font-size:11px;margin-top:6px"
-            onclick="event.stopPropagation();ceImgRetryOne(${idx})">Retry</button>
-        </div>`;
-      reject();
-    };
-
-    img.src = url;
-  });
+    const cell = $(`imgCell${idx}`);
+    if(!cell || !cell.classList.contains('loading')) return dataUrl; // replaced by a retry
+    cell.className   = 'imggen-cell done';
+    cell.dataset.url = dataUrl;
+    cell.innerHTML   = `
+      <img src="${dataUrl}" alt="${model.label}">
+      <div class="imggen-label"><strong>${model.label}</strong><span>${model.tag}</span></div>`;
+    return dataUrl;
+  } catch(e) {
+    const cell = $(`imgCell${idx}`);
+    if(!cell || !cell.classList.contains('loading')) return; // replaced by a retry
+    cell.className = 'imggen-cell error';
+    cell.innerHTML = `
+      <div class="imggen-status">
+        <span style="font-size:24px;opacity:.3">✕</span>
+        <span class="imggen-status-lbl">${model.label}</span>
+        <button class="btn ghost" style="height:26px;padding:0 10px;font-size:11px;margin-top:6px"
+          onclick="event.stopPropagation();ceImgRetryOne(${idx})">Retry</button>
+      </div>`;
+    throw e;
+  }
 }
 
 /* Retry a single failed or timed-out cell with a fresh seed */
@@ -1254,15 +1236,28 @@ function ceImgSelectCell(idx){
   $('ceImgDownloadBtn').disabled = false;
 }
 
-/* Download the selected image */
+/* Download the selected image.
+   Images now arrive as data: URLs (base64 from the Worker), so we convert the
+   data URL directly to a Blob rather than fetching an external URL. */
 async function ceImgDownload(){
   if(!_imgGen.selectedUrl){ toast('Tap an image to select it first'); return; }
   try {
-    const resp = await fetch(_imgGen.selectedUrl);
-    const blob = await resp.blob();
+    let blob;
+    if(_imgGen.selectedUrl.startsWith('data:')){
+      // data:<mime>;base64,<b64data>
+      const [header, b64] = _imgGen.selectedUrl.split(',');
+      const mime  = header.match(/:(.*?);/)?.[1] || 'image/jpeg';
+      const bytes = atob(b64);
+      const arr   = new Uint8Array(bytes.length);
+      for(let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
+      blob = new Blob([arr], { type: mime });
+    } else {
+      const resp = await fetch(_imgGen.selectedUrl);
+      blob = await resp.blob();
+    }
     const a    = document.createElement('a');
     a.href     = URL.createObjectURL(blob);
-    a.download = `xgrowth-insta-${Date.now()}.png`;
+    a.download = `xgrowth-insta-${Date.now()}.jpg`;
     a.click();
     URL.revokeObjectURL(a.href);
   } catch {

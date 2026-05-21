@@ -117,7 +117,10 @@ export default {
       }
       try {
         let result;
-        if (provider.startsWith('hf-')) {
+        if (provider === 'pollinations') {
+          const { model: pollinationsModel = 'flux', seed } = body;
+          result = await callPollinationsImage(prompt, pollinationsModel, seed);
+        } else if (provider.startsWith('hf-')) {
           if (!env.HF_TOKEN) return json({ error: 'HF_TOKEN secret not configured — run: npx wrangler secret put HF_TOKEN' }, 500, origin, allowed);
           result = await callHuggingFaceImage(env.HF_TOKEN, prompt, provider);
         } else {
@@ -1106,6 +1109,56 @@ ${HARD_RULES}
 - Subject lines: no ALL CAPS, no emojis, no vague teasers — earn the open with specificity or curiosity
 - Never use "journey", "excited", "thrilled", "leverage", "game-changer", or "at the end of the day"
 - Do NOT add any text before Email 1 or after the final email`;
+}
+
+/* ─── Pollinations image client (server-to-server proxy) ─────────────────── */
+
+// Fetch from Pollinations server-side so the browser never makes a direct
+// request to image.pollinations.ai — bypasses any ad-blocker / privacy-extension
+// that blocks third-party image CDN domains. Returns base64 so the client
+// can display it as a data: URL (not blockable by extensions).
+async function callPollinationsImage(prompt, model, seed) {
+  const s = seed || Math.floor(Math.random() * 1e9);
+  const imageUrl =
+    `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}` +
+    `?width=1080&height=1080&model=${encodeURIComponent(model)}&nologo=true&seed=${s}`;
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 25000); // 25s hard limit
+
+  let resp;
+  try {
+    resp = await fetch(imageUrl, {
+      signal: controller.signal,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; XGrowthBot/1.0; +https://xgrowth.uno)',
+        'Referer':    'https://xgrowth.uno/',
+      },
+    });
+  } catch (e) {
+    clearTimeout(timer);
+    if (e.name === 'AbortError') throw new Error('Pollinations timed out after 25s');
+    throw e;
+  }
+  clearTimeout(timer);
+
+  if (!resp.ok) throw new Error(`Pollinations ${resp.status}`);
+
+  const ct       = resp.headers.get('content-type') || 'image/jpeg';
+  const mimeType = ct.split(';')[0].trim();
+
+  // Read image bytes and base64-encode in chunks (avoids call-stack overflow on
+  // large images when using String.fromCharCode spread).
+  const buffer = await resp.arrayBuffer();
+  const bytes  = new Uint8Array(buffer);
+  let binary   = '';
+  const CHUNK  = 8192;
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+  }
+  const imageData = btoa(binary);
+
+  return { imageData, mimeType };
 }
 
 /* ─── Hugging Face image client ───────────────────────────────────────────── */
