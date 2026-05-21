@@ -123,6 +123,7 @@ nav.addEventListener('click', e=>{
   document.querySelector(`section[data-view="${v}"]`).classList.remove('hide');
   if(v === 'brand') brandKitAutoFill();
   if(v === 'email') emailAutoFill();
+  if(v === 'growth') growthAutoFill();
   if(v === 'library') renderLibrary();
 });
 
@@ -1436,6 +1437,89 @@ function brandKitAutoFill(){
   if(prof.target && !val('bkWho'))  $('bkWho').value  = prof.target;
 }
 
+/* ========= Growth Lab ========= */
+function growthAutoFill(){
+  const p = state.profile || {};
+  if(p.stage){
+    const stageMap = {'Pre-seed':'idea','Seed':'mvp','Series A':'pmf','Bootstrapped':'mvp'};
+    const mapped = stageMap[p.stage];
+    if(mapped && $('glStage')) $('glStage').value = mapped;
+  }
+}
+
+async function genGrowthExperiments(){
+  const stage = val('glStage') || 'mvp';
+  const goal  = val('glGoal')  || 'trials';
+  const count = parseInt(val('glCount') || '6');
+  const budget = val('glBudget') || '$0 (bootstrapped)';
+  const channels = [
+    $('glChX')?.checked    && 'X / Twitter',
+    $('glChLI')?.checked   && 'LinkedIn',
+    $('glChEmail')?.checked&& 'Email',
+    $('glChSEO')?.checked  && 'SEO / Blog',
+    $('glChPH')?.checked   && 'Product Hunt',
+    $('glChComm')?.checked && 'Communities',
+  ].filter(Boolean);
+
+  const outEl = $('growthOut');
+  outEl.innerHTML = '<span class="ce-spinner"></span> Designing your growth experiments…';
+  try {
+    const data = await xgFetch('/generate', {
+      kind: 'growth-experiments',
+      stage, goal, channels, budget, count,
+      niche: state.profile?.niche || 'your SaaS product',
+    });
+    outEl.textContent = data.text;
+    toast('Growth experiments ready');
+  } catch(e) {
+    console.warn('Growth experiments API failed', e);
+    toast('AI unavailable — check connection');
+    outEl.textContent = `Could not reach AI: ${e.message}\n\nTry again once you're signed in.`;
+  }
+}
+
+/* ========= AI Growth Pulse (Dashboard) ========= */
+function mdSimple(text){
+  // Minimal safe markdown renderer: bold + newlines only
+  return escapeHtml(text)
+    .replace(/\*\*([^*\n]+)\*\*/g, '<b>$1</b>')
+    .replace(/\n/g, '<br>');
+}
+
+async function runGrowthPulse(){
+  const btn = $('pulseBtn');
+  const out = $('pulseOut');
+  if(!fbAuth?.currentUser){ toast('Sign in to use AI Pulse'); return; }
+  const m = state.metrics;
+  const cur  = m.followers.at(-1)||0;
+  const prev = m.followers.at(-8)||cur;
+  const top  = state.posts.slice().sort((a,b)=>b.impr-a.impr)[0];
+
+  if(btn){ btn.disabled = true; btn.textContent = 'Analysing…'; }
+  out.innerHTML = '<span class="ce-spinner"></span> Reading your metrics…';
+  try {
+    const data = await xgFetch('/generate', {
+      kind: 'pulse',
+      niche:  state.profile?.niche  || 'your product',
+      stage:  state.profile?.stage  || 'mvp',
+      metrics: {
+        followersWoW: pct(cur, prev),
+        impressions7: sum(m.impressions.slice(-7)),
+        engagement7:  avg(m.engagement.slice(-7)),
+        visits7:      sum(m.visits.slice(-7)),
+        topPost: top ? { text: top.text, impr: top.impr } : null,
+      },
+    });
+    out.innerHTML = `<div class="pulse-insights">${mdSimple(data.text)}</div>`;
+    toast('Pulse ready');
+  } catch(e) {
+    out.innerHTML = '<span class="muted small">AI Pulse unavailable — add some metrics first, then try again.</span>';
+    console.warn('Pulse error', e);
+  } finally {
+    if(btn){ btn.disabled = false; btn.textContent = 'Refresh'; }
+  }
+}
+
 /* ========= Email Sequences ========= */
 function emailAutoFill(){
   const p = state.profile || {};
@@ -1513,7 +1597,7 @@ function setLibFilter(f){
   renderLibrary();
 }
 
-const LIB_TYPE_LABELS = { email:'Email', campaign:'Campaign', copy:'Website Copy', brand:'Brand Kit' };
+const LIB_TYPE_LABELS = { email:'Email', campaign:'Campaign', copy:'Website Copy', brand:'Brand Kit', growth:'Growth Lab' };
 
 function renderLibrary(){
   const el = $('libItems'); if(!el) return;

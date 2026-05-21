@@ -71,6 +71,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
         Dashboard
       </button>
+      <button data-view="growth">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44A2.5 2.5 0 0 1 2.5 17v-2.6a2.5 2.5 0 0 1 1.32-2.2L9.5 9V2z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44A2.5 2.5 0 0 0 21.5 17v-2.6a2.5 2.5 0 0 0-1.32-2.2L14.5 9V2z"/></svg>
+        Growth Lab
+      </button>
       <button data-view="brand">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
         Brand Kit
@@ -211,8 +215,24 @@
               <span class="qa-icon">📊</span>
               <div><b>Build weekly report</b><div class="muted small">Investor-ready snapshot</div></div>
             </button>
+            <button class="qa" onclick="document.querySelector('button[data-view=\'growth\']').click()">
+              <span class="qa-icon">🧪</span>
+              <div><b>Growth experiments</b><div class="muted small">ICE-scored tactics for your stage</div></div>
+            </button>
           </div>
         </div>
+      </div>
+
+      <!-- AI Growth Pulse -->
+      <div class="card" style="margin-top:14px">
+        <div class="copybar">
+          <div>
+            <h3 style="margin:0 0 2px">AI Growth Pulse</h3>
+            <span class="muted small">3 insights from your current metrics</span>
+          </div>
+          <button class="btn ghost" id="pulseBtn" onclick="runGrowthPulse()">Run analysis</button>
+        </div>
+        <div id="pulseOut" class="pulse-out">Click "Run analysis" to get 3 AI-generated insights and this week's #1 action item — based on your logged metrics.</div>
       </div>
 
       <div class="grid cols-3" style="margin-top:14px">
@@ -415,6 +435,71 @@
       </div>
     </section>
 
+    <!-- GROWTH LAB -->
+    <section data-view="growth" class="hide">
+      <h2 class="section">Growth Lab</h2>
+      <p class="lede">ICE-scored growth experiments tailored to your stage, goal, and channels — ranked by what to run first.</p>
+      <div class="grid cols-2">
+        <div class="card">
+          <h3>Your situation</h3>
+          <label>Product stage</label>
+          <select id="glStage">
+            <option value="idea">Idea / Pre-launch</option>
+            <option value="mvp" selected>MVP / Early users</option>
+            <option value="pmf">Post-PMF / Growing</option>
+            <option value="scaling">Scaling</option>
+          </select>
+          <label>Primary growth goal</label>
+          <select id="glGoal">
+            <option value="awareness">Build awareness</option>
+            <option value="waitlist">Grow waitlist / email list</option>
+            <option value="trials" selected>Drive trials / signups</option>
+            <option value="activation">Improve activation</option>
+            <option value="retention">Reduce churn / retention</option>
+            <option value="revenue">Grow revenue / upsell</option>
+            <option value="referrals">Referrals / word of mouth</option>
+          </select>
+          <label>Active channels</label>
+          <div class="row" style="flex-wrap:wrap;gap:8px;margin-top:4px">
+            <label class="chip"><input type="checkbox" checked id="glChX"/> X / Twitter</label>
+            <label class="chip"><input type="checkbox" id="glChLI"/> LinkedIn</label>
+            <label class="chip"><input type="checkbox" id="glChEmail"/> Email</label>
+            <label class="chip"><input type="checkbox" id="glChSEO"/> SEO / Blog</label>
+            <label class="chip"><input type="checkbox" id="glChPH"/> Product Hunt</label>
+            <label class="chip"><input type="checkbox" id="glChComm"/> Communities</label>
+          </div>
+          <label>Monthly marketing budget</label>
+          <select id="glBudget">
+            <option value="$0 (bootstrapped)" selected>$0 — bootstrapped</option>
+            <option value="under $500">Under $500 / mo</option>
+            <option value="$500–$2,000">$500–$2,000 / mo</option>
+            <option value="$2,000–$10,000">$2,000–$10,000 / mo</option>
+            <option value="$10,000+">$10,000+ / mo</option>
+          </select>
+          <label>Number of experiments</label>
+          <select id="glCount">
+            <option value="4">4 experiments</option>
+            <option value="6" selected>6 experiments</option>
+            <option value="8">8 experiments</option>
+          </select>
+          <div class="row" style="margin-top:14px">
+            <button class="btn" onclick="genGrowthExperiments()">Generate Experiments</button>
+            <button class="btn secondary" onclick="clearOut('growthOut')">Clear</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="copybar">
+            <h3>Growth Experiments</h3>
+            <div class="row" style="gap:6px">
+              <button class="btn ghost" onclick="saveToLibrary('growth','Growth experiments',$('growthOut').innerText)">Save</button>
+              <button class="btn ghost" onclick="copyOut('growthOut')">Copy</button>
+            </div>
+          </div>
+          <div class="output" id="growthOut">Configure your situation and click Generate. You'll get 6 ICE-scored experiments — each with a hypothesis, step-by-step playbook, success metric, and signal to double down.</div>
+        </div>
+      </div>
+    </section>
+
     <!-- EMAIL SEQUENCES -->
     <section data-view="email" class="hide">
       <h2 class="section">Email Sequences</h2>
@@ -477,6 +562,7 @@
           <button class="btn ghost" data-lib-filter="campaign" onclick="setLibFilter('campaign')">Campaign</button>
           <button class="btn ghost" data-lib-filter="copy" onclick="setLibFilter('copy')">Website Copy</button>
           <button class="btn ghost" data-lib-filter="brand" onclick="setLibFilter('brand')">Brand Kit</button>
+          <button class="btn ghost" data-lib-filter="growth" onclick="setLibFilter('growth')">Growth Lab</button>
         </div>
       </div>
       <p class="lede">All your saved AI-generated content in one place. Click Save on any module output to keep it here.</p>

@@ -176,6 +176,10 @@ export default {
         prompt = buildImagePromptPrompt(body);
       } else if (kind === 'email-sequence') {
         prompt = buildEmailSequencePrompt(body);
+      } else if (kind === 'growth-experiments') {
+        prompt = buildGrowthExperimentsPrompt(body);
+      } else if (kind === 'pulse') {
+        prompt = buildPulsePrompt(body);
       } else {
         return json({ error: 'Unknown kind: ' + kind }, 400, origin, allowed);
       }
@@ -799,6 +803,120 @@ ${HARD_RULES}
 - If a metric is 0 or missing, treat it as "no signal yet" not "great success".
 
 Return ONLY the two paragraphs. No preamble, no headers.`;
+}
+
+function buildGrowthExperimentsPrompt(body) {
+  const {
+    stage = 'mvp',
+    goal = 'trials',
+    channels = [],
+    budget = '$0 (bootstrapped)',
+    niche = 'your SaaS product',
+    count = 6,
+  } = body;
+
+  const stageGuide = {
+    idea:    'pre-launch idea stage — no product yet, building in public',
+    mvp:     'MVP with early users but no clear PMF yet',
+    pmf:     'post-PMF with traction and some paying customers',
+    scaling: 'scaling with proven growth loops and significant revenue',
+  };
+
+  const goalGuide = {
+    awareness:  'increase brand awareness and become known in the niche',
+    waitlist:   'grow the email waitlist / subscriber list as fast as possible',
+    trials:     'drive free trial signups or demo requests',
+    activation: 'improve activation (get users to the aha moment faster)',
+    retention:  'reduce churn and improve long-term retention',
+    revenue:    'grow revenue through upsells, upgrades, or expansion',
+    referrals:  'generate referrals and organic word-of-mouth growth',
+  };
+
+  const chList = channels.length ? channels.join(', ') : 'not specified — recommend the best 2–3 for this stage';
+
+  return `You are a Y Combinator-level growth advisor who has helped 50+ SaaS products reach their first $1M ARR. You think in systems, not one-off tactics, and you are allergic to generic advice.
+
+PRODUCT CONTEXT:
+- Product / niche: ${niche}
+- Stage: ${stageGuide[stage] || stage}
+- Primary growth goal: ${goalGuide[goal] || goal}
+- Active channels: ${chList}
+- Monthly budget: ${budget}
+
+Generate exactly ${count} growth experiments tailored to this context. Rank them from highest ICE total to lowest.
+
+Format EACH experiment EXACTLY like this — no exceptions:
+
+---
+## Experiment [N]: [Punchy name, 4–7 words]
+**Hypothesis:** If we [specific action], then [expected outcome] because [one-sentence reason].
+**ICE Score:** Impact [1–10] · Confidence [1–10] · Ease [1–10] · **Total: [average to 1 decimal]**
+**Channel:** [Which channel(s)]
+**Time to run:** [e.g. "2 days", "1 week"]
+**Budget needed:** [exact $ or "Free"]
+
+**Run it tomorrow:**
+1. [Specific, executable step — not "create content" but the exact thing to write, post, or build]
+2. [Next step]
+3. [Next step]
+[4–5 steps max]
+
+**Success metric:** [What to measure, with a concrete "good" threshold — e.g. "≥12 trial signups from this within 72h"]
+**Double down if:** [The leading indicator that tells you to scale this immediately]
+---
+
+${HARD_RULES}
+- ICE scores must be realistic. Confidence = how proven the mechanism is. Do NOT score everything 7+.
+- Every step must be executable by a solo founder with no team today.
+- At least one experiment must be Free and completable in under 48h.
+- If channels are not specified, pick the best 2 for the stage and explain why.
+- Experiments must be specific to the actual niche — not generic SaaS advice.
+- Do NOT add any text before Experiment 1 or after the last experiment.`;
+}
+
+function buildPulsePrompt(body) {
+  const {
+    niche = 'your SaaS product',
+    stage = 'mvp',
+    metrics: {
+      followersWoW = 0,
+      impressions7 = 0,
+      engagement7 = 0,
+      visits7 = 0,
+      topPost = null,
+    } = {},
+  } = body;
+
+  const hasData = impressions7 > 0 || visits7 > 0 || followersWoW !== 0;
+
+  return `You are a blunt, data-driven growth advisor. The founder has 60 seconds. Give them only what matters.
+
+PRODUCT: ${niche} (${stage} stage)
+
+LAST 7 DAYS:
+- Follower growth WoW: ${followersWoW.toFixed(1)}%
+- Impressions: ${impressions7}
+- Avg engagement rate: ${engagement7.toFixed(2)}%
+- Profile visits: ${visits7}
+${topPost ? `- Top post: "${topPost.text?.slice(0, 120)}" — ${topPost.impr} impressions` : '- No top post logged'}
+${!hasData ? '\nNote: Most metrics are zero — the founder has not logged data yet.' : ''}
+
+Return EXACTLY 3 insights in this format:
+
+**[3–5 word title]**
+[2 sentences: what this metric signals + one specific action to take this week.]
+
+**[3–5 word title]**
+[2 sentences.]
+
+**[3–5 word title]**
+[2 sentences.]
+
+Rules:
+- If a number is bad, say so directly. No softening.
+- Each action must be specific enough to complete in under 1 hour.
+- If data is sparse or all zeros, focus on exactly what to start tracking and why.
+- Do NOT number the insights. Do NOT add preamble or sign-off. Return only the 3 insights.`;
 }
 
 function buildEmailSequencePrompt(body) {
