@@ -83,6 +83,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
         Campaign Builder
       </button>
+      <button data-view="email">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+        Email Sequences
+      </button>
       <button data-view="copy">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
         Website Copy
@@ -94,6 +98,10 @@
       <button data-view="reports">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
         Reports &amp; Exports
+      </button>
+      <button data-view="library">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+        Saved Library
       </button>
     </div>
     <div class="side-spacer"></div>
@@ -286,7 +294,7 @@
         <div class="card">
           <div class="copybar">
             <h3>Your Brand Kit</h3>
-            <button class="btn ghost" onclick="copyOut('brandKitOut')">Copy</button>
+            <div class="row" style="gap:6px"><button class="btn ghost" onclick="saveToLibrary('brand','Brand Kit',$('brandKitOut').innerText)">Save</button><button class="btn ghost" onclick="copyOut('brandKitOut')">Copy</button></div>
           </div>
           <div class="output" id="brandKitOut">Fill in your details and generate your Brand Kit. You'll get a positioning statement, platform bios, content pillars, ICP, and brand voice.</div>
         </div>
@@ -407,6 +415,74 @@
       </div>
     </section>
 
+    <!-- EMAIL SEQUENCES -->
+    <section data-view="email" class="hide">
+      <h2 class="section">Email Sequences</h2>
+      <p class="lede">AI-written email sequences for onboarding, launches, nurture, and re-engagement — ready to paste into any ESP.</p>
+      <div class="grid cols-2">
+        <div class="card">
+          <h3>Sequence setup</h3>
+          <label>Product / Brand name</label>
+          <input id="esName" type="text" placeholder="XGrowth"/>
+          <label>What it does (1 sentence)</label>
+          <input id="esWhat" type="text" placeholder="AI marketing OS for indie makers"/>
+          <label>Who it's for</label>
+          <input id="esAudience" type="text" placeholder="SaaS founders, bootstrapped operators"/>
+          <label>Sequence goal</label>
+          <select id="esGoal">
+            <option value="onboarding">Onboarding — new users → aha moment</option>
+            <option value="launch">Product launch — pre-launch → day-of</option>
+            <option value="nurture">Cold nurture — educate → trial</option>
+            <option value="reEngage">Re-engagement / win-back</option>
+            <option value="waitlist">Waitlist warm-up</option>
+          </select>
+          <label>Number of emails</label>
+          <select id="esCount">
+            <option value="3">3 emails</option>
+            <option value="5" selected>5 emails</option>
+            <option value="7">7 emails</option>
+          </select>
+          <label>Tone</label>
+          <select id="esTone">
+            <option value="direct and conversational">Direct + Conversational</option>
+            <option value="warm and friendly">Warm + Friendly</option>
+            <option value="bold and urgency-driven">Bold + Urgency-driven</option>
+            <option value="professional and authoritative">Professional + Authoritative</option>
+          </select>
+          <div class="row" style="margin-top:14px">
+            <button class="btn" onclick="genEmailSequence()">Generate Sequence</button>
+            <button class="btn secondary" onclick="clearOut('emailSeqOut')">Clear</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="copybar">
+            <h3>Email Sequence</h3>
+            <div class="row" style="gap:6px">
+              <button class="btn ghost" onclick="saveToLibrary('email',val('esGoal')+' sequence',$('emailSeqOut').innerText)">Save</button>
+              <button class="btn ghost" onclick="copyOut('emailSeqOut')">Copy</button>
+            </div>
+          </div>
+          <div class="output" id="emailSeqOut">Configure your sequence and click Generate. You'll get subject lines, preview text, and full email bodies — ready to paste into Mailchimp, ConvertKit, or any ESP.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SAVED LIBRARY -->
+    <section data-view="library" class="hide">
+      <div class="topbar" style="margin-bottom:6px;flex-wrap:wrap;gap:10px">
+        <h2 class="section" style="margin:0">Saved Library</h2>
+        <div class="row" id="libFilters" style="gap:6px;flex-wrap:wrap">
+          <button class="btn ghost active" data-lib-filter="all" onclick="setLibFilter('all')">All</button>
+          <button class="btn ghost" data-lib-filter="email" onclick="setLibFilter('email')">Email</button>
+          <button class="btn ghost" data-lib-filter="campaign" onclick="setLibFilter('campaign')">Campaign</button>
+          <button class="btn ghost" data-lib-filter="copy" onclick="setLibFilter('copy')">Website Copy</button>
+          <button class="btn ghost" data-lib-filter="brand" onclick="setLibFilter('brand')">Brand Kit</button>
+        </div>
+      </div>
+      <p class="lede">All your saved AI-generated content in one place. Click Save on any module output to keep it here.</p>
+      <div id="libItems"></div>
+    </section>
+
     <!-- CAMPAIGN -->
     <section data-view="campaign" class="hide">
       <h2 class="section">Campaign Builder</h2>
@@ -438,7 +514,7 @@
           </div>
         </div>
         <div class="card">
-          <div class="copybar"><h3>Plan & Assets</h3><button class="btn ghost" onclick="copyOut('campaignOut')">Copy</button></div>
+          <div class="copybar"><h3>Plan & Assets</h3><div class="row" style="gap:6px"><button class="btn ghost" onclick="saveToLibrary('campaign','Campaign plan',$('campaignOut').innerText)">Save</button><button class="btn ghost" onclick="copyOut('campaignOut')">Copy</button></div></div>
           <div class="output" id="campaignOut">Pick a type and generate, you'll get audience segments, timeline, KPIs, 5 emails, ad copy, and a landing-page wireframe (HTML).</div>
         </div>
       </div>
@@ -461,7 +537,7 @@
           </div>
         </div>
         <div class="card">
-          <div class="copybar"><h3>Sections</h3><button class="btn ghost" onclick="copyOut('copyOut')">Copy</button></div>
+          <div class="copybar"><h3>Sections</h3><div class="row" style="gap:6px"><button class="btn ghost" onclick="saveToLibrary('copy','Website copy',$('copyOut').innerText)">Save</button><button class="btn ghost" onclick="copyOut('copyOut')">Copy</button></div></div>
           <div class="output" id="copyOut">Fill in details and hit Generate.</div>
         </div>
       </div>

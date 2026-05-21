@@ -338,3 +338,24 @@
   .ce-imggen-generate-btn:hover{background:linear-gradient(135deg,#1e2535,#141920);border-color:#3a5a9c;color:#a0ccff}
   .ce-imggen-generate-btn:disabled{opacity:.45;cursor:default}
   @media(max-width:600px){.ce-imggen-modal{padding:16px;gap:12px}.ce-imggen-modal h3{font-size:16px}}
+
+  /* ── Saved Library ───────────────────────────────────────────────────────── */
+  #libItems{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;margin-top:4px}
+  .lib-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;transition:.15s}
+  .lib-card:hover{border-color:#333}
+  .lib-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+  .lib-badge{font-size:11px;font-weight:700;letter-spacing:.3px;padding:3px 9px;border-radius:99px;white-space:nowrap;flex-shrink:0}
+  .lib-badge-email{background:rgba(59,130,246,.15);color:#7eb8f7;border:1px solid rgba(59,130,246,.25)}
+  .lib-badge-campaign{background:rgba(168,85,247,.15);color:#c084fc;border:1px solid rgba(168,85,247,.25)}
+  .lib-badge-copy{background:rgba(34,197,94,.12);color:#4ade80;border:1px solid rgba(34,197,94,.2)}
+  .lib-badge-brand{background:rgba(251,191,36,.12);color:#fbbf24;border:1px solid rgba(251,191,36,.2)}
+  .lib-preview{font-size:13px;line-height:1.55;color:var(--muted);white-space:pre-wrap;word-break:break-word;margin:0;max-height:140px;overflow:hidden;position:relative}
+  .lib-preview::after{content:'';position:absolute;bottom:0;left:0;right:0;height:32px;background:linear-gradient(transparent,var(--panel))}
+  .lib-actions{display:flex;gap:8px;margin-top:2px}
+  .lib-del{color:#f87171!important;border-color:rgba(248,113,113,.3)!important}
+  .lib-del:hover{background:rgba(248,113,113,.1)!important}
+  .btn.small{height:28px;padding:0 10px;font-size:12px}
+  .lib-empty{text-align:center;padding:60px 20px;color:var(--muted)}
+  .lib-empty-icon{font-size:40px;margin-bottom:12px}
+  .lib-empty p{margin:4px 0;font-size:15px}
+  @media(max-width:700px){#libItems{grid-template-columns:1fr}}

@@ -174,6 +174,8 @@ export default {
         prompt = buildBrandKitPrompt(body);
       } else if (kind === 'image-prompt') {
         prompt = buildImagePromptPrompt(body);
+      } else if (kind === 'email-sequence') {
+        prompt = buildEmailSequencePrompt(body);
       } else {
         return json({ error: 'Unknown kind: ' + kind }, 400, origin, allowed);
       }
@@ -797,6 +799,59 @@ ${HARD_RULES}
 - If a metric is 0 or missing, treat it as "no signal yet" not "great success".
 
 Return ONLY the two paragraphs. No preamble, no headers.`;
+}
+
+function buildEmailSequencePrompt(body) {
+  const {
+    name = 'your product',
+    what = 'a SaaS tool',
+    audience = 'founders and indie makers',
+    goal = 'onboarding',
+    count = 5,
+    tone = 'direct and conversational',
+    voiceNiche = '',
+    voiceStyle = '',
+  } = body;
+
+  const goalGuide = {
+    onboarding: `Welcome & onboarding — get new users to their first "aha moment": using the core feature, seeing real value, and feeling confident to continue.`,
+    launch: `Product launch — build anticipation before launch day, convert warm leads on launch day, and capture stragglers with urgency-driven follow-up.`,
+    nurture: `Cold nurture / drip — educate cold subscribers about the problem ${name} solves, build trust over time, and warm them toward a trial or purchase.`,
+    reEngage: `Re-engagement / win-back — reactivate subscribers who went cold. Acknowledge the gap, deliver new value, and invite them back with a low-friction CTA.`,
+    waitlist: `Waitlist warm-up — keep waitlisters excited and sharing while they wait. Tease what's coming, deliver early value, and prime them for conversion at launch.`,
+  };
+
+  return `You are a world-class email copywriter who has written sequences for some of the fastest-growing SaaS products. You write like a sharp, direct founder — not a corporate marketer.
+
+Write a ${count}-email sequence for the following product:
+
+PRODUCT: ${name}
+WHAT IT DOES: ${what}
+AUDIENCE: ${audience}
+TONE: ${tone}
+${voiceNiche ? `NICHE CONTEXT: ${voiceNiche}` : ''}
+${voiceStyle ? `VOICE STYLE: ${voiceStyle}` : ''}
+
+SEQUENCE GOAL: ${goalGuide[goal] || goalGuide.onboarding}
+
+Format EXACTLY like this for EVERY email — no exceptions:
+
+---
+## Email [N]: [Short descriptive title, 3–6 words]
+**Send:** [When to send, e.g. "Day 0 — immediately on sign-up" or "Day 3"]
+**Subject:** [Subject line, under 50 characters — specific, curiosity-driven, no "Introducing" or "Welcome to"]
+**Preview text:** [Preview snippet, 60–90 characters — continues the subject's curiosity loop]
+
+[Email body — 150–220 words. Short paragraphs (1–3 sentences each). One clear, specific CTA at the end. Written in first person as the founder. Start with a hook — a surprising stat, a bold claim, or a relatable problem — never with "Hey, it's [name] from [product]".]
+
+**P.S.** [A P.S. that adds a nugget of value, social proof, or urgency — 1 sentence.]
+---
+
+${HARD_RULES}
+- Every email has exactly ONE goal and ONE CTA
+- Subject lines: no ALL CAPS, no emojis, no vague teasers — earn the open with specificity or curiosity
+- Never use "journey", "excited", "thrilled", "leverage", "game-changer", or "at the end of the day"
+- Do NOT add any text before Email 1 or after the final email`;
 }
 
 /* ─── Hugging Face image client ───────────────────────────────────────────── */

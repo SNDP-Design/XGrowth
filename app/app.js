@@ -58,6 +58,7 @@ const state = load() || {
   posts: [],
   campaigns: [],
   goals: [],
+  library: [],
   range: 7
 };
 // Always start at 7-day range on login. User can switch mid-session;
@@ -121,6 +122,8 @@ nav.addEventListener('click', e=>{
   document.querySelectorAll('main > section').forEach(s=>s.classList.add('hide'));
   document.querySelector(`section[data-view="${v}"]`).classList.remove('hide');
   if(v === 'brand') brandKitAutoFill();
+  if(v === 'email') emailAutoFill();
+  if(v === 'library') renderLibrary();
 });
 
 /* ========= Welcome / Profile ========= */
@@ -1431,6 +1434,111 @@ function brandKitAutoFill(){
   const prof = state.profile || {};
   if(prof.niche  && !val('bkWhat')) $('bkWhat').value = prof.niche;
   if(prof.target && !val('bkWho'))  $('bkWho').value  = prof.target;
+}
+
+/* ========= Email Sequences ========= */
+function emailAutoFill(){
+  const p = state.profile || {};
+  if(p.niche && !val('esName')) $('esName').value = p.niche;
+  if(p.niche && !val('esWhat')) $('esWhat').value = p.niche;
+  if(p.target && !val('esAudience')) $('esAudience').value = p.target;
+}
+
+async function genEmailSequence(){
+  const name     = val('esName') || state.profile?.niche || 'your product';
+  const what     = val('esWhat') || '';
+  const audience = val('esAudience') || '';
+  const goal     = val('esGoal') || 'onboarding';
+  const count    = parseInt(val('esCount') || '5');
+  const tone     = val('esTone') || 'direct and conversational';
+
+  const outEl = $('emailSeqOut');
+  outEl.innerHTML = '<span class="ce-spinner"></span> Writing your email sequence…';
+  try {
+    const data = await xgFetch('/generate', {
+      kind: 'email-sequence',
+      name, what, audience, goal, count, tone,
+      voiceNiche: state.profile?.niche || '',
+      voiceStyle: _ce?.voice?.style || '',
+    });
+    outEl.textContent = data.text;
+    toast('Email sequence ready');
+  } catch(e) {
+    console.warn('Email sequence API failed', e);
+    toast('AI unavailable — showing template');
+    outEl.textContent = emailSeqFallback(name, goal, count);
+  }
+}
+
+function emailSeqFallback(name, goal, count){
+  const goalLabel = {onboarding:'Onboarding',launch:'Launch',nurture:'Nurture',reEngage:'Re-Engagement',waitlist:'Waitlist'}[goal] || goal;
+  const emails = [];
+  for(let i=1;i<=count;i++){
+    emails.push(`---\n## Email ${i}: ${goalLabel} Email ${i}\n**Send:** Day ${(i-1)*2}\n**Subject:** ${i===1?`Welcome to ${name}`:`Your ${goalLabel} update #${i}`}\n**Preview text:** Here's what you need to know right now.\n\nHi,\n\nThis is where your email body goes. Keep it under 200 words, one CTA.\n\n[CTA: ${i===1?'Get started →':'Continue →'}]\n\n**P.S.** More value drops in the next email.`);
+  }
+  return emails.join('\n\n');
+}
+
+/* ========= Saved Library ========= */
+let _libFilter = 'all';
+
+function saveToLibrary(type, label, content){
+  if(!content || content.length < 20){ toast('Nothing to save yet — generate content first'); return; }
+  if(!state.library) state.library = [];
+  const item = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2),
+    type,
+    label: label || type,
+    content,
+    date: new Date().toISOString().slice(0,10)
+  };
+  state.library.unshift(item);
+  save();
+  toast('Saved to Library ✓');
+}
+
+function deleteFromLibrary(id){
+  if(!confirm('Delete this saved item?')) return;
+  state.library = (state.library||[]).filter(x=>x.id!==id);
+  save();
+  renderLibrary();
+  toast('Deleted');
+}
+
+function setLibFilter(f){
+  _libFilter = f;
+  document.querySelectorAll('[data-lib-filter]').forEach(b=>{
+    b.classList.toggle('active', b.dataset.libFilter === f);
+  });
+  renderLibrary();
+}
+
+const LIB_TYPE_LABELS = { email:'Email', campaign:'Campaign', copy:'Website Copy', brand:'Brand Kit' };
+
+function renderLibrary(){
+  const el = $('libItems'); if(!el) return;
+  if(!state.library) state.library = [];
+  const items = state.library.filter(x => _libFilter === 'all' || x.type === _libFilter);
+  if(!items.length){
+    el.innerHTML = `<div class="lib-empty"><div class="lib-empty-icon">📚</div><p><b>No saved items${_libFilter !== 'all' ? ' in this category' : ''}</b></p><p class="muted small">Generate content in any module and click Save to keep it here, synced to your account.</p></div>`;
+    return;
+  }
+  el.innerHTML = items.map(item=>{
+    const badge = LIB_TYPE_LABELS[item.type] || item.type;
+    const preview = escapeHtml((item.content||'').slice(0,280)) + (item.content.length>280?'…':'');
+    const contentJson = JSON.stringify(item.content);
+    return `<div class="lib-card">
+      <div class="lib-card-head">
+        <span class="lib-badge lib-badge-${item.type}">${badge} · ${escapeHtml(item.label)}</span>
+        <span class="muted small">${item.date}</span>
+      </div>
+      <pre class="lib-preview">${preview}</pre>
+      <div class="lib-actions">
+        <button class="btn ghost small" onclick="navigator.clipboard.writeText(${contentJson}).then(()=>toast('Copied'))">Copy all</button>
+        <button class="btn ghost small lib-del" onclick="deleteFromLibrary('${item.id}')">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 async function genCopy(){
