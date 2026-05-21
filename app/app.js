@@ -525,18 +525,18 @@ function ceEsc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;
 const CE_API = 'https://xgrowth-api.xgrowth.workers.dev';
 
 // Image generation state
-const _imgGen = { selectedUrl: '', selectedIdx: -1, seeds: [] };
+const _imgGen = { selectedUrl: '', selectedIdx: -1, seeds: [], _failCount: 0, _failTimer: null };
 
-// 6 visual style variants for the parallel grid.
-// All use Gemini image gen (server-side, no ad-blocker issues, no extra API key).
-// Each adds a style prefix to the user's prompt so the 6 cells look genuinely different.
+// 6 Pollinations models for the parallel grid.
+// Loaded browser-direct (free, no API key). Cloudflare Worker IPs get 402 from Pollinations
+// (CDN IP blocking) so these must be fetched by the browser, not proxied.
 const IMGGEN_GRID_MODELS = [
-  { id: 'gemini', label: 'Realistic',  tag: 'Photorealistic',  style: 'Photorealistic product photography, sharp focus, natural light' },
-  { id: 'gemini', label: 'Editorial',  tag: 'Magazine shot',   style: 'Clean editorial studio photography, white background, professional lighting' },
-  { id: 'gemini', label: 'Cinematic',  tag: 'Dramatic',        style: 'Cinematic dramatic side lighting, moody atmosphere, shallow depth of field' },
-  { id: 'gemini', label: 'Minimal',    tag: 'Clean & simple',  style: 'Minimalist design, clean composition, lots of white space, subtle shadows' },
-  { id: 'gemini', label: 'Bold',       tag: 'Graphic art',     style: 'Bold graphic design, vibrant saturated colors, high contrast, artistic' },
-  { id: 'gemini', label: 'Dark',       tag: 'Dark aesthetic',  style: 'Dark moody aesthetic, deep shadows, noir atmosphere, dramatic contrast' },
+  { id: 'flux-pro',     label: 'FLUX Pro',     tag: 'Best overall'   },
+  { id: 'flux-realism', label: 'Realism',      tag: 'Photorealistic' },
+  { id: 'flux',         label: 'FLUX Schnell', tag: 'Fast & clean'   },
+  { id: 'flux-anime',   label: 'Anime',        tag: 'Illustrated'    },
+  { id: 'flux-3d',      label: 'FLUX 3D',      tag: '3D / Product'   },
+  { id: 'any-dark',     label: 'Any Dark',     tag: 'Dark aesthetic' },
 ];
 
 // Authed POST to the Worker. Attaches the user's Firebase ID token.
@@ -1152,8 +1152,11 @@ async function ceImgGenerate(){
   const prompt = ($('ceImgPromptInput')?.value || '').trim();
   if(!prompt){ toast('Enter a prompt first'); return; }
 
+  _imgGen.seeds       = IMGGEN_GRID_MODELS.map(() => Math.floor(Math.random() * 1e9));
   _imgGen.selectedUrl = '';
   _imgGen.selectedIdx = -1;
+  _imgGen._failCount  = 0;
+  clearTimeout(_imgGen._failTimer);
   $('ceImgDownloadBtn').disabled = true;
   $('ceImgGenBtn').disabled = true;
   ceImgRenderGrid('loading');
@@ -1162,42 +1165,73 @@ async function ceImgGenerate(){
   $('ceImgGenBtn').disabled = false;
 }
 
-/* Load one image (Gemini via Worker) and update its cell.
-   Each cell sends its own style prefix so the 6 outputs look genuinely different.
-   Gemini runs server-side — no ad-blocker or Pollinations 402 issues. */
-async function ceImgLoadOne(prompt, model, idx){
-  // Prepend the visual style so Gemini interprets each cell differently
-  const stylizedPrompt = model.style ? `${model.style}: ${prompt}` : prompt;
-  try {
-    const data = await xgFetch('/generate-image', {
-      prompt:   stylizedPrompt,
-      provider: 'gemini',
-    });
-    if(!data.imageData) throw new Error('No image returned');
-    const dataUrl = `data:${data.mimeType || 'image/jpeg'};base64,${data.imageData}`;
+/* Load one Pollinations image (browser-direct) and update its cell.
+   Pollinations is free and returns 200 from real browsers.
+   Their servers 402 Cloudflare Worker IPs (CDN blocking), so we load directly.
+   If an ad-blocker or privacy extension is intercepting requests we detect it
+   by counting fast failures and show a one-time whitelist suggestion. */
+function ceImgLoadOne(prompt, model, idx){
+  return new Promise((resolve, reject) => {
+    const seed = _imgGen.seeds[idx] || Math.floor(Math.random() * 1e9);
+    const url  = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}` +
+                 `?width=1080&height=1080&model=${model.id}&nologo=true&seed=${seed}`;
+    const img  = new Image();
+    const startedAt = Date.now();
 
-    const cell = $(`imgCell${idx}`);
-    if(!cell || !cell.classList.contains('loading')) return dataUrl;
-    cell.className   = 'imggen-cell done';
-    cell.dataset.url = dataUrl;
-    cell.innerHTML   = `
-      <img src="${dataUrl}" alt="${model.label}">
-      <div class="imggen-label"><strong>${model.label}</strong><span>${model.tag}</span></div>`;
-    return dataUrl;
-  } catch(e) {
-    const cell = $(`imgCell${idx}`);
-    if(!cell || !cell.classList.contains('loading')) return;
-    cell.className = 'imggen-cell error';
-    cell.innerHTML = `
-      <div class="imggen-status">
-        <span style="font-size:24px;opacity:.3">✕</span>
-        <span class="imggen-status-lbl">${model.label}</span>
-        <span class="imggen-status-lbl" style="font-size:10px;opacity:.45;margin-top:-4px">${ceEsc((e?.message||'').slice(0,60))}</span>
-        <button class="btn ghost" style="height:26px;padding:0 10px;font-size:11px;margin-top:4px"
-          onclick="event.stopPropagation();ceImgRetryOne(${idx})">Retry</button>
-      </div>`;
-    throw e;
-  }
+    const timer = setTimeout(() => {
+      img.src = '';
+      const cell = $(`imgCell${idx}`);
+      if(cell && cell.classList.contains('loading')){
+        cell.className = 'imggen-cell error';
+        cell.innerHTML = `
+          <div class="imggen-status">
+            <span style="font-size:24px;opacity:.3">⏱</span>
+            <span class="imggen-status-lbl">${model.label} timed out</span>
+            <button class="btn ghost" style="height:26px;padding:0 10px;font-size:11px;margin-top:6px"
+              onclick="event.stopPropagation();ceImgRetryOne(${idx})">Retry</button>
+          </div>`;
+      }
+      reject(new Error('timeout'));
+    }, 45000);
+
+    img.onload = () => {
+      clearTimeout(timer);
+      const cell = $(`imgCell${idx}`);
+      if(!cell) return resolve(url);
+      cell.className   = 'imggen-cell done';
+      cell.dataset.url = url;
+      cell.innerHTML   = `
+        <img src="${url}" alt="${model.label}">
+        <div class="imggen-label"><strong>${model.label}</strong><span>${model.tag}</span></div>`;
+      resolve(url);
+    };
+
+    img.onerror = () => {
+      clearTimeout(timer);
+      const cell = $(`imgCell${idx}`);
+      if(!cell) return reject();
+      cell.className = 'imggen-cell error';
+      cell.innerHTML = `
+        <div class="imggen-status">
+          <span style="font-size:24px;opacity:.3">✕</span>
+          <span class="imggen-status-lbl">${model.label}</span>
+          <button class="btn ghost" style="height:26px;padding:0 10px;font-size:11px;margin-top:6px"
+            onclick="event.stopPropagation();ceImgRetryOne(${idx})">Retry</button>
+        </div>`;
+
+      // Ad-blocker detection: if onerror fires within 3 s it wasn't a real image failure.
+      // Count fast failures; if 3+ cells all fail fast, the extension is likely blocking.
+      if(Date.now() - startedAt < 3000){
+        _imgGen._failCount++;
+        if(_imgGen._failCount === 3){
+          toast('Images blocked — your ad-blocker is intercepting requests. Whitelist xgrowth.uno to fix this.');
+        }
+      }
+      reject();
+    };
+
+    img.src = url;
+  });
 }
 
 /* Retry a single failed or timed-out cell with a fresh seed */
