@@ -854,42 +854,40 @@
 <!-- Image generation modal -->
 <div class="ce-imggen-overlay" id="ceImgGenOverlay" onclick="if(event.target===this)ceImgClose()">
   <div class="ce-imggen-modal">
+
+    <!-- Header -->
     <div class="ce-imggen-header">
       <div>
-        <h3 style="margin:0 0 2px;font-size:18px;letter-spacing:-.2px">Generate image</h3>
-        <span style="font-size:12px;color:var(--muted)">1080×1080 · Free · Powered by Flux</span>
+        <h3 style="margin:0 0 3px;font-size:18px;letter-spacing:-.3px">Generate image</h3>
+        <span style="font-size:12px;color:var(--muted)">6 styles in parallel · tap to select · 1080×1080 · free</span>
       </div>
       <button class="btn ghost" style="height:32px;padding:0 12px;font-size:13px" onclick="ceImgClose()">Close</button>
     </div>
-    <div class="ce-imggen-preview" id="ceImgPreview">
-      <span>Image will appear here</span>
+
+    <!-- 3×2 image grid — filled by JS -->
+    <div class="imggen-grid" id="ceImgGrid"></div>
+
+    <!-- Prompt -->
+    <div style="margin-top:2px">
+      <label style="margin-bottom:6px;display:flex;align-items:center;gap:6px">
+        Image prompt
+        <span style="font-size:11px;font-weight:400;color:var(--muted);margin-left:2px">· AI-written · edit to refine</span>
+      </label>
+      <textarea id="ceImgPromptInput" style="min-height:68px;resize:vertical" placeholder="Describe the image… (auto-filled from your post)"></textarea>
     </div>
-    <label style="margin-top:0">Image prompt</label>
-    <textarea id="ceImgPromptInput" style="min-height:80px;resize:vertical" placeholder="Describe the image you want to create…"></textarea>
-    <div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap">
-      <select id="ceImgModel" style="height:44px;background:var(--chip);border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:0 12px;font-size:13px;cursor:pointer;flex:1;min-width:160px">
-        <optgroup label="— Google (via Worker)">
-          <option value="gemini-flash">Gemini Flash</option>
-        </optgroup>
-        <optgroup label="— Hugging Face (via Worker)">
-          <option value="hf-flux">FLUX.1-schnell</option>
-        </optgroup>
-        <optgroup label="— Pollinations (direct)">
-          <option value="flux">Flux</option>
-          <option value="flux-realism">Flux Realism</option>
-          <option value="flux-anime">Flux Anime</option>
-          <option value="flux-3d">Flux 3D</option>
-          <option value="ghibli">Ghibli Style</option>
-          <option value="any-dark">Any Dark</option>
-          <option value="turbo">Turbo (fastest)</option>
-        </optgroup>
-      </select>
-      <button class="btn" id="ceImgGenBtn" onclick="ceImgGenerate()" style="flex:1;min-width:120px">Generate</button>
+
+    <!-- Actions -->
+    <div class="row" style="gap:8px">
+      <button class="btn ghost" id="ceImgGenBtn" onclick="ceImgGenerate()" style="flex:1;gap:6px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2H3v16h5v4l4-4h5l4-4V2z"/><path d="m10 9 4 2-4 2V9z"/></svg>
+        Regenerate all 6
+      </button>
+      <button class="btn" id="ceImgDownloadBtn" onclick="ceImgDownload()" disabled style="flex:1;gap:6px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download selected
+      </button>
     </div>
-    <div class="row" style="justify-content:flex-end;gap:8px;margin-top:12px">
-      <button class="btn ghost" id="ceImgRegenerateBtn" onclick="ceImgRegenerate()" disabled>Regenerate</button>
-      <button class="btn secondary" id="ceImgDownloadBtn" onclick="ceImgDownload()" disabled>Download</button>
-    </div>
+
   </div>
 </div>
 

@@ -117,9 +117,9 @@ export default {
       }
       try {
         let result;
-        if (provider === 'hf-flux') {
-          if (!env.HF_TOKEN) return json({ error: 'HF_TOKEN secret not set — run: npx wrangler secret put HF_TOKEN' }, 500, origin, allowed);
-          result = await callHuggingFaceImage(env.HF_TOKEN, prompt);
+        if (provider.startsWith('hf-')) {
+          if (!env.HF_TOKEN) return json({ error: 'HF_TOKEN secret not configured — run: npx wrangler secret put HF_TOKEN' }, 500, origin, allowed);
+          result = await callHuggingFaceImage(env.HF_TOKEN, prompt, provider);
         } else {
           if (!env.GEMINI_API_KEY) return json({ error: 'Server missing GEMINI_API_KEY secret' }, 500, origin, allowed);
           result = await callGeminiImage(env.GEMINI_API_KEY, prompt);
@@ -511,15 +511,15 @@ BODY:
   };
 
   const typeGuides = {
-    'hot-take':   'Take the sharpest, most contrarian angle. Challenge what everyone thinks they know. Be specific about what others are missing or getting wrong.',
-    'story':      'Frame this as a narrative: setup → tension → resolution with a lesson. First person. Human and specific.',
-    'teach':      'Explain what this means and why it matters. Break it down clearly. Teach one thing well. No jargon.',
-    'data':       'Lead with the most concrete number or stat (from the content, or a plausible extrapolation). Build the entire post around that anchor.',
-    'question':   'Pose one sharp, thought-provoking question this content raises. Briefly explain why it matters. Make readers stop and think.',
-    'founder':    "Write like a founder sharing a real insight while building in public. Personal, slightly vulnerable, honest about what you're learning.",
-    'default':    'Smart, specific, human. Like an experienced operator with a real point of view.',
-    'shorter':    'Make it noticeably shorter and tighter. Cut every word that does not earn its place.',
-    'contrarian': 'Take a sharp contrarian angle. Push back on the conventional read. Be specific about what others are missing.',
+    'hot-take':   'Take the most contrarian angle. Say what others are afraid to say. Be specific about what people get wrong. Use plain words.',
+    'story':      'Tell a short story: what happened → what went wrong → what you learned. First person. Keep it real and simple. Short sentences.',
+    'teach':      'Explain one idea clearly. Use simple words and short sentences. Teach it like you are explaining to a smart friend who is new to the topic.',
+    'data':       'Lead with the strongest number or fact from the content. Build the whole post around that one number. Explain what it means in plain words.',
+    'question':   'Ask one clear question that makes people stop and think. Explain in 2–3 simple sentences why it matters. Short words, short sentences.',
+    'founder':    'Write like a founder sharing something real from building their product. Personal, honest, and easy to understand. No big words.',
+    'default':    'Clear, specific, and easy to read. Short sentences. Simple words. Like a smart person talking to a friend.',
+    'shorter':    'Make it shorter. Cut every word that is not needed. Keep only the most important idea.',
+    'contrarian': 'Disagree with the common view. Say clearly what you think people are getting wrong. Use plain, simple language.',
   };
 
   const guide  = platformGuides[platform] || platformGuides.linkedin;
@@ -530,7 +530,7 @@ BODY:
     ? `FOUNDER'S ROUGH NOTES / THOUGHTS:\n${articleTitle}`
     : `ARTICLE TITLE: ${articleTitle}\n${articleAngle ? `ARTICLE CONTEXT: ${articleAngle}` : ''}`;
 
-  return `You are writing a social media post for a startup founder who runs XGrowth, a marketing OS for digital products. Audience: founders, indie hackers, SaaS operators.${voice}
+  return `You are writing a social media post for a startup founder. The audience is global — many readers are non-native English speakers. Write in plain, simple, everyday English that anyone can understand.${voice}
 
 TOPIC: "${topic || 'startup growth'}"
 
@@ -541,18 +541,21 @@ ${guide}
 
 POST ANGLE: ${tone}
 
-HARD RULES — break ANY of these and the post is unusable:
-- Be SPECIFIC to the actual content above. No generic advice.
-- NO clichés: "in today's fast-paced world", "game-changer", "moving the needle", "synergy", "leveraging", "let's dive in", "thoughts?", "the future of X is Y".
+PLAIN ENGLISH — these rules are non-negotiable:
+- Short sentences. Aim for 8–14 words each. If a sentence is long, break it in two.
+- Use the simplest word that works:
+    say "use" not "utilize" · "start" not "initiate" · "help" not "facilitate"
+    say "buy" not "purchase" · "need" not "require" · "show" not "demonstrate"
+    say "problems" not "pain points" · "get better" not "iterate" · "launch" not "go-to-market"
+- NO jargon: no "leverage", "scalable", "robust", "frictionless", "seamless", "ecosystem", "stakeholders", "value proposition", "empower", "innovative", "cutting-edge", "best-in-class", "agile", "pivot", "synergy", "paradigm".
+- NO startup slang: no "move the needle", "deep dive", "level up", "circle back", "low-hanging fruit", "at the end of the day", "game-changer", "10x this", "ship fast", "in today's fast-paced world", "let's dive in", "the future of X is Y".
 - NO meta-commentary ("Here's a post about…", "I wanted to share…").
-- NO emojis.
-- NO bold/italics markdown.
-- NO closing platitudes ("hope this helps!", "keep building", "drop a comment").
-- NO URLs in the output text. None.
-- First person, present tense.
-- Sound like a smart human, not a content marketer.
+- NO emojis. NO bold/italics markdown. NO closing phrases ("hope this helps!", "keep building!").
+- NO URLs in the post. None.
+- Be SPECIFIC to the actual content above. No generic filler.
+- First person, present tense. Sound like a real person talking, not a marketer writing.
 
-Return ONLY the post content. No preamble. No explanation. No quote marks. Just the content.${refineInstruction ? `\n\nREFINEMENT INSTRUCTION (apply this to your output): ${refineInstruction}` : ''}`;
+Return ONLY the post content. No preamble. No explanation. No quote marks. Just the content.${refineInstruction ? `\n\nREFINEMENT INSTRUCTION (apply this on top): ${refineInstruction}` : ''}`;
 }
 
 function buildCampaignPrompt(body) {
@@ -749,27 +752,39 @@ Return ONLY the markdown. No preamble.`;
 }
 
 function buildImagePromptPrompt(body) {
-  const { caption = '', niche = '' } = body;
-  return `You are a visual creative director generating a Pollinations.ai image prompt for an Instagram post.
+  const { caption = '', topic = '', articleTitle = '', niche = '' } = body;
 
-INSTAGRAM CAPTION:
-${caption.slice(0, 800)}
-${niche ? `\nNICHE / PRODUCT: ${niche}` : ''}
+  // Build layered context — caption is primary, topic + article give extra signal
+  const contextLines = [];
+  if (caption)       contextLines.push(`INSTAGRAM CAPTION (primary context):\n${caption.slice(0, 600)}`);
+  if (articleTitle)  contextLines.push(`ARTICLE / SOURCE TITLE: ${articleTitle}`);
+  if (topic)         contextLines.push(`TOPIC: ${topic}`);
+  if (niche)         contextLines.push(`PRODUCT / NICHE: ${niche}`);
+  const context = contextLines.join('\n\n');
 
-Generate ONE image prompt for a 1080×1080 Instagram visual that matches this post's theme.
+  return `You are a visual creative director. Your job is to turn an Instagram caption into a vivid, specific image generation prompt.
 
-Rules:
-- Describe the VISUAL SCENE concretely: subject, composition, lighting, background, color palette
-- Start with the photographic style: "dark minimal product photography", "clean flatlay", "cinematic close-up", etc.
-- Include lighting quality, background mood, camera angle, depth of field
-- NO text, NO logos, NO faces, NO UI screenshots
-- Avoid abstract words: "success", "growth", "innovation"
-- 15–40 words total, specific and vivid
+${context}
 
-Good prompt examples:
-- "dark minimal flatlay, MacBook on matte black surface, soft rim lighting, deep shadows, professional product photography, 4K detail"
-- "cinematic smartphone glowing in darkness, blue-purple gradient halo, neon reflections, shallow depth of field, editorial feel"
-- "clean white desk workspace, coffee, notebook, natural window light, flat-lay, high contrast, commercial photography"
+Read the caption carefully. Identify the CORE IDEA or KEY VISUAL METAPHOR the post is communicating. Then write ONE image prompt that directly illustrates that idea for a 1080×1080 Instagram post.
+
+RULES:
+1. The image MUST directly match the post's specific message — not just the general niche
+   - Post about "saving 9 hours/week with AI ops" → show a calm, organised desk with a glowing dashboard, NOT just a generic tech scene
+   - Post about "founder burnout" → show a dim laptop at midnight, scattered coffee cups, warm bedside glow
+   - Post about "product launch day" → show a clean product reveal shot, spotlight, dramatic shadows
+2. Describe the scene concretely: subject, composition, lighting, background, color palette
+3. Lead with photographic style: "dark minimal product photography", "editorial flatlay", "cinematic close-up", etc.
+4. Include: lighting quality, background mood, camera angle, depth of field
+5. NO text overlays, NO logos, NO human faces, NO UI screenshots in frame
+6. Skip abstract nouns: "success", "innovation", "growth" — describe the VISUAL, not the concept
+7. 15–40 words total. Dense, specific, vivid.
+
+Good examples (notice how each matches a specific concept):
+- "dark minimal flatlay, MacBook on matte black surface, soft rim lighting, deep shadows, glowing dashboard reflection, professional product photography, 4K"
+- "cinematic close-up of a timer stopping at zero, blue-purple gradient background, shallow depth of field, editorial feel, dramatic side lighting"
+- "clean white desk with colour-coded sticky notes and open planner, natural window light, flat-lay, high contrast, commercial photography"
+- "lone founder at a glass-wall office, city lights at dusk below, warm interior glow vs cool exterior, editorial, wide-angle, moody"
 
 Return ONLY the image prompt. No quotes, no explanation, no preamble.`;
 }
@@ -1095,58 +1110,62 @@ ${HARD_RULES}
 
 /* ─── Hugging Face image client ───────────────────────────────────────────── */
 
-const HF_MODELS = {
-  'hf-flux': 'black-forest-labs/FLUX.1-schnell',
+// HF Inference API model IDs — all free with a HF token (FLUX.1-dev needs gated approval)
+const HF_IMAGE_MODELS = {
+  'hf-flux':      'black-forest-labs/FLUX.1-schnell',   // fastest, free
+  'hf-flux-dev':  'black-forest-labs/FLUX.1-dev',        // best quality (accept terms on HF first)
+  'hf-sdxl':      'stabilityai/stable-diffusion-xl-base-1.0', // classic SDXL
+  'hf-sd3':       'stabilityai/stable-diffusion-3-medium-diffusers', // SD3 Medium
 };
 
-async function callHuggingFaceImage(token, prompt) {
-  const modelId = HF_MODELS['hf-flux'];
-  const resp = await fetch(`https://api-inference.huggingface.co/models/${modelId}`, {
+async function callHuggingFaceImage(token, prompt, modelKey = 'hf-flux') {
+  const modelId = HF_IMAGE_MODELS[modelKey] || HF_IMAGE_MODELS['hf-flux'];
+
+  // Use the HF router inference endpoint — more reliable than the raw model endpoint
+  const resp = await fetch(`https://router.huggingface.co/hf-inference/models/${modelId}/v1/images/generations`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
-      'Accept': 'image/png,image/jpeg,image/*',
     },
-    body: JSON.stringify({ inputs: prompt, parameters: { width: 1024, height: 1024 } }),
+    body: JSON.stringify({
+      prompt,
+      n: 1,
+      size: '1024x1024',
+      response_format: 'b64_json',
+    }),
   });
 
   if (!resp.ok) {
     const t = await resp.text();
-    // Model still loading — common on cold start
-    if (resp.status === 503) throw new Error('Model loading, retry in ~20s');
-    throw new Error(`HF API ${resp.status}: ${t.slice(0, 150)}`);
+    if (resp.status === 503) throw new Error('Model loading — wait 20s then retry');
+    if (resp.status === 422) throw new Error('Invalid request — try a different model');
+    if (resp.status === 429) throw new Error('Rate limited — wait a moment then retry');
+    if (resp.status === 403) throw new Error('Access denied — accept model terms on huggingface.co first');
+    throw new Error(`HF ${resp.status}: ${t.slice(0, 150)}`);
   }
 
-  const mimeType = resp.headers.get('Content-Type') || 'image/jpeg';
-  const buffer = await resp.arrayBuffer();
-  const bytes = new Uint8Array(buffer);
-
-  // Convert binary to base64 in chunks to avoid call-stack overflow
-  let binary = '';
-  const chunk = 8192;
-  for (let i = 0; i < bytes.length; i += chunk) {
-    binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
-  }
-  const imageData = btoa(binary);
-  return { imageData, mimeType };
+  const data = await resp.json();
+  const imageData = data.data?.[0]?.b64_json;
+  if (!imageData) throw new Error('No image returned from HF — try again');
+  return { imageData, mimeType: 'image/jpeg' };
 }
 
 /* ─── Gemini image client ─────────────────────────────────────────────────── */
 
-// Models to try in order for image generation (free tier)
+// Gemini native image generation models — tries each in order until one works
 const GEMINI_IMAGE_MODELS = [
-  'gemini-2.0-flash-preview-image-generation',
-  'gemini-2.0-flash-exp-image-generation',
-  'gemini-2.0-flash-exp',
+  'gemini-2.0-flash-exp-image-generation',   // primary (free tier)
+  'gemini-2.0-flash-preview-image-generation', // alias used in some regions
 ];
 
 async function callGeminiImage(apiKey, prompt) {
+  // NOTE: image gen models don't accept temperature / topP / thinkingConfig.
+  // responseModalities must be ['TEXT', 'IMAGE'] — TEXT first is required.
   const body = JSON.stringify({
-    contents: [{ role: 'user', parts: [{ text: `Generate a high-quality image: ${prompt}` }] }],
+    contents: [{ role: 'user', parts: [{ text: prompt }] }],
     generationConfig: {
-      responseModalities: ['IMAGE', 'TEXT'],
-      temperature: 1,
+      responseModalities: ['TEXT', 'IMAGE'],
     },
     safetySettings: [
       { category: 'HARM_CATEGORY_HARASSMENT',       threshold: 'BLOCK_ONLY_HIGH' },
@@ -1190,7 +1209,7 @@ async function callGeminiImage(apiKey, prompt) {
     }
   }
 
-  throw new Error(`All image models failed. ${errors.join(' | ')}`);
+  throw new Error(`Gemini image gen failed. ${errors.join(' | ')}`);
 }
 
 /* ─── Gemini client ────────────────────────────────────────────────────────── */

@@ -525,7 +525,18 @@ function ceEsc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;
 const CE_API = 'https://xgrowth-api.xgrowth.workers.dev';
 
 // Image generation state
-const _imgGen = { url: '', seed: 0 };
+const _imgGen = { selectedUrl: '', selectedIdx: -1, seeds: [] };
+
+// The 6 Pollinations models shown in the auto-grid (free, no key, client-side)
+// Only confirmed valid model IDs from image.pollinations.ai
+const IMGGEN_GRID_MODELS = [
+  { id: 'flux-pro',     label: 'FLUX Pro',     tag: 'Best overall'   },
+  { id: 'flux-realism', label: 'Realism',      tag: 'Photorealistic' },
+  { id: 'flux',         label: 'FLUX Schnell', tag: 'Fast & clean'   },
+  { id: 'flux-anime',   label: 'Anime',        tag: 'Illustrated'    },
+  { id: 'flux-3d',      label: 'FLUX 3D',      tag: '3D / Product'   },
+  { id: 'any-dark',     label: 'Any Dark',     tag: 'Dark aesthetic' },
+];
 
 // Authed POST to the Worker. Attaches the user's Firebase ID token.
 async function xgFetch(path, payload){
@@ -1080,135 +1091,182 @@ async function ceLoadVoice(){
 
 function ceInit(){ ceLoadHistory(); ceLoadVoice(); }
 
-/* ── Image generation ─────────────────────────────────────────────────────── */
+/* ── Image generation — 6-model parallel grid ────────────────────────────── */
 
 async function ceOpenImageModal(){
-  const caption = _ce.posts['instagram']?.text || '';
-  _imgGen.url = '';
-  _imgGen.seed = Math.floor(Math.random() * 1e9);
+  // Parse the clean caption (strip "CAPTION:" prefix and hashtags)
+  const rawText = _ce.posts['instagram']?.text || '';
+  const { caption: parsedCaption } = ceParseInstagram(rawText);
+  const caption = parsedCaption || rawText;
+
+  // Reset state
+  _imgGen.selectedUrl = '';
+  _imgGen.selectedIdx = -1;
+
+  // Open modal
   $('ceImgGenOverlay').classList.add('show');
   document.body.style.overflow = 'hidden';
   $('ceImgPromptInput').value = '';
   $('ceImgDownloadBtn').disabled = true;
-  $('ceImgRegenerateBtn').disabled = true;
-  ceImgSetPreview('loading', 'Writing visual prompt…');
+  $('ceImgGenBtn').disabled = true;
+
+  // Show grid in "writing prompt" loading state
+  ceImgRenderGrid('prompt');
 
   try {
     const data = await xgFetch('/generate', {
-      kind: 'image-prompt',
+      kind:         'image-prompt',
       caption,
-      niche: state.profile?.niche || '',
+      topic:        _ce.topic || '',
+      articleTitle: _ce.article?.title || '',
+      niche:        state.profile?.niche || '',
     });
     $('ceImgPromptInput').value = data.text || '';
-    ceImgGenerate();
+    $('ceImgGenBtn').disabled = false;
+    ceImgGenerate(); // auto-kick all 6
   } catch(e) {
-    ceImgSetPreview('empty');
-    toast('Could not generate prompt — enter one manually');
+    ceImgRenderGrid('error');
+    $('ceImgGenBtn').disabled = false;
+    toast('Could not auto-generate prompt — type one above and click Regenerate all');
   }
 }
 
-function ceImgSetPreview(mode, msg){
-  const el = $('ceImgPreview');
-  if(!el) return;
-  if(mode === 'loading'){
-    el.innerHTML = `<div class="imggen-loading"><span class="ce-spinner"></span><span>${msg||'Generating…'}</span></div>`;
-  } else if(mode === 'empty'){
-    el.innerHTML = '<span>Image will appear here</span>';
-  }
-  // 'done' mode: caller appends the img element directly
+/* Render 6 shimmer cells (phase: 'prompt' | 'loading' | 'error') */
+function ceImgRenderGrid(phase){
+  const grid = $('ceImgGrid');
+  if(!grid) return;
+  const label = phase === 'prompt' ? 'Writing prompt…' : phase === 'error' ? 'Enter prompt above' : '';
+  grid.innerHTML = IMGGEN_GRID_MODELS.map((m, i) => `
+    <div class="imggen-cell loading" id="imgCell${i}" onclick="ceImgSelectCell(${i})" title="${m.label} · ${m.tag}">
+      <div class="imggen-shimmer"></div>
+      <div class="imggen-status">
+        <span class="ce-spinner"></span>
+        <span class="imggen-status-lbl">${label || m.label}</span>
+      </div>
+    </div>`).join('');
 }
 
+/* Fire all 6 in parallel with fresh seeds */
 async function ceImgGenerate(){
   const prompt = ($('ceImgPromptInput')?.value || '').trim();
   if(!prompt){ toast('Enter a prompt first'); return; }
-  const model = $('ceImgModel')?.value || 'gemini-flash';
 
-  ceImgSetPreview('loading', 'Generating image…');
-  $('ceImgGenBtn').disabled = true;
+  _imgGen.seeds   = IMGGEN_GRID_MODELS.map(() => Math.floor(Math.random() * 1e9));
+  _imgGen.selectedUrl = '';
+  _imgGen.selectedIdx = -1;
   $('ceImgDownloadBtn').disabled = true;
-  $('ceImgRegenerateBtn').disabled = true;
+  $('ceImgGenBtn').disabled = true;
+  ceImgRenderGrid('loading');
 
-  const SERVER_SIDE_MODELS = { 'gemini-flash': 'gemini', 'hf-flux': 'hf-flux' };
-  if(model in SERVER_SIDE_MODELS){
-    // Server-side: Worker calls Gemini or HF, returns base64
-    try {
-      const data = await xgFetch('/generate-image', { prompt, provider: SERVER_SIDE_MODELS[model] });
-      const dataUrl = `data:${data.mimeType};base64,${data.imageData}`;
-      _imgGen.url = dataUrl;
-      const img = new Image();
-      img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block';
-      img.onload = () => {
-        const preview = $('ceImgPreview');
-        if(!preview) return;
-        preview.innerHTML = '';
-        preview.appendChild(img);
-        $('ceImgGenBtn').disabled = false;
-        $('ceImgDownloadBtn').disabled = false;
-        $('ceImgRegenerateBtn').disabled = false;
-      };
-      img.src = dataUrl;
-    } catch(e){
-      ceImgSetPreview('empty');
-      $('ceImgGenBtn').disabled = false;
-      const hint = e.message?.includes('HF_TOKEN') ? 'Set HF_TOKEN in your Worker first' :
-                   e.message?.includes('loading') ? 'Model loading — wait 20s and retry' :
-                   'Try a different model or edit the prompt';
-      toast(hint);
-    }
-  } else {
-    // Client-side: load Pollinations URL directly
-    _imgGen.seed = Math.floor(Math.random() * 1e9);
-    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1080&height=1080&model=${model}&nologo=true&seed=${_imgGen.seed}`;
-    _imgGen.url = url;
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block';
+  await Promise.allSettled(IMGGEN_GRID_MODELS.map((m, i) => ceImgLoadOne(prompt, m, i)));
+  $('ceImgGenBtn').disabled = false;
+}
+
+/* Load one Pollinations image and update its cell */
+function ceImgLoadOne(prompt, model, idx){
+  return new Promise((resolve, reject) => {
+    const seed = _imgGen.seeds[idx] || Math.floor(Math.random() * 1e9);
+    const url  = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}` +
+                 `?width=1080&height=1080&model=${model.id}&nologo=true&seed=${seed}`;
+    const img  = new Image();
+    // ⚠️  Do NOT set crossOrigin here — Pollinations CDN sometimes omits CORS headers
+    // on cached responses, which causes the browser to fire onerror even when the image
+    // is perfectly valid. Download uses a separate fetch() call which handles CORS fine.
+
+    // Timeout safety net — mark as failed after 45s so the cell doesn't spin forever
+    const timer = setTimeout(() => {
+      img.src = '';
+      const cell = $(`imgCell${idx}`);
+      if(cell && cell.classList.contains('loading')){
+        cell.className = 'imggen-cell error';
+        cell.innerHTML = `
+          <div class="imggen-status">
+            <span style="font-size:24px;opacity:.3">⏱</span>
+            <span class="imggen-status-lbl">${model.label} timed out</span>
+            <button class="btn ghost" style="height:26px;padding:0 10px;font-size:11px;margin-top:6px"
+              onclick="event.stopPropagation();ceImgRetryOne(${idx})">Retry</button>
+          </div>`;
+      }
+      reject(new Error('timeout'));
+    }, 45000);
+
     img.onload = () => {
-      const preview = $('ceImgPreview');
-      if(!preview) return;
-      preview.innerHTML = '';
-      preview.appendChild(img);
-      $('ceImgGenBtn').disabled = false;
-      $('ceImgDownloadBtn').disabled = false;
-      $('ceImgRegenerateBtn').disabled = false;
+      clearTimeout(timer);
+      const cell = $(`imgCell${idx}`);
+      if(!cell) return resolve(url);
+      cell.className   = 'imggen-cell done';
+      cell.dataset.url = url;
+      cell.innerHTML   = `
+        <img src="${url}" alt="${model.label}">
+        <div class="imggen-label"><strong>${model.label}</strong><span>${model.tag}</span></div>`;
+      resolve(url);
     };
+
     img.onerror = () => {
-      ceImgSetPreview('empty');
-      $('ceImgGenBtn').disabled = false;
-      toast('Generation failed — try editing the prompt');
+      clearTimeout(timer);
+      const cell = $(`imgCell${idx}`);
+      if(!cell) return reject();
+      cell.className = 'imggen-cell error';
+      cell.innerHTML = `
+        <div class="imggen-status">
+          <span style="font-size:24px;opacity:.3">✕</span>
+          <span class="imggen-status-lbl">${model.label}</span>
+          <button class="btn ghost" style="height:26px;padding:0 10px;font-size:11px;margin-top:6px"
+            onclick="event.stopPropagation();ceImgRetryOne(${idx})">Retry</button>
+        </div>`;
+      reject();
     };
+
     img.src = url;
-  }
+  });
 }
 
-function ceImgRegenerate(){
-  // Same prompt, new seed
-  ceImgGenerate();
+/* Retry a single failed or timed-out cell with a fresh seed */
+function ceImgRetryOne(idx){
+  const model  = IMGGEN_GRID_MODELS[idx];
+  const prompt = ($('ceImgPromptInput')?.value || '').trim();
+  if(!prompt) return;
+
+  const cell = $(`imgCell${idx}`);
+  if(!cell) return;
+  cell.className = 'imggen-cell loading';
+  cell.innerHTML = `
+    <div class="imggen-shimmer"></div>
+    <div class="imggen-status">
+      <span class="ce-spinner"></span>
+      <span class="imggen-status-lbl">${model.label}</span>
+    </div>`;
+
+  // Ensure seeds array exists even if page was freshly loaded
+  if(!_imgGen.seeds.length) _imgGen.seeds = IMGGEN_GRID_MODELS.map(() => Math.floor(Math.random() * 1e9));
+  _imgGen.seeds[idx] = Math.floor(Math.random() * 1e9);
+  ceImgLoadOne(prompt, model, idx);
 }
 
+/* Tap a loaded cell to select it */
+function ceImgSelectCell(idx){
+  const cell = $(`imgCell${idx}`);
+  if(!cell || !cell.dataset.url) return; // still loading or errored
+  $('ceImgGrid')?.querySelectorAll('.imggen-cell').forEach(c => c.classList.remove('selected'));
+  cell.classList.add('selected');
+  _imgGen.selectedUrl = cell.dataset.url;
+  _imgGen.selectedIdx = idx;
+  $('ceImgDownloadBtn').disabled = false;
+}
+
+/* Download the selected image */
 async function ceImgDownload(){
-  if(!_imgGen.url){ toast('Generate an image first'); return; }
+  if(!_imgGen.selectedUrl){ toast('Tap an image to select it first'); return; }
   try {
-    const a = document.createElement('a');
-    if(_imgGen.url.startsWith('data:')){
-      // Gemini base64 data URL — convert to blob directly
-      const res = await fetch(_imgGen.url);
-      const blob = await res.blob();
-      a.href = URL.createObjectURL(blob);
-      a.download = `xgrowth-insta-${Date.now()}.png`;
-      a.click();
-      URL.revokeObjectURL(a.href);
-    } else {
-      // Pollinations URL — fetch blob
-      const resp = await fetch(_imgGen.url);
-      const blob = await resp.blob();
-      a.href = URL.createObjectURL(blob);
-      a.download = `xgrowth-insta-${Date.now()}.png`;
-      a.click();
-      URL.revokeObjectURL(a.href);
-    }
+    const resp = await fetch(_imgGen.selectedUrl);
+    const blob = await resp.blob();
+    const a    = document.createElement('a');
+    a.href     = URL.createObjectURL(blob);
+    a.download = `xgrowth-insta-${Date.now()}.png`;
+    a.click();
+    URL.revokeObjectURL(a.href);
   } catch {
-    toast('Download failed — right-click the image to save');
+    toast('Download failed — right-click the image and Save As');
   }
 }
 
