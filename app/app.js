@@ -865,7 +865,9 @@ function ceImgLoadOne(prompt, model, idx){
     const url  = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}` +
                  `?width=1080&height=1080&model=${model.id}&nologo=true&seed=${seed}`;
     const img  = new Image();
-    img.crossOrigin = 'anonymous'; // needed so canvas toBlob works if a user tries to draw it
+    // ⚠️ Do NOT set crossOrigin — Pollinations CDN omits CORS headers on cached
+    // responses, which causes the browser to fire onerror even when the image
+    // is perfectly valid. Download uses a separate fetch() with CORS handling.
     const startedAt = Date.now();
 
     const timer = setTimeout(() => {
@@ -891,7 +893,7 @@ function ceImgLoadOne(prompt, model, idx){
       cell.className   = 'imggen-cell done';
       cell.dataset.url = url;
       cell.innerHTML   = `
-        <img src="${url}" alt="${model.label}" crossorigin="anonymous">
+        <img src="${url}" alt="${model.label}">
         <div class="imggen-label"><strong>${model.label}</strong><span>${model.tag}</span></div>`;
       resolve(url);
     };

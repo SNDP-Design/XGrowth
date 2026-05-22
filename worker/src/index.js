@@ -48,14 +48,9 @@ const FIREBASE_JWKS_URL = 'https://www.googleapis.com/robot/v1/metadata/x509/sec
 
 // Try models in order; first one that responds wins.
 const GEMINI_MODELS = [
-  'gemini-3.1-pro-preview',
-  'gemini-3-flash-preview',
-  'gemini-3.1-flash-lite',
-  'gemini-3.1-flash-lite-preview',
-  'gemini-2.5-pro',
-  'gemini-2.5-flash',
-  'gemini-2.5-flash-lite',
-  'gemini-2.0-flash',
+  'gemini-2.5-flash',      // fastest reliable model
+  'gemini-2.5-pro',        // higher quality fallback
+  'gemini-2.0-flash',      // last resort fallback
 ];
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models/';
 
