@@ -42,7 +42,6 @@ fbAuth.getRedirectResult().then(res=>{
 }).finally(()=>{
   redirectResultDone = true;
   // If still not signed in after redirect result is in, run the gate decision now.
-  // (signInWithRedirect itself navigates the page so we won't reach this in that case.)
   if(!fbAuth.currentUser){
     runAuthGateLogic();
   }
@@ -50,64 +49,45 @@ fbAuth.getRedirectResult().then(res=>{
 const state = load() || {
   profile: null,
   metrics: {
-    followers: [],   // up to 30 days
-    impressions: [], // up to 30 days
-    engagement: [],  // up to 30 days (rate %)
-    visits: []       // up to 30 days
+    followers: [],
+    impressions: [],
+    engagement: [],
+    visits: []
   },
-  posts: [],
-  campaigns: [],
-  goals: [],
-  library: [],
   range: 7
 };
-// Always start at 7-day range on login. User can switch mid-session;
-// next reload returns to 7d. (If you want range to persist, change to: if(state.range == null) state.range = 7;)
+// Always start at 7-day range on login.
 state.range = 7;
 
 function save(){
   localStorage.setItem(KEY, JSON.stringify(state));
   // Mirror to Firestore (debounced) when signed in
   if(fbAuth.currentUser && cloudLoaded){
-    setSync('syncing');
     clearTimeout(saveDebounce);
     saveDebounce = setTimeout(()=>{
       db.collection('users').doc(fbAuth.currentUser.uid).set(state, {merge:false})
-        .then(()=> setSync('synced'))
-        .catch(err=>{ console.error('Cloud save failed', err); setSync('error'); });
+        .catch(err=>{ console.error('Cloud save failed', err); });
     }, 700);
   }
 }
 function load(){ try{return JSON.parse(localStorage.getItem(KEY))}catch{return null} }
-function setSync(status){
-  const el = $('syncStatus'); if(!el) return;
-  el.className = 'sync ' + status;
-  $('syncLabel').textContent = {synced:'Synced', syncing:'Syncing…', offline:'Offline', error:'Sync error'}[status] || status;
-}
 async function loadFromCloud(){
   if(!fbAuth.currentUser) return;
-  setSync('syncing');
   try{
     const snap = await db.collection('users').doc(fbAuth.currentUser.uid).get();
     if(snap.exists){
       const cloud = snap.data() || {};
-      // Cloud wins on initial load, EXCEPT range — always start at 7d on login.
       Object.assign(state, cloud);
       state.range = 7;
       localStorage.setItem(KEY, JSON.stringify(state));
       cloudLoaded = true;
       if(state.profile){ applyProfile(); }
-      else { renderAll(); }
-      setSync('synced');
     } else {
-      // First sign-in on this account → push current local state up
       cloudLoaded = true;
       await db.collection('users').doc(fbAuth.currentUser.uid).set(state);
-      setSync('synced');
     }
   }catch(err){
     console.error('Cloud load failed', err);
-    setSync('error');
     cloudLoaded = false;
   }
 }
@@ -120,13 +100,8 @@ nav.addEventListener('click', e=>{
   b.classList.add('active');
   const v = b.dataset.view;
   document.querySelectorAll('main > section').forEach(s=>s.classList.add('hide'));
-  document.querySelector(`section[data-view="${v}"]`).classList.remove('hide');
-  if(v === 'brand') brandKitAutoFill();
-  if(v === 'icp')   icpAutoFill();
-  if(v === 'ph')    phAutoFill();
-  if(v === 'email') emailAutoFill();
-  if(v === 'growth') growthAutoFill();
-  if(v === 'library') renderLibrary();
+  const sec = document.querySelector(`section[data-view="${v}"]`);
+  if(sec) sec.classList.remove('hide');
 });
 
 /* ========= Welcome / Profile ========= */
@@ -164,35 +139,22 @@ function saveProfile(){
     target: val('pTarget'),
     goal:  val('pGoal') || '10k followers'
   };
-  // seed goals from typed goal
   state.goals = parseGoals(state.profile.goal);
-  if(!state.metrics.followers.length) seedDemo(true);
   save(); closeWelcome(false);
   toast('Profile saved');
 }
-document.getElementById('editProfile').onclick = ()=>{
-  if(state.profile){
-    document.getElementById('pNiche').value = state.profile.niche;
-    document.getElementById('pStage').value = state.profile.stage;
-    document.getElementById('pTarget').value = state.profile.target;
-    document.getElementById('pGoal').value  = state.profile.goal;
-  }
-  openWelcome();
-};
 
 function applyProfile(){
   const p = state.profile;
   if(!p) return;
-  document.getElementById('nicheTag').textContent = p.niche;
-  document.getElementById('stageTag').textContent = p.stage;
-  document.getElementById('goalTag').textContent  = p.goal;
-  const audEl = document.getElementById('audienceTag'); if(audEl) audEl.textContent = p.target || '—';
+  const nicheEl = document.getElementById('nicheTag'); if(nicheEl) nicheEl.textContent = p.niche;
+  const stageEl = document.getElementById('stageTag'); if(stageEl) stageEl.textContent = p.stage;
+  const goalEl  = document.getElementById('goalTag');  if(goalEl)  goalEl.textContent  = p.goal;
+  const audEl   = document.getElementById('audienceTag'); if(audEl) audEl.textContent = p.target || '—';
   const st = document.getElementById('sessionTag'); if(st) st.textContent = p.niche.split(' ')[0];
-  renderAll();
 }
 
 function parseGoals(s){
-  // Extract numbered targets like "10k followers", "5 investor DMs"
   const out = [];
   const re = /(\d+\.?\d*)\s*(k|m)?\s*([a-zA-Z ]+)/g; let m;
   while((m = re.exec(s))){
@@ -214,305 +176,10 @@ function fmt(n){ if(n>=1e6) return (n/1e6).toFixed(1)+'M'; if(n>=1e3) return (n/
 function pct(a,b){ if(!b) return 0; return ((a-b)/b)*100; }
 function sum(arr){ return arr.reduce((a,b)=>a+b,0); }
 function avg(arr){ return arr.length? sum(arr)/arr.length : 0; }
-
-/* ========= Demo data ========= */
-function seedDemo(quiet){
-  const days=30;
-  const f=[], imp=[], eng=[], vis=[];
-  let base = 900 + Math.floor(Math.random()*800);
-  for(let i=0;i<days;i++){
-    base += Math.floor(Math.random()*70-12);
-    f.push(base);
-    imp.push(1800 + Math.floor(Math.random()*8500) + i*180);
-    eng.push(+(2 + Math.random()*4).toFixed(2));
-    vis.push(110 + Math.floor(Math.random()*420));
-  }
-  state.metrics = {followers:f, impressions:imp, engagement:eng, visits:vis};
-  state.posts = [
-    {text:'5 patterns I saw kill pre-seed SaaS at YC →', impr:18420, prevImpr:14210, likes:412, replies:38, rt:73},
-    {text:'Most "growth" advice fails for solo founders. Here\'s why:', impr:9845, prevImpr:11200, likes:201, replies:22, rt:31},
-    {text:'I shipped 3 features in 24h. The trick wasn\'t speed.', impr:7211, prevImpr:5800, likes:156, replies:18, rt:14},
-    {text:'Investor DMs that worked for me (template inside)', impr:5432, prevImpr:5210, likes:122, replies:31, rt:9},
-  ];
-  state.campaigns = [
-    {name:'Launch Storm v1', spend:0, leads:48, status:'Live'},
-    {name:'Investor Outreach', spend:120, leads:11, status:'Live'},
-    {name:'Webinar, AI for SMB', spend:380, leads:64, status:'Planned'},
-  ];
-  if(state.profile && state.goals.length){
-    // Update progress for "followers" goal if present
-    state.goals = state.goals.map(g=>{
-      if(/follower/i.test(g.label)) g.current = f[f.length-1];
-      else if(/dm/i.test(g.label)) g.current = 3;
-      else g.current = Math.round(g.target*0.2);
-      return g;
-    });
-  } else if(!state.goals.length){
-    state.goals = [
-      {label:'followers', target:10000, current:f[f.length-1]},
-      {label:'investor DMs', target:5, current:3},
-      {label:'newsletter signups', target:500, current:120}
-    ];
-  }
-  save(); renderAll();
-  if(!quiet) toast('Demo data loaded');
-}
-
-function resetData(){
-  if(!confirm('Reset all local data?')) return;
-  localStorage.removeItem(KEY); location.reload();
-}
-
-/* ========= Render: Dashboard ========= */
-function renderAll(){
-  syncRangeButton();
-  renderKPIs();
-  renderBars();
-  renderVelocity();
-  renderFunnel();
-  renderGoals();
-  renderPosts();
-  renderCampaigns();
-}
-
-function rangeWindow(){
-  const r = state.range || 7;
-  return {r, label:`last ${r} days`, prevLabel:`prior ${r} days`};
-}
-
-/* ── Animated counter for KPI numbers ─────────────────────────────────── */
-function animCount(el, to, format, dur=700){
-  if(!el || isNaN(to)) return;
-  const start = performance.now();
-  function tick(now){
-    const t = Math.min((now-start)/dur, 1);
-    const ease = 1 - Math.pow(1-t, 4);
-    el.textContent = format(to * ease);
-    if(t < 1) requestAnimationFrame(tick);
-  }
-  requestAnimationFrame(tick);
-}
-
-function renderKPIs(){
-  const m = state.metrics;
-  if(!m.followers.length){ return; }
-  const r = state.range || 7;
-  const cur = m.followers.at(-1);
-  const prev = m.followers.at(-1-r) || m.followers[0];
-
-  animCount($('kFollowers'), cur, v => fmt(Math.round(v)));
-  setDelta('kFollowersDelta', pct(cur, prev));
-  $('lFollowers').textContent = `vs ${r}d ago`;
-
-  const impCur = sum(m.impressions.slice(-r));
-  const impPrev = sum(m.impressions.slice(-r*2,-r)) || 1;
-  animCount($('kImpr'), impCur, v => fmt(Math.round(v)));
-  setDelta('kImprDelta', pct(impCur, impPrev));
-  $('lImpr').textContent = `${r}-day total`;
-
-  const engCur = avg(m.engagement.slice(-r));
-  const engPrev = avg(m.engagement.slice(-r*2,-r));
-  animCount($('kEng'), engCur, v => v.toFixed(1)+'%');
-  $('kEngDelta').textContent = (engCur-engPrev>=0?'+':'') + (engCur-engPrev).toFixed(1)+'pp';
-  $('kEngDelta').className = 'delta ' + (engCur>engPrev?'up':engCur<engPrev?'down':'flat');
-
-  const visCur = sum(m.visits.slice(-r));
-  const visPrev = sum(m.visits.slice(-r*2,-r)) || 1;
-  animCount($('kVisits'), visCur, v => fmt(Math.round(v)));
-  setDelta('kVisitsDelta', pct(visCur, visPrev));
-  $('lVisits').textContent = `${r}-day total`;
-
-  const totalImpr = state.posts.reduce((a,p)=>a+p.impr,0);
-  const totalReplies = state.posts.reduce((a,p)=>a+p.replies,0);
-  const reply = totalImpr? (totalReplies/totalImpr*100) : 0;
-  animCount($('kReply'), reply, v => v.toFixed(2)+'%');
-  const replyPrev = avg(m.engagement.slice(-r*2,-r))*0.18;
-  $('kReplyDelta').textContent = (reply-replyPrev>=0?'+':'') + (reply-replyPrev).toFixed(2)+'pp';
-  $('kReplyDelta').className = 'delta ' + (reply>replyPrev?'up':reply<replyPrev?'down':'flat');
-
-  drawSpark('sparkFollowers', m.followers.slice(-r));
-  drawSpark('sparkImpr', m.impressions.slice(-r));
-  drawSpark('sparkEng', m.engagement.slice(-r));
-  drawSpark('sparkVisits', m.visits.slice(-r));
-  drawSpark('sparkReply', m.engagement.slice(-r).map(v=>+(v*0.18).toFixed(2)));
-
-  const rn = $('rangeNote'); if(rn) rn.textContent = `vs prior ${r} days`;
-  if($('funnelRange')) $('funnelRange').textContent = `last ${r}d`;
-}
-
-function renderVelocity(){
-  const m = state.metrics; if(!m.followers.length){ return; }
-  const r = state.range || 7;
-  const f = m.followers.slice(-r-1);
-  const deltas = []; for(let i=1;i<f.length;i++) deltas.push(f[i]-f[i-1]);
-  const max = Math.max(...deltas.map(Math.abs),1);
-  // Render at height 0 first, then animate
-  $('velChart').innerHTML = deltas.map((v,i)=>{
-    const color = v>=0 ? 'linear-gradient(180deg,#4ade80,#22c55e)' : 'linear-gradient(180deg,#f87171,#dc2626)';
-    return `<div class="bar" data-target="${(Math.abs(v)/max*100).toFixed(1)}" style="height:0%;background:${color}" data-v="${v>=0?'+':''}${v}"></div>`;
-  }).join('');
-  requestAnimationFrame(()=>requestAnimationFrame(()=>{
-    $('velChart').querySelectorAll('.bar').forEach((b,i)=>{
-      setTimeout(()=>{ b.style.height = b.dataset.target+'%'; }, i*20);
-    });
-  }));
-  const net = deltas.reduce((a,b)=>a+b,0);
-  const avgD = deltas.length ? (net/deltas.length).toFixed(1) : '0';
-  $('velSummary').textContent = `Net ${net>=0?'+':''}${net} · Avg ${avgD}/day`;
-}
-
-function renderFunnel(){
-  const m = state.metrics; if(!m.impressions.length){ return; }
-  const r = state.range || 7;
-  const impr = sum(m.impressions.slice(-r));
-  const visits = sum(m.visits.slice(-r));
-  // Assume profile clicks ~ 32% of profile visits become CTA clicks; leads from campaigns
-  const profileClicks = Math.round(visits * 0.34);
-  const leads = state.campaigns.reduce((a,c)=>a+(c.leads||0),0);
-  const stages = [
-    {name:'Impressions', value:impr, cls:''},
-    {name:'Profile Visits', value:visits, cls:'f2'},
-    {name:'CTA Clicks (est.)', value:profileClicks, cls:'f3'},
-    {name:'Leads / DMs', value:Math.max(leads,1), cls:'f4'}
-  ];
-  const max = stages[0].value || 1;
-  let html = '';
-  stages.forEach((s,i)=>{
-    const w = Math.max(8, (s.value/max*100));
-    const conv = i>0 ? ((s.value/stages[i-1].value)*100).toFixed(1)+'% from prev' : '100% top';
-    html += `<div class="funnel-row"><span>${s.name}</span><span><b>${fmt(s.value)}</b><span class="conv">${conv}</span></span></div>
-             <div class="funnel-bar ${s.cls}" style="width:${w}%">${fmt(s.value)}</div>`;
-  });
-  $('funnel').innerHTML = html;
-}
-
-function setDelta(id, p){
-  const el = $(id);
-  el.textContent = (p>=0?'+':'') + p.toFixed(1)+'%';
-  el.className = 'delta ' + (p>0.05?'up':p<-0.05?'down':'flat');
-}
-
-function drawSpark(id, data){
-  const el = $(id);
-  if(!el || data.length < 2) return;
-  const w = el.clientWidth || 280, h = 52, padX = 2, padY = 6;
-  const min = Math.min(...data), max = Math.max(...data);
-  const range = max - min || 1;
-  const xs = i => padX + (i*(w-padX*2))/(data.length-1);
-  const ys = v => h - padY - ((v-min)/range)*(h-padY*2);
-  // Build smooth bezier path
-  const pts = data.map((v,i) => [xs(i), ys(v)]);
-  let d = `M${pts[0][0]},${pts[0][1]}`;
-  for(let i=1; i<pts.length; i++){
-    const cp1x = (pts[i-1][0]+pts[i][0])/2, cp1y = pts[i-1][1];
-    const cp2x = (pts[i-1][0]+pts[i][0])/2, cp2y = pts[i][1];
-    d += ` C${cp1x},${cp1y} ${cp2x},${cp2y} ${pts[i][0]},${pts[i][1]}`;
-  }
-  const areaD = d + ` L${pts[pts.length-1][0]},${h} L${pts[0][0]},${h} Z`;
-  const gid = 'sg'+id;
-  el.innerHTML = `
-    <defs>
-      <linearGradient id="${gid}" x1="0" x2="0" y1="0" y2="1">
-        <stop offset="0%" stop-color="#fff" stop-opacity=".25"/>
-        <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
-      </linearGradient>
-    </defs>
-    <path d="${areaD}" fill="url(#${gid})"/>
-    <path d="${d}" fill="none" stroke="#e5e5e5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-    <circle cx="${pts[pts.length-1][0]}" cy="${pts[pts.length-1][1]}" r="3" fill="#fff"/>
-  `;
-}
-
-function renderBars(){
-  const r = state.range || 7;
-  const data = state.metrics.impressions.slice(-r);
-  if(!data.length) return;
-  const max = Math.max(...data, 1);
-  // Render with height 0, animate to actual heights
-  $('barChart').innerHTML = data.map(v=>
-    `<div class="bar" data-target="${(v/max*100).toFixed(1)}" style="height:0%" data-v="${fmt(v)}"></div>`
-  ).join('');
-  requestAnimationFrame(()=>requestAnimationFrame(()=>{
-    $('barChart').querySelectorAll('.bar').forEach((b,i)=>{
-      setTimeout(()=>{ b.style.height = b.dataset.target+'%'; }, i*22);
-    });
-  }));
-  $('impSummary').textContent = `Total ${fmt(sum(data))} · Avg ${fmt(Math.round(avg(data)))}/day · ${r}d`;
-}
-
-/* Range selector wiring */
-function syncRangeButton(){
-  document.querySelectorAll('#rangeSel button[data-r]').forEach(x=>{
-    x.classList.toggle('active', +x.dataset.r === state.range);
-  });
-}
-document.addEventListener('click', (e)=>{
-  const b = e.target.closest('#rangeSel button[data-r]'); if(!b) return;
-  state.range = +b.dataset.r;
-  syncRangeButton();
-  save(); renderAll();
-});
-
-function renderGoals(){
-  const wrap = $('goalList'); wrap.innerHTML = '';
-  if(!state.goals.length){ wrap.innerHTML = '<div class="muted small">No goals yet, set them in your profile.</div>'; return; }
-  state.goals.forEach(g=>{
-    const p = Math.min(100, (g.current/g.target)*100);
-    wrap.insertAdjacentHTML('beforeend', `
-      <div style="margin:10px 0">
-        <div style="display:flex;justify-content:space-between;font-size:13px">
-          <span>${g.label}</span>
-          <span class="muted">${fmt(g.current)} / ${fmt(g.target)} · ${p.toFixed(0)}%</span>
-        </div>
-        <div class="bar-track"><div class="bar-fill" style="width:${p}%"></div></div>
-      </div>
-    `);
-  });
-}
-
-function renderPosts(){
-  const tb = $('postsBody'); tb.innerHTML = '';
-  state.posts.slice().sort((a,b)=>b.impr-a.impr).forEach(p=>{
-    const er = ((p.likes+p.replies+p.rt)/Math.max(1,p.impr)*100).toFixed(2)+'%';
-    const prev = p.prevImpr || 0;
-    const wow = prev? pct(p.impr, prev) : 0;
-    const cls = wow>0.5?'up':wow<-0.5?'down':'flat';
-    const wowTxt = prev? `<span class="delta ${cls}">${wow>=0?'+':''}${wow.toFixed(0)}%</span>` : '<span class="muted small">—</span>';
-    tb.insertAdjacentHTML('beforeend', `<tr>
-      <td title="${escapeHtml(p.text)}">${truncate(p.text,46)}</td>
-      <td>${fmt(p.impr)}</td><td>${wowTxt}</td><td>${p.likes}</td><td>${p.replies}</td><td>${p.rt}</td><td>${er}</td>
-    </tr>`);
-  });
-  if(!state.posts.length) tb.innerHTML = '<tr><td colspan="7" class="muted">No posts logged. Click "+ Log post".</td></tr>';
-}
-
-function renderCampaigns(){
-  const tb = $('campBody'); tb.innerHTML='';
-  state.campaigns.forEach(c=>{
-    const cpl = c.leads? '$'+(c.spend/c.leads).toFixed(2) : '—';
-    tb.insertAdjacentHTML('beforeend', `<tr>
-      <td>${escapeHtml(c.name)}</td><td>$${c.spend}</td><td>${c.leads}</td><td>${cpl}</td>
-      <td><span class="tag">${c.status}</span></td>
-    </tr>`);
-  });
-  if(!state.campaigns.length) tb.innerHTML='<tr><td colspan="5" class="muted">No campaigns yet.</td></tr>';
-}
-
 function escapeHtml(s){ return s.replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
 function truncate(s,n){ return s.length>n? s.slice(0,n-1)+'…' : s; }
 
-/* ========= Add post ========= */
-$('addPost').onclick = ()=>{
-  const text = prompt('Post text?'); if(!text) return;
-  const impr = +prompt('Impressions?')||0;
-  const likes = +prompt('Likes?')||0;
-  const replies = +prompt('Replies?')||0;
-  const rt = +prompt('Retweets?')||0;
-  state.posts.push({text,impr,likes,replies,rt});
-  save(); renderPosts();
-};
-
-/* ========= Generators (template-based, no external API) ========= */
+/* ========= Generator context helper ========= */
 function p(){ return state.profile || {niche:'AI SaaS', stage:'Pre-seed', target:'Both', goal:'10k followers'}; }
 
 /* =========================================================
@@ -808,17 +475,23 @@ async function ceGenerateCurrent(pickedAt){
 
 async function ceCallAPI(platform, article, type){
   try {
+    // For X threads, send mode='thread'. For all other cases, send the post type as mode.
     const mode = (platform === 'x' && _ce.threadMode) ? 'thread' : type;
     const payload = {
       kind: 'post',
-      topic: _ce.topic, articleTitle: article.title, articleAngle: article.angle||'',
-      platform, mode, voiceNiche: _ce.voice.niche||'', voiceStyle: _ce.voice.style||'casual',
-      inputMode: article.inputMode||'search',
+      topic: _ce.topic,
+      articleTitle: article.title,
+      articleAngle: article.angle || '',
+      platform,
+      mode,
+      voiceNiche: _ce.voice.niche || '',
+      voiceStyle: _ce.voice.style || 'casual',
+      inputMode: article.inputMode || 'search',
     };
     if(_ce.refineInstruction) payload.refineInstruction = _ce.refineInstruction;
     const data = await xgFetch('/generate', payload);
-    return data.text || ceFallback(platform,article);
-  } catch(e){ console.warn('CE API error',e); return ceFallback(platform,article); }
+    return data.text || ceFallback(platform, article);
+  } catch(e){ console.warn('CE API error', e); return ceFallback(platform, article); }
 }
 
 // Regenerate current platform's post (optionally with a refine instruction)
@@ -984,21 +657,28 @@ function ceThreadCard(tweets){
 }
 
 function ceParseInstagram(text){
+  // Match CAPTION: section up to double-newline + HASHTAGS: OR end of string
   const cm = text.match(/CAPTION:\s*([\s\S]+?)(?:\n\n+HASHTAGS:|$)/i);
   const hm = text.match(/HASHTAGS:\s*([\s\S]+?)$/i);
-  if(cm||hm) return { caption:(cm?.[1]||'').trim(), hashtags:(hm?.[1]||'').trim() };
+  if(cm || hm) return { caption:(cm?.[1]||'').trim(), hashtags:(hm?.[1]||'').trim() };
+  // Fallback: split on a line that has 5+ hashtags
   const lines = text.split('\n');
-  const hi = lines.findIndex(l=>(l.match(/#\w+/g)||[]).length>=5);
-  if(hi>0) return { caption:lines.slice(0,hi).join('\n').trim(), hashtags:lines.slice(hi).join('\n').trim() };
+  const hi = lines.findIndex(l => (l.match(/#\w+/g)||[]).length >= 5);
+  if(hi > 0) return { caption:lines.slice(0,hi).join('\n').trim(), hashtags:lines.slice(hi).join('\n').trim() };
   return { caption:text, hashtags:'' };
 }
 
 function ceParseReddit(text){
-  return {
-    subreddit: (text.match(/SUBREDDIT:\s*(.+)/i)?.[1]||'').trim(),
-    title:     (text.match(/TITLE:\s*(.+)/i)?.[1]||'').trim(),
-    body:      (text.match(/BODY:\s*([\s\S]+?)$/i)?.[1]||'').trim(),
-  };
+  // SUBREDDIT: may include "r/" prefix or not — normalise
+  const subMatch = text.match(/SUBREDDIT:\s*(.+)/i);
+  const sub = (subMatch?.[1]||'').trim();
+  // TITLE: everything to end of that line
+  const titleMatch = text.match(/TITLE:\s*(.+)/i);
+  const title = (titleMatch?.[1]||'').trim();
+  // BODY: everything after BODY: label to end of string
+  const bodyMatch = text.match(/BODY:\s*([\s\S]+?)$/i);
+  const body = (bodyMatch?.[1]||'').trim();
+  return { subreddit: sub, title, body };
 }
 
 /* ── History ──────────────────────────────────────────────────────────── */
@@ -1012,7 +692,7 @@ async function ceSaveToHistory(platform, text, type, article){
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
     ceLoadHistory();
-  } catch(e){ console.warn('History save',e); }
+  } catch(e){ console.warn('History save', e); }
 }
 
 async function ceLoadHistory(){
@@ -1023,7 +703,7 @@ async function ceLoadHistory(){
     _ce.history = snap.docs.map(d=>({id:d.id,...d.data()}));
     ceRenderHistoryBadge();
     if(_ce.historyOpen) ceRenderHistoryList();
-  } catch(e){ console.warn('History load',e); }
+  } catch(e){ console.warn('History load', e); }
 }
 
 function ceRenderHistoryBadge(){
@@ -1087,7 +767,7 @@ async function ceLoadVoice(){
   try{
     const doc=await db.collection('users').doc(fbAuth.currentUser.uid).collection('prefs').doc('ceVoice').get();
     if(doc.exists){ const d=doc.data(); _ce.voice.style=d.style||'casual'; _ce.voice.niche=d.niche||''; }
-  }catch(e){ console.warn('Voice load',e); }
+  }catch(e){ console.warn('Voice load', e); }
 }
 
 function ceInit(){ ceLoadHistory(); ceLoadVoice(); }
@@ -1185,6 +865,7 @@ function ceImgLoadOne(prompt, model, idx){
     const url  = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}` +
                  `?width=1080&height=1080&model=${model.id}&nologo=true&seed=${seed}`;
     const img  = new Image();
+    img.crossOrigin = 'anonymous'; // needed so canvas toBlob works if a user tries to draw it
     const startedAt = Date.now();
 
     const timer = setTimeout(() => {
@@ -1210,7 +891,7 @@ function ceImgLoadOne(prompt, model, idx){
       cell.className   = 'imggen-cell done';
       cell.dataset.url = url;
       cell.innerHTML   = `
-        <img src="${url}" alt="${model.label}">
+        <img src="${url}" alt="${model.label}" crossorigin="anonymous">
         <div class="imggen-label"><strong>${model.label}</strong><span>${model.tag}</span></div>`;
       resolve(url);
     };
@@ -1229,7 +910,6 @@ function ceImgLoadOne(prompt, model, idx){
         </div>`;
 
       // Ad-blocker detection: if onerror fires within 3 s it wasn't a real image failure.
-      // Count fast failures; if 3+ cells all fail fast, the extension is likely blocking.
       if(Date.now() - startedAt < 3000){
         _imgGen._failCount++;
         if(_imgGen._failCount === 3){
@@ -1276,18 +956,29 @@ function ceImgSelectCell(idx){
   $('ceImgDownloadBtn').disabled = false;
 }
 
-/* Download the selected image (stored as a data: URL from Gemini base64). */
-function ceImgDownload(){
+/* Download the selected image.
+   The URL is a Pollinations https:// URL, not a data: URL, so we must fetch it as a blob.
+   If the fetch fails (CORS, ad-blocker, etc.) fall back to opening the URL in a new tab. */
+async function ceImgDownload(){
   if(!_imgGen.selectedUrl){ toast('Tap an image to select it first'); return; }
+  const url = _imgGen.selectedUrl;
+
+  // Try fetch-as-blob first so the browser saves the file rather than navigating
   try {
-    const a    = document.createElement('a');
-    a.href     = _imgGen.selectedUrl;
+    const resp = await fetch(url, { mode: 'cors' });
+    if(!resp.ok) throw new Error('fetch failed');
+    const blob = await resp.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
     a.download = `xgrowth-insta-${Date.now()}.jpg`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
   } catch {
-    toast('Download failed — right-click the image and Save As');
+    // CORS or ad-blocker blocked the fetch — open in new tab so user can save manually
+    window.open(url, '_blank', 'noopener,noreferrer');
+    toast('Opening in new tab — right-click to Save As');
   }
 }
 
@@ -1311,759 +1002,6 @@ document.addEventListener('keydown',(e)=>{
   if(id==='ceTopicInput'){ e.preventDefault(); ceSearchNews(); }
   else if(id==='ceUrlInput'){ e.preventDefault(); ceFetchUrlPreview(); }
 });
-
-/* ── Old CE_TREND_BANK kept only as named const (no longer used for display) ── */
-const CE_TREND_BANK = {
-  ai: [
-    { tag:'Models',     source:'The Information',    date:'2 days ago',  title:"Anthropic's Claude 4 ships with longer context — what changes for product teams", angle:"Longer context windows + better tool use are quietly making real agent products viable in production for the first time." },
-    { tag:'Open source', source:'Latent Space',       date:'3 days ago',  title:"Open-source LLMs are closing the gap on Anthropic and OpenAI",           angle:"Llama 4 + Mistral results show parity on specific tasks. Teams are routing 30-40% of traffic to open models for cost." },
-    { tag:'Dev tools',  source:'Pragmatic Engineer', date:'4 days ago',  title:"Cursor crosses $100M ARR in 12 months — AI-native dev tools have momentum", angle:"What the Cursor curve tells founders building AI-first products: distribution + DX is the moat." },
-    { tag:'Tooling',    source:'TechCrunch',         date:'5 days ago',  title:"Eval infrastructure is the new dev-tools gold rush",                    angle:"Braintrust, Langfuse, Helicone — every serious AI team is either buying or building one in-house." },
-    { tag:'Product',    source:'Stratechery',        date:'6 days ago',  title:"AI agents are eating the SaaS UI layer",                                angle:"Customers are asking for chat-first interfaces instead of dashboards. The 'configure-it-yourself' era is fading fast." },
-    { tag:'Pricing',    source:'Ben\'s Bites',        date:'this week',   title:"Inference costs drop 80% YoY — what's possible at the new price point", angle:"Features that were uneconomic 12 months ago are now sub-cent-per-call. Re-run the business case on your AI features." },
-    { tag:'Voice AI',   source:'The Information',    date:'this week',   title:"Voice AI is the sleeper category — Sesame, ElevenLabs, Bland.ai all raising", angle:"After 18 months of text being the story, voice is suddenly where the breakouts are happening." },
-    { tag:'GTM',        source:'First Round Review', date:'last week',   title:"Enterprise AI procurement is collapsing to 30-day pilots",              angle:"Long sales cycles are dying. Show-it-now wins more deals than 6-week decks ever did." },
-    { tag:'Hiring',     source:'Lenny\'s Newsletter', date:'last week',   title:"AI-native engineers expect 2-3x their last salary",                    angle:"Founders are choosing between fewer senior hires or building a leverage-heavy stack. Both work — picking one matters." },
-    { tag:'Caution',    source:'Hugging Face Blog',  date:'last week',   title:"Fine-tuning is quietly back, post-RAG fatigue",                         angle:"RAG hit its limits on narrow domains. Specialized small models are winning where context retrieval was failing." }
-  ],
-  saas: [
-    { tag:'AI agents',  source:'Lenny\'s Newsletter', date:'2 days ago',  title:"Notion, Linear, Airtable all add AI agents — what's the table-stakes feature now?", angle:"AI inside SaaS shifted from differentiator to baseline in 6 months. Founders need to redraw the moat." },
-    { tag:'Pricing',    source:'SaaStr',             date:'3 days ago',  title:"Usage-based pricing is now table stakes — flat per-seat is losing deals", angle:"Hybrid models (base + usage) are winning RFPs that pure subscription would lose this year." },
-    { tag:'Valuation',  source:'SaaStr',             date:'4 days ago',  title:"SaaS valuations finally rebound after 18-month flat line",              angle:"Multiples are climbing for real-growth companies. Bottoming-out chatter looks correct in hindsight." },
-    { tag:'PLG',        source:'First Round Review', date:'5 days ago',  title:"PLG plateaus around $5M ARR — what's after self-serve?",                angle:"Teams that nailed product-led acquisition are now hiring their first outbound reps. The playbook is shifting." },
-    { tag:'AI',         source:'The Information',    date:'5 days ago',  title:"Salesforce's $500M Agentforce pricing reset is a signal for everyone",  angle:"When the incumbent re-prices AI features, every vertical SaaS has to ask: how do we charge for ours?" },
-    { tag:'Market',     source:'TechCrunch',         date:'this week',   title:"Vertical SaaS keeps minting unicorns quietly",                          angle:"Industry-specific tools are outpacing horizontal players in ACV and retention. The 'TAM has to be huge' thesis is fading." },
-    { tag:'Open source', source:'TechCrunch',         date:'this week',   title:"Open-source SaaS alternatives are growing 2x faster than incumbents",   angle:"PostHog, Cal.com, Supabase pattern is now repeatable. Bottoms-up dev adoption is the new B2B funnel." },
-    { tag:'Strategy',   source:'Pavilion',           date:'last week',   title:"Bundling is back — single SKU, multiple products",                      angle:"After unbundling fatigue, customers want one bill, one login, one vendor relationship. Watch for consolidation plays." },
-    { tag:'AI',         source:'SaaStr',             date:'last week',   title:"AI features inside SaaS aren't moving renewals yet",                    angle:"Adoption is high. Retention impact is mixed. Early data suggests it's the wrong moat to bet on." },
-    { tag:'CX',         source:'First Round Review', date:'last week',   title:"Onboarding is the new pricing page",                                    angle:"First 10 minutes decide LTV more than any landing-page tweak. Yet onboarding is still underinvested at most companies." }
-  ],
-  retail: [
-    { tag:'Big box',    source:'Modern Retail',      date:'2 days ago',  title:"Costco hits $300B revenue — bulk + private label still winning",       angle:"In a discount-driven environment, Costco's playbook is the one independent brands should be studying." },
-    { tag:'Channels',   source:'Retail Dive',        date:'3 days ago',  title:"Walmart+ surpasses Amazon Prime in same-day delivery satisfaction",    angle:"Logistics moats are flipping. Smaller brands need to pick a horse — or build last-mile themselves." },
-    { tag:'Behavior',   source:'Glossy',             date:'4 days ago',  title:"Live-shopping is finally taking off in the US",                         angle:"What worked in China for 5 years is now hitting US conversion benchmarks. Early movers are getting outsized reach." },
-    { tag:'Showrooms',  source:'Glossy',             date:'5 days ago',  title:"Brick-and-mortar showrooming is getting weird — Apple Store playbook for indie brands", angle:"Retail-as-marketing is back. The store doesn't have to sell — it has to be memorable." },
-    { tag:'M&A',        source:'Modern Retail',      date:'6 days ago',  title:"DTC brand consolidation is accelerating",                               angle:"Tighter ad performance is forcing solo brands into PE roll-ups. Independent operators have a 12-month window." },
-    { tag:'Pricing',    source:'AdAge',              date:'this week',   title:"Subscription fatigue is hitting CPG brands hardest",                    angle:"Churn on monthly box products is at 5-year highs. The 'subscribe & save' model needs a refresh." },
-    { tag:'Forecast',   source:'eMarketer',          date:'this week',   title:"Holiday shopping forecast: discount-driven, but premium brands holding margin", angle:"The bifurcation is real — value brands compete on price, premium brands hold pricing through scarcity." },
-    { tag:'Margins',    source:'Retail Dive',        date:'this week',   title:"Returns are eating 30% of e-comm margin — solving this is gold",        angle:"Try-before-you-buy, AI sizing, and packaging redesigns are showing measurable margin wins." },
-    { tag:'Brand',      source:'Modern Retail',      date:'last week',   title:"In-person pop-ups out-converting paid social",                          angle:"DTC-first brands are renting physical space again. CAC is lower than Meta ads for many categories." },
-    { tag:'Tech',       source:'AdAge',              date:'last week',   title:"AI-driven product photography is replacing studio shoots",              angle:"Brands are saving 60-80% on photo costs and shipping new SKUs to site in days, not weeks." }
-  ],
-  fintech: [
-    { tag:'Payments',   source:'The Information',    date:'2 days ago',  title:"Stripe quietly grew to $1T processed — what's next after payments?",    angle:"Stripe's expansion into financial infrastructure (Issuing, Tax, Capital) is the playbook for every vertical fintech." },
-    { tag:'Credit',     source:'Fintech Business Weekly', date:'3 days ago', title:"Mercury, Brex pull back on credit lines as default rates climb",   angle:"The SMB credit market is repricing. Founders relying on revenue-based financing need to re-plan." },
-    { tag:'IPOs',       source:'Bloomberg',          date:'4 days ago',  title:"Plaid IPO chatter resurfaces — what it means for the open banking stack", angle:"A Plaid public listing would set the comp for every embedded-finance company. Watch the data-access narrative." },
-    { tag:'Regulation', source:'Banking Dive',       date:'5 days ago',  title:"BaaS shake-up: banking partners are getting selective",                 angle:"Synapse-era fallout means smaller fintechs need to prove compliance maturity before partnering. Sponsor banks are slow-rolling new accounts." },
-    { tag:'Product',    source:'The Block',          date:'6 days ago',  title:"Robinhood adds private investing — wealth management is the new product wedge", angle:"The brokerage-to-wealth-platform transition is the obvious play for every consumer fintech with users." },
-    { tag:'Embedded',   source:'Fintech Today',      date:'this week',   title:"Embedded finance is moving from feature to category",                   angle:"Vertical SaaS players are launching their own cards, accounts, and credit lines. The build-vs-buy moment is now." },
-    { tag:'AI',         source:'TechCrunch',         date:'this week',   title:"Underwriting on bank-statement data is eating FICO for SMB",            angle:"For SMB lending especially, alternative data is outperforming traditional credit bureau scoring on default rates." },
-    { tag:'B2B',        source:'Fintech Today',      date:'this week',   title:"Treasury management is the next obvious SaaS wedge",                    angle:"Mid-market CFOs are stitching together 5+ tools for cash management. One unified play could win this fast." },
-    { tag:'UX',         source:'Banking Dive',       date:'last week',   title:"Consumer banking apps are removing features, not adding",               angle:"After years of feature creep, the new wave is 'three buttons and a balance.' Simplicity is winning." },
-    { tag:'Compliance', source:'Fintech Business Weekly', date:'last week', title:"KYC/KYB automation is the unsexy moat that's actually working",     angle:"Onboarding flows that take 2 minutes instead of 2 days are converting 3x better." }
-  ],
-  healthcare: [
-    { tag:'Pharma',     source:'STAT News',          date:'2 days ago',  title:"Mark Cuban's Cost Plus Drug crosses 1M prescriptions/month — generic distribution disrupted", angle:"Direct-to-consumer pharma is now a real channel, not a stunt. Incumbents are scrambling." },
-    { tag:'Operations', source:'Becker\'s',          date:'3 days ago',  title:"Hospital staffing crisis sparks 30% YoY growth in AI scheduling tools", angle:"The operational layer is where AI is paying off in healthcare — not clinical decision support." },
-    { tag:'AI',         source:'STAT News',          date:'4 days ago',  title:"AI scribes are now baseline expectation, not differentiator",           angle:"Clinicians who used to be skeptical are now asking why one isn't running by default. Adoption is steeper than EHRs ever were." },
-    { tag:'Pharma',     source:'Rock Health',        date:'5 days ago',  title:"GLP-1s expanding beyond weight loss — cardiovascular trials reshape pharma", angle:"The downstream effects of GLP-1 success will reshape pharma-adjacent businesses for years." },
-    { tag:'Consolidation', source:'Becker\'s',       date:'6 days ago',  title:"Independent practices are consolidating faster than ever",              angle:"Solo and small-group practices are joining MSOs or selling to PE. Tech needs to serve the buyer, not the legacy seller." },
-    { tag:'Payment',    source:'Fierce Healthcare',  date:'this week',   title:"Direct-pay and cash-only practices are growing 25% YoY",                angle:"Patients fed up with insurance friction are paying out-of-pocket for primary care and specialty. New billing models needed." },
-    { tag:'Membership', source:'Fierce Healthcare',  date:'this week',   title:"Direct primary care membership models hit 2.5M patients — insurance-light is sustainable", angle:"The subscription-medicine thesis just got real numbers. Watch this category." },
-    { tag:'B2B',        source:'Rock Health',        date:'this week',   title:"Payers are buying tech, not licensing it anymore",                       angle:"UnitedHealth, Cigna, and the Blues are acquiring point solutions instead of subscribing. Exit math has changed." },
-    { tag:'Patient',    source:'STAT News',          date:'last week',   title:"Patient-facing tools are losing to clinician-facing tools",              angle:"The ROI proof is faster when you save a clinician 30 minutes a day than when you save a patient a phone call." },
-    { tag:'Cost',       source:'Becker\'s',          date:'last week',   title:"Telehealth-only companies are becoming hybrid by necessity",            angle:"Pure-virtual specialty care is losing reimbursement battles. The winners now run brick-and-mortar + virtual." }
-  ],
-  marketing: [
-    { tag:'LinkedIn',   source:'Marketing Brew',     date:'2 days ago',  title:"LinkedIn engagement up 40% YoY — text posts beating video for B2B",     angle:"The platform is having a moment. Founders who haven't published in a year are getting outsized reach for showing up now." },
-    { tag:'Channels',   source:'AdAge',              date:'3 days ago',  title:"Reddit ad inventory selling out — the platform's moment in the sun",    angle:"Brand safety + community trust + IPO momentum = Reddit ads suddenly working for categories that ignored it for years." },
-    { tag:'Email',      source:'AdWeek',             date:'4 days ago',  title:"Email open rates rebound after Apple Mail privacy reset",                angle:"The data is finally credible again. Founders who paused email investment have a window to re-engage." },
-    { tag:'AI',         source:'Stratechery',        date:'5 days ago',  title:"ChatGPT search referral traffic is showing up in analytics — get ready for AEO", angle:"Answer-engine optimization is the new SEO. Early adopters are seeing real signal in GA4." },
-    { tag:'Cost',       source:'MarketingDive',      date:'6 days ago',  title:"Paid social CACs are up 40% YoY — organic is back in fashion",           angle:"Founders are rebuilding distribution muscles they outsourced to Meta. Newsletter and SEO budgets are climbing." },
-    { tag:'AI',         source:'AdWeek',             date:'this week',   title:"Generative AI is flooding LinkedIn — original posts now stand out",     angle:"The bar for what counts as a 'thought leader' post has dropped, which means actual original takes get disproportionate reach." },
-    { tag:'Format',     source:'Marketing Brew',     date:'this week',   title:"Long-form is winning again, even on short-form platforms",              angle:"X threads, 90-second TikToks, and 1500-word LinkedIn essays are outperforming punchy hot takes." },
-    { tag:'Attribution', source:'AdAge',              date:'this week',   title:"Self-reported attribution is replacing pixel tracking",                  angle:"With iOS privacy + cookieless browsers, 'how did you hear about us?' is back as a primary signal." },
-    { tag:'Agencies',   source:'AdWeek',             date:'last week',   title:"Agencies are switching from retainers to performance fees",              angle:"Clients want skin in the game. Hybrid models (base + win share) are out-converting traditional billing." },
-    { tag:'Founders',   source:'Marketing Brew',     date:'last week',   title:"Founder-led content is outperforming brand-led content 5-10x",          angle:"Audiences trust people, not logos. Even bigger companies are putting CEOs and engineers on camera." }
-  ],
-  ecommerce: [
-    { tag:'Channels',   source:'Modern Retail',      date:'2 days ago',  title:"Amazon Buy with Prime expands to Shopify — what it does to the off-Amazon brand strategy", angle:"Brands have to decide: lean in for trust + traffic, or stay independent and own the customer relationship." },
-    { tag:'BNPL',       source:'Bloomberg',          date:'3 days ago',  title:"Klarna IPO refile — BNPL is mainstream but margins are tight",          angle:"Even the BNPL leader is going public into a tougher environment. What this signals for embedded checkout." },
-    { tag:'Channels',   source:'Modern Retail',      date:'4 days ago',  title:"TikTok Shop is no longer experimental — it's a category leader",        angle:"Brands hitting $1M+/mo on TikTok Shop are running playbooks Amazon sellers ran in 2018. The window is closing." },
-    { tag:'Cost',       source:'eMarketer',          date:'5 days ago',  title:"Shein and Temu ad spend slows — chase for new customers gets expensive", angle:"The cheap-import giants are pulling back on US ad spend. Could be a softening signal across the entire DTC ad market." },
-    { tag:'M&A',        source:'Modern Retail',      date:'6 days ago',  title:"DTC brand exits are quietly active — strategic buyers paying again",     angle:"After 2 years of zero deal flow, the M&A market for $5-50M DTC brands is suddenly back open." },
-    { tag:'Margin',     source:'eMarketer',          date:'this week',   title:"Free shipping thresholds are quietly dying",                              angle:"Customers expect free regardless. Brands are building it into product price instead of as a 'reward.'" },
-    { tag:'Tech',       source:'RetailWire',         date:'this week',   title:"Shopify apps are eating Magento — and now Shopify Plus's lunch",         angle:"Apps that were 'nice to have' are now critical infrastructure. The mid-market is upgrading their stack quietly." },
-    { tag:'AI',         source:'eMarketer',          date:'this week',   title:"Personalized product feeds are converting 2-3x the static grid",        angle:"Algorithmic merchandising is mainstream. If your category page is still chronological, you're leaving money on the table." },
-    { tag:'Retention',  source:'Modern Retail',      date:'last week',   title:"Loyalty programs are losing to memberships",                              angle:"'Earn points' is yesterday. 'Pay $X/yr for member perks' is converting better and locking in repeat purchase." },
-    { tag:'Returns',    source:'RetailWire',         date:'last week',   title:"Charging for returns is becoming acceptable — and margin-positive",      angle:"Customers are surprisingly tolerant when reasons are clear. Return abuse is down, margins are up." }
-  ],
-  realestate: [
-    { tag:'Rates',      source:'Inman',              date:'2 days ago',  title:"Mortgage rate cuts spark biggest sales surge in 2 years",                angle:"The lock-in effect that froze the market for 18 months is finally cracking. Agents who stayed in the game have a window." },
-    { tag:'Tech',       source:'Inman',              date:'3 days ago',  title:"Zillow rolls out instant tours feature — the iBuyer playbook's second act", angle:"After the iBuyer wind-down, Zillow is back to building agent-augmenting tools. Pay attention to the workflow." },
-    { tag:'Settlement', source:'RisMedia',           date:'4 days ago',  title:"NAR settlement aftermath: buyer-agent commissions are negotiable",       angle:"The 6% standard is gone. Agents who can clearly articulate value are charging more, not less. Most can't." },
-    { tag:'Tech',       source:'HousingWire',        date:'5 days ago',  title:"AI-generated listing photos and 3D tours are now baseline",              angle:"Listings without them are getting 40% fewer views. The cost of producing them dropped 10x this year." },
-    { tag:'Rentals',    source:'HousingWire',        date:'6 days ago',  title:"Multi-family rents flat YoY — the era of 8% annual increases is over",   angle:"Operators that priced for 7% growth are revising plans. Watch concession packages climbing." },
-    { tag:'Investors',  source:'The Real Deal',      date:'this week',   title:"Single-family rentals are quietly outperforming multi-family",            angle:"Institutional money that flooded multi-family in 2021-22 is rotating to SFR. Smaller operators have an opening." },
-    { tag:'Behavior',   source:'Inman',              date:'this week',   title:"Showings are getting longer — buyers are commitment-shy",                 angle:"Average time-to-decision has stretched from 3 weeks to 8 weeks in many markets. Tools to nurture warm leads are critical." },
-    { tag:'Conversions', source:'The Real Deal',      date:'this week',   title:"Commercial-to-residential conversions accelerate in 5 major cities",     angle:"NYC, Chicago, DC, SF, Boston: all running pilot programs. Developers and architects with experience here are getting calls." },
-    { tag:'Pricing',    source:'RisMedia',           date:'last week',   title:"Iterative price reductions are losing to one big strategic cut",         angle:"Three small reductions over 60 days underperform a single big cut on week 3. Sellers are slow to update." },
-    { tag:'Brokerage',  source:'Inman',              date:'last week',   title:"Indie brokerages are growing 3x faster than national franchises",        angle:"Top agents are leaving Compass, Coldwell, RE/MAX for boutique brands or going solo. Tech infra is closing the gap." }
-  ]
-};
-
-const CE_TREND_GENERIC = [
-  { tag:'Distribution', source:'Indie Hackers',      date:'2 days ago',  title:"Founder-led content is outperforming brand-led content 5-10x",        angle:"Audiences trust people, not logos. The case for a founder behind the keyboard, not behind the brand." },
-  { tag:'Channels',     source:'On Deck',            date:'3 days ago',  title:"Newsletter-as-CRM is replacing top-of-funnel ads",                     angle:"Owned audience beats rented audience. The 12-month math is now obvious to most operators." },
-  { tag:'Cadence',      source:'Pragmatic Engineer', date:'4 days ago',  title:"Weekly shipping beats quarterly planning",                              angle:"Teams running 2-week experiment cycles are out-learning teams running 6-month roadmaps. The compounding is real." },
-  { tag:'AI',           source:'Stratechery',        date:'5 days ago',  title:"Generative AI is flooding feeds — original takes now stand out",       angle:"The signal-to-noise ratio is collapsing. Specific stories with receipts are getting disproportionate reach." },
-  { tag:'Pricing',      source:'Lenny\'s Newsletter', date:'6 days ago',  title:"Bundling is back — single SKU, multiple products",                     angle:"After unbundling fatigue, customers want one bill, one login, one relationship. Watch for consolidation plays." },
-  { tag:'Newsletters',  source:'Indie Hackers',      date:'this week',   title:"Indie hackers reporting record month for paid newsletters",            angle:"Owned-audience compounding is real. The 12-month math is finally obvious to everyone." },
-  { tag:'CAC',          source:'First Round Review', date:'this week',   title:"Productivity software CACs are climbing 30% YoY — organic is the moat", angle:"The paid-acquisition playbook is breaking. Founders who built distribution muscles are winning quietly." },
-  { tag:'Communities',  source:'TechCrunch',         date:'this week',   title:"Communities-as-product is back — Geneva, Heartbeat, Circle all raising", angle:"After a quiet 2024, community products are getting funded again. The thesis: relationships compound, features don't." },
-  { tag:'Education',    source:'On Deck',            date:'last week',   title:"Cohort-based courses bouncing back after a quiet 2024",                 angle:"The CBC graveyard was overblown. Operators teaching what they actually do are seeing $200k+ launches again." },
-  { tag:'Hiring',       source:'Lenny\'s Newsletter', date:'last week',   title:"Small teams are out-shipping bigger ones — and getting noticed",       angle:"4-person teams hitting $1M ARR are now common stories. Leverage > headcount as the founder skill of the year." }
-];
-
-
-async function genCampaign(){
-  const t = val('cmType'); const hook = val('cmHook')||'Free 14-day trial'; const days = +val('cmDays')||14; const budget=+val('cmBudget')||0;
-  const channels = [];
-  if($('chX').checked) channels.push('X');
-  if($('chLI').checked) channels.push('LinkedIn');
-  if($('chEmail').checked) channels.push('Email');
-
-  const outEl = $('campaignOut');
-  outEl.innerHTML = '<span class="ce-spinner"></span> Building your campaign…';
-  try {
-    const data = await xgFetch('/generate', {
-      kind: 'campaign',
-      campaignType: t, hook, days, budget,
-      channels: channels.length ? channels : ['X'],
-      niche: state.profile?.niche || '',
-      voiceNiche: _ce.voice?.niche || '', voiceStyle: _ce.voice?.style || '',
-    });
-    outEl.textContent = data.text;
-    state.campaigns.unshift({name:`${t}, ${new Date().toLocaleDateString()}`, spend:budget, leads:0, status:'Planned'});
-    save(); renderCampaigns();
-    toast('Campaign built & logged');
-    return;
-  } catch(e){
-    console.warn('Campaign API failed, falling back', e);
-    toast('Using template fallback — ' + (e.message||'API error'));
-  }
-
-  // Template fallback (offline / quota / error)
-  const week = (n)=>`Week ${n}`;
-  const out = `## Campaign: ${t}
-Hook: ${hook}
-Channels: ${channels.join(', ')||'X'}
-Duration: ${days} days · Budget: $${budget}
-
-## Audience Segments
-- Cold: ${state.profile?.niche||'niche'} founders following 3+ peers in your space
-- Warm: profile visitors last 30 days, newsletter subs, free-trial drop-offs
-- Hot: replied to last 5 posts; opened 3+ emails
-
-## Timeline
-${week(1)}: Pre-launch teasers (3 hooks/day on X), warm-list email (#1)
-${week(2)}: Launch storm (10-tweet thread + reply sprint), email (#2 + #3), 1 LinkedIn long-form
-${days>14? `${week(3)}: Case-study post + retargeting copy + email (#4)\n${week(4)}: Wrap thread + email (#5) with ROI receipts\n` : ''}
-
-## KPIs
-- Impressions: ${fmt(50000*(days/14))}
-- Replies: ${Math.round(150*(days/14))}
-- Profile visits: ${Math.round(2500*(days/14))}
-- Leads (email/demo): ${Math.round(40*(days/14))}
-- CPL target: $${budget? (budget/Math.max(40*(days/14),1)).toFixed(2):'0.00'}
-
-## Email Sequence
-1. Subject: "${hook}, for ${state.profile?.niche||'founders'}"
-   Body: 1-line story → problem → offer → 1 CTA.
-2. Subject: "Why we built this (and the metric that changed)"
-3. Subject: "A 90-second demo (no signup)"
-4. Subject: "Case study: how [persona] used it in week 1"
-5. Subject: "Last call, closing the cohort Friday"
-
-## Ad Copy (X promoted)
-- A: "${hook}. No card. 14 days." → CTA: Start free
-- B: "We rebuilt ${state.profile?.niche||'this'} for solo founders. Here's the 60s tour." → CTA: Watch
-- C: "Replaced 4 tools with one. Numbers inside." → CTA: See receipts
-
-## Landing Page Wireframe (HTML)
-\`\`\`html
-<section class="hero">
-  <h1>${hook}</h1>
-  <p>Built for ${state.profile?.niche||'founders'}. Ship results in week 1.</p>
-  <a class="cta" href="#start">Start free</a>
-</section>
-<section class="proof">
-  <ul><li>"Saved 8 hrs/week", Founder, SaaS</li><li>+34% reply rate</li><li>1-click setup</li></ul>
-</section>
-<section class="faq">
-  <h2>FAQ</h2>
-  <details><summary>Do I need a credit card?</summary>No.</details>
-  <details><summary>How long is setup?</summary>≤ 5 minutes.</details>
-</section>
-\`\`\`
-
-## Next Steps
-- Approve Email #1 + 3 ad variants today. Schedule launch storm for Tue 9am ET.
-
-## Upgrade?
-- Done-for-you launch ($199): we write all assets + schedule.`;
-  $('campaignOut').textContent = out;
-  // Track in dashboard
-  state.campaigns.unshift({name:`${t}, ${new Date().toLocaleDateString()}`, spend:budget, leads:0, status:'Planned'});
-  save(); renderCampaigns();
-  toast('Campaign built & logged');
-}
-
-/* ========= Brand Kit ========= */
-async function genBrandKit(){
-  // Auto-fill from profile if fields are empty
-  const prof = state.profile || {};
-  if(!val('bkWhat') && prof.niche) $('bkWhat').value = prof.niche;
-
-  const what = val('bkWhat') || prof.niche || '';
-  const who  = val('bkWho')  || prof.target || '';
-  const bio  = val('bkBio')  || '';
-  const platform = val('bkPlatform') || 'X / Twitter';
-  const tone     = val('bkTone')     || 'direct and casual';
-
-  if(!what){ toast('Tell me what you build first'); $('bkWhat')?.focus(); return; }
-
-  const outEl = $('brandKitOut');
-  outEl.innerHTML = '<span class="ce-spinner"></span> Building your Brand Kit…';
-
-  try {
-    const data = await xgFetch('/generate', {
-      kind: 'brand-kit', what, who, bio, platform, tone,
-    });
-    outEl.textContent = data.text;
-    toast('Brand Kit ready');
-  } catch(e) {
-    outEl.textContent = 'Generation failed — ' + (e.message || 'try again');
-    toast('Brand Kit failed: ' + (e.message || 'API error'));
-  }
-}
-
-// Pre-fill Brand Kit inputs whenever the user navigates to the brand view
-function brandKitAutoFill(){
-  const prof = state.profile || {};
-  if(prof.niche  && !val('bkWhat')) $('bkWhat').value = prof.niche;
-  if(prof.target && !val('bkWho'))  $('bkWho').value  = prof.target;
-}
-
-/* ========= ICP Builder ========= */
-function icpAutoFill(){
-  const p = state.profile || {};
-  if(p.niche   && !val('icpName')) $('icpName').value  = p.niche;
-  if(p.niche   && !val('icpWhat')) $('icpWhat').value  = p.niche;
-  if(p.target  && !val('icpCustomers')) $('icpCustomers').value = p.target;
-}
-
-async function genIcp(){
-  const name      = val('icpName')      || state.profile?.niche || 'your product';
-  const what      = val('icpWhat')      || '';
-  const problem   = val('icpProblem')   || '';
-  const price     = val('icpPrice')     || '';
-  const customers = val('icpCustomers') || '';
-
-  const outEl = $('icpOut');
-  outEl.innerHTML = '<span class="ce-spinner"></span> Building your customer profiles…';
-  try {
-    const data = await xgFetch('/generate', {
-      kind: 'icp',
-      name, what, problem, price, customers,
-      niche: state.profile?.niche || '',
-    });
-    outEl.textContent = data.text;
-    toast('ICP profiles ready');
-  } catch(e) {
-    console.warn('ICP API failed', e);
-    toast('AI unavailable — check connection');
-    outEl.textContent = `Could not reach AI: ${e.message}`;
-  }
-}
-
-/* ========= Product Hunt Launch Kit ========= */
-function phAutoFill(){
-  const p = state.profile || {};
-  if(p.niche && !val('phName'))     $('phName').value     = p.niche;
-  if(p.niche && !val('phOneliner')) $('phOneliner').value = p.niche;
-  if(p.target && !val('phAudience')) $('phAudience').value = p.target;
-}
-
-async function genPhLaunch(){
-  const name     = val('phName')     || state.profile?.niche || 'your product';
-  const oneliner = val('phOneliner') || '';
-  const what     = val('phWhat')     || '';
-  const audience = val('phAudience') || '';
-  const features = val('phFeatures') || '';
-  const goal     = val('phGoal')     || 'top-5 product of the day';
-
-  const outEl = $('phOut');
-  outEl.innerHTML = '<span class="ce-spinner"></span> Assembling your launch kit…';
-  try {
-    const data = await xgFetch('/generate', {
-      kind: 'ph-launch',
-      name, oneliner, what, audience, features, goal,
-      niche: state.profile?.niche || '',
-    });
-    outEl.textContent = data.text;
-    toast('Launch kit ready');
-  } catch(e) {
-    console.warn('PH Launch API failed', e);
-    toast('AI unavailable — check connection');
-    outEl.textContent = `Could not reach AI: ${e.message}`;
-  }
-}
-
-/* ========= Growth Lab ========= */
-function growthAutoFill(){
-  const p = state.profile || {};
-  if(p.stage){
-    const stageMap = {'Pre-seed':'idea','Seed':'mvp','Series A':'pmf','Bootstrapped':'mvp'};
-    const mapped = stageMap[p.stage];
-    if(mapped && $('glStage')) $('glStage').value = mapped;
-  }
-}
-
-async function genGrowthExperiments(){
-  const stage = val('glStage') || 'mvp';
-  const goal  = val('glGoal')  || 'trials';
-  const count = parseInt(val('glCount') || '6');
-  const budget = val('glBudget') || '$0 (bootstrapped)';
-  const channels = [
-    $('glChX')?.checked    && 'X / Twitter',
-    $('glChLI')?.checked   && 'LinkedIn',
-    $('glChEmail')?.checked&& 'Email',
-    $('glChSEO')?.checked  && 'SEO / Blog',
-    $('glChPH')?.checked   && 'Product Hunt',
-    $('glChComm')?.checked && 'Communities',
-  ].filter(Boolean);
-
-  const outEl = $('growthOut');
-  outEl.innerHTML = '<span class="ce-spinner"></span> Designing your growth experiments…';
-  try {
-    const data = await xgFetch('/generate', {
-      kind: 'growth-experiments',
-      stage, goal, channels, budget, count,
-      niche: state.profile?.niche || 'your SaaS product',
-    });
-    outEl.textContent = data.text;
-    toast('Growth experiments ready');
-  } catch(e) {
-    console.warn('Growth experiments API failed', e);
-    toast('AI unavailable — check connection');
-    outEl.textContent = `Could not reach AI: ${e.message}\n\nTry again once you're signed in.`;
-  }
-}
-
-/* ========= AI Growth Pulse (Dashboard) ========= */
-function mdSimple(text){
-  // Minimal safe markdown renderer: bold + newlines only
-  return escapeHtml(text)
-    .replace(/\*\*([^*\n]+)\*\*/g, '<b>$1</b>')
-    .replace(/\n/g, '<br>');
-}
-
-async function runGrowthPulse(){
-  const btn = $('pulseBtn');
-  const out = $('pulseOut');
-  if(!fbAuth?.currentUser){ toast('Sign in to use AI Pulse'); return; }
-  const m = state.metrics;
-  const cur  = m.followers.at(-1)||0;
-  const prev = m.followers.at(-8)||cur;
-  const top  = state.posts.slice().sort((a,b)=>b.impr-a.impr)[0];
-
-  if(btn){ btn.disabled = true; btn.textContent = 'Analysing…'; }
-  out.innerHTML = '<span class="ce-spinner"></span> Reading your metrics…';
-  try {
-    const data = await xgFetch('/generate', {
-      kind: 'pulse',
-      niche:  state.profile?.niche  || 'your product',
-      stage:  state.profile?.stage  || 'mvp',
-      metrics: {
-        followersWoW: pct(cur, prev),
-        impressions7: sum(m.impressions.slice(-7)),
-        engagement7:  avg(m.engagement.slice(-7)),
-        visits7:      sum(m.visits.slice(-7)),
-        topPost: top ? { text: top.text, impr: top.impr } : null,
-      },
-    });
-    out.innerHTML = `<div class="pulse-insights">${mdSimple(data.text)}</div>`;
-    toast('Pulse ready');
-  } catch(e) {
-    out.innerHTML = '<span class="muted small">AI Pulse unavailable — add some metrics first, then try again.</span>';
-    console.warn('Pulse error', e);
-  } finally {
-    if(btn){ btn.disabled = false; btn.textContent = 'Refresh'; }
-  }
-}
-
-/* ========= Email Sequences ========= */
-function emailAutoFill(){
-  const p = state.profile || {};
-  if(p.niche && !val('esName')) $('esName').value = p.niche;
-  if(p.niche && !val('esWhat')) $('esWhat').value = p.niche;
-  if(p.target && !val('esAudience')) $('esAudience').value = p.target;
-}
-
-async function genEmailSequence(){
-  const name     = val('esName') || state.profile?.niche || 'your product';
-  const what     = val('esWhat') || '';
-  const audience = val('esAudience') || '';
-  const goal     = val('esGoal') || 'onboarding';
-  const count    = parseInt(val('esCount') || '5');
-  const tone     = val('esTone') || 'direct and conversational';
-
-  const outEl = $('emailSeqOut');
-  outEl.innerHTML = '<span class="ce-spinner"></span> Writing your email sequence…';
-  try {
-    const data = await xgFetch('/generate', {
-      kind: 'email-sequence',
-      name, what, audience, goal, count, tone,
-      voiceNiche: state.profile?.niche || '',
-      voiceStyle: _ce?.voice?.style || '',
-    });
-    outEl.textContent = data.text;
-    toast('Email sequence ready');
-  } catch(e) {
-    console.warn('Email sequence API failed', e);
-    toast('AI unavailable — showing template');
-    outEl.textContent = emailSeqFallback(name, goal, count);
-  }
-}
-
-function emailSeqFallback(name, goal, count){
-  const goalLabel = {onboarding:'Onboarding',launch:'Launch',nurture:'Nurture',reEngage:'Re-Engagement',waitlist:'Waitlist'}[goal] || goal;
-  const emails = [];
-  for(let i=1;i<=count;i++){
-    emails.push(`---\n## Email ${i}: ${goalLabel} Email ${i}\n**Send:** Day ${(i-1)*2}\n**Subject:** ${i===1?`Welcome to ${name}`:`Your ${goalLabel} update #${i}`}\n**Preview text:** Here's what you need to know right now.\n\nHi,\n\nThis is where your email body goes. Keep it under 200 words, one CTA.\n\n[CTA: ${i===1?'Get started →':'Continue →'}]\n\n**P.S.** More value drops in the next email.`);
-  }
-  return emails.join('\n\n');
-}
-
-/* ========= Saved Library ========= */
-let _libFilter = 'all';
-
-function saveToLibrary(type, label, content){
-  if(!content || content.length < 20){ toast('Nothing to save yet — generate content first'); return; }
-  if(!state.library) state.library = [];
-  const item = {
-    id: Date.now().toString(36) + Math.random().toString(36).slice(2),
-    type,
-    label: label || type,
-    content,
-    date: new Date().toISOString().slice(0,10)
-  };
-  state.library.unshift(item);
-  save();
-  toast('Saved to Library ✓');
-}
-
-function deleteFromLibrary(id){
-  if(!confirm('Delete this saved item?')) return;
-  state.library = (state.library||[]).filter(x=>x.id!==id);
-  save();
-  renderLibrary();
-  toast('Deleted');
-}
-
-function setLibFilter(f){
-  _libFilter = f;
-  document.querySelectorAll('[data-lib-filter]').forEach(b=>{
-    b.classList.toggle('active', b.dataset.libFilter === f);
-  });
-  renderLibrary();
-}
-
-const LIB_TYPE_LABELS = { email:'Email', campaign:'Campaign', copy:'Website Copy', brand:'Brand Kit', growth:'Growth Lab', icp:'ICP', ph:'PH Launch' };
-
-function renderLibrary(){
-  const el = $('libItems'); if(!el) return;
-  if(!state.library) state.library = [];
-  const items = state.library.filter(x => _libFilter === 'all' || x.type === _libFilter);
-  if(!items.length){
-    el.innerHTML = `<div class="lib-empty"><div class="lib-empty-icon">📚</div><p><b>No saved items${_libFilter !== 'all' ? ' in this category' : ''}</b></p><p class="muted small">Generate content in any module and click Save to keep it here, synced to your account.</p></div>`;
-    return;
-  }
-  el.innerHTML = items.map(item=>{
-    const badge = LIB_TYPE_LABELS[item.type] || item.type;
-    const preview = escapeHtml((item.content||'').slice(0,280)) + (item.content.length>280?'…':'');
-    const contentJson = JSON.stringify(item.content);
-    return `<div class="lib-card">
-      <div class="lib-card-head">
-        <span class="lib-badge lib-badge-${item.type}">${badge} · ${escapeHtml(item.label)}</span>
-        <span class="muted small">${item.date}</span>
-      </div>
-      <pre class="lib-preview">${preview}</pre>
-      <div class="lib-actions">
-        <button class="btn ghost small" onclick="navigator.clipboard.writeText(${contentJson}).then(()=>toast('Copied'))">Copy all</button>
-        <button class="btn ghost small lib-del" onclick="deleteFromLibrary('${item.id}')">Delete</button>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-async function genCopy(){
-  const n=val('wName')||'YourStartup';
-  const w=val('wWhat')||'AI bookkeeping copilot for SMBs';
-  const bio=val('wBio')||'Founder. Builder. Shipper.';
-  const cta=val('wCTA')||'Book a 15-min demo';
-
-  const outEl = $('copyOut');
-  outEl.innerHTML = '<span class="ce-spinner"></span> Writing your landing-page copy…';
-  try {
-    const data = await xgFetch('/generate', {
-      kind: 'copy',
-      name: n, what: w, bio, cta,
-      niche: state.profile?.niche || '',
-      voiceNiche: _ce.voice?.niche || '', voiceStyle: _ce.voice?.style || '',
-    });
-    outEl.textContent = data.text;
-    toast('Copy generated');
-    return;
-  } catch(e){
-    console.warn('Copy API failed, falling back', e);
-    toast('Using template fallback — ' + (e.message||'API error'));
-  }
-
-  const out = `## Hero
-# ${w}.
-${n} helps you cut marketing busywork by 80%, without an agency.
-[${cta}]
-
-## About
-${bio} I built ${n} after watching teams lose weeks to manual ops. Now ${n} runs the boring parts so you can ship.
-
-## Services
-- Setup in <5 minutes (no integrations to babysit)
-- Daily summaries: what changed, what's at risk, what to do
-- Investor-ready exports in 1 click
-
-## Testimonials
-- "Replaced 3 tools and an analyst.", Founder, SaaS (seed)
-- "First week saved me 9 hours.", Solo founder, e-com
-
-## CTA
-[${cta}]  ·  No card. Cancel anytime.
-
-## Framer/HTML Snippet
-\`\`\`html
-<section style="padding:80px 24px;text-align:center">
-  <h1 style="font-size:56px;margin:0 0 12px">${w}.</h1>
-  <p style="font-size:18px;color:#475569;max-width:640px;margin:0 auto 24px">
-    ${n} helps you cut marketing busywork by 80%, without an agency.
-  </p>
-  <a href="#cta" style="background:#111;color:#fff;padding:14px 22px;border-radius:10px;text-decoration:none">${cta}</a>
-</section>
-\`\`\`
-
-## Next Steps
-- Drop into Framer. Replace placeholders. Ship today.
-
-## Upgrade?
-- Conversion audit ($79): we rewrite the hero + 3 sections for your funnel.`;
-  $('copyOut').textContent = out;
-  toast('Copy generated');
-}
-
-async function genAudit(){
-  const handle = val('aHandle')||'@yourhandle';
-  const tweets = (val('aTweets')||'').split('\n').map(s=>s.trim()).filter(Boolean).slice(0,5);
-  if(!tweets.length){ $('auditOut').textContent='Paste at least one tweet on the left.'; return; }
-
-  const outEl = $('auditOut');
-  outEl.innerHTML = '<span class="ce-spinner"></span> Auditing your posts…';
-  try {
-    const data = await xgFetch('/generate', {
-      kind: 'audit',
-      handle, posts: tweets,
-      niche: state.profile?.niche || '',
-    });
-    outEl.textContent = data.text;
-    toast('Audit ready');
-    return;
-  } catch(e){
-    console.warn('Audit API failed, falling back', e);
-    toast('Using template fallback — ' + (e.message||'API error'));
-  }
-
-  const score = (t)=>{
-    let s=50;
-    if(/^[A-Z]/.test(t)) s+=2;
-    if(t.length<280) s+=5;
-    if(/\?/.test(t)) s+=8;        // questions drive replies
-    if(/\d/.test(t)) s+=6;        // numbers add specificity
-    if(/^(I|We|Most|Stop|Here|If)/i.test(t)) s+=10; // strong hooks
-    if(t.split(' ').length<14) s+=6; // brevity
-    if(/!{2,}/.test(t)) s-=5;
-    return Math.min(99, Math.max(20,s));
-  };
-  const ab = (t)=>[
-    `A: "Most founders get this wrong: " + ${shortify(t)}`,
-    `B: "I tested ${Math.floor(Math.random()*5+3)} versions. Only one worked: " + ${shortify(t)}`
-  ].join('\n   ');
-  const out = `## Audit Report, ${handle}
-
-## Scorecard
-${tweets.map((t,i)=>`Tweet ${i+1}: ${score(t)}/100, ${t.length} chars`).join('\n')}
-Avg: ${(tweets.map(score).reduce((a,b)=>a+b,0)/tweets.length).toFixed(0)}/100
-
-## Hook Diagnosis
-${tweets.map((t,i)=>`- T${i+1}: ${diagnose(t)}`).join('\n')}
-
-## A/B Variants
-${tweets.map((t,i)=>`T${i+1}\n   ${ab(t)}`).join('\n\n')}
-
-## Growth Hacks (next 7 days)
-- Reply within 30 min on 10 in-niche posts daily (compounds reach 3-5x)
-- Pin your highest-engagement thread; rotate weekly
-- Quote-tweet 1 contrarian take/day with a specific receipt
-- Convert your top tweet into a 5-tweet thread by Friday
-- DM 5 warm followers with a 1-line ask (no pitch)
-
-## Weekly Action Plan
-Mon: Ship 3 hooks · Reply sprint
-Tue: Long thread (8–10) · Poll
-Wed: Contrarian take · Founder story
-Thu: Listicle · Reply sprint
-Fri: Recap thread · CTA push
-Sat: Evergreen + meme
-Sun: Reflection + tease
-
-## Upgrade?
-- Premium Audit ($49): manual review of last 30 posts + new hooks for top 5.`;
-  $('auditOut').textContent = out;
-  toast('Audit ready');
-}
-
-function diagnose(t){
-  const issues=[];
-  if(t.length>240) issues.push('too long for hook, trim to <140');
-  if(!/\?/.test(t) && !/^[A-Z]/.test(t)) issues.push('weak opener, start with I/We/Most/Stop/Here/If');
-  if(!/\d/.test(t)) issues.push('add a number to add specificity');
-  if(/!{2,}/.test(t)) issues.push('drop the hype punctuation');
-  if(!issues.length) return 'Solid. Try an A/B with a stronger hook variant.';
-  return issues.join('; ');
-}
-function shortify(t){ return JSON.stringify(t.length>120? t.slice(0,117)+'…' : t); }
-
-/* ========= Reports / Exports ========= */
-async function buildReport(){
-  const m = state.metrics;
-  const cur = m.followers.at(-1)||0, prev = m.followers.at(-8)||cur;
-  const impr7 = sum(m.impressions.slice(-7));
-  const eng7 = avg(m.engagement.slice(-7));
-  const visits7 = sum(m.visits.slice(-7));
-  const top = state.posts.slice().sort((a,b)=>b.impr-a.impr)[0];
-
-  $('reportOut').innerHTML = '<span class="ce-spinner"></span> Building your weekly snapshot…';
-
-  // Fetch AI narrative (best-effort; report still works without it)
-  let narrative = '';
-  try {
-    const data = await xgFetch('/generate', {
-      kind: 'report',
-      niche: state.profile?.niche || 'your product',
-      metrics: {
-        followersWoW: pct(cur, prev),
-        impressions7: impr7,
-        engagement7: eng7,
-        visits7,
-        topPost: top ? { text: top.text, impr: top.impr, likes: top.likes } : null,
-      },
-    });
-    narrative = (data.text||'').trim();
-  } catch(e){
-    console.warn('Report narrative skipped', e);
-  }
-
-  const md = `# Weekly Snapshot, ${state.profile?.niche||'Your Startup'}
-Date: ${new Date().toISOString().slice(0,10)}
-${narrative ? `\n## What Happened This Week\n${narrative}\n` : ''}
-## Headlines
-- Followers: ${fmt(cur)} (${(pct(cur,prev)).toFixed(1)}% WoW)
-- Impressions (7d): ${fmt(impr7)}
-- Engagement rate (7d): ${eng7.toFixed(2)}%
-- Profile visits (7d): ${fmt(sum(m.visits.slice(-7)))}
-
-## Top Post
-${top? `"${top.text}", ${fmt(top.impr)} impressions, ${top.likes} likes` : 'No posts logged.'}
-
-## Goals
-${state.goals.map(g=>`- ${g.label}: ${fmt(g.current)} / ${fmt(g.target)} (${((g.current/g.target)*100).toFixed(0)}%)`).join('\n')||'- (none set)'}
-
-## Campaigns
-${state.campaigns.map(c=>`- ${c.name}: $${c.spend} spend · ${c.leads} leads · ${c.status}`).join('\n')||'- (none)'}
-
-## Next Week's Plan
-- Ship 3 threads (Tue/Thu/Sat 9am ET)
-- Daily reply sprint (10 in-niche replies, 30 min after their post)
-- Email #2 to warm list with 1 receipt screenshot
-`;
-  $('reportOut').textContent = md;
-  // Populate side cards
-  const r = state.range || 7;
-  const totalImpr = sum(m.impressions.slice(-r));
-  const totalVisits = sum(m.visits.slice(-r));
-  const totalLeads = state.campaigns.reduce((a,c)=>a+(c.leads||0),0);
-  const spend = state.campaigns.reduce((a,c)=>a+(c.spend||0),0);
-  const cpl = totalLeads? '$'+(spend/totalLeads).toFixed(2) : '—';
-  $('invKPIs').innerHTML = `
-    <div class="row" style="flex-direction:column;gap:6px">
-      <div><b>${fmt(cur)}</b> followers <span class="muted">· ${pct(cur,prev).toFixed(1)}% WoW</span></div>
-      <div><b>${fmt(totalImpr)}</b> impressions / ${r}d</div>
-      <div><b>${eng7.toFixed(2)}%</b> engagement rate</div>
-      <div><b>${fmt(totalVisits)}</b> profile visits</div>
-      <div><b>${totalLeads}</b> leads · CPL ${cpl}</div>
-    </div>`;
-  // Channel mix from campaigns (best-effort guess by name)
-  const mix = {X:0, LinkedIn:0, Email:0};
-  state.campaigns.forEach(c=>{
-    const k = /linkedin/i.test(c.name)?'LinkedIn':/email|webinar/i.test(c.name)?'Email':'X';
-    mix[k] += (c.leads||0)+1;
-  });
-  const tot = Math.max(1, mix.X+mix.LinkedIn+mix.Email);
-  $('channelMix').innerHTML = ['X','LinkedIn','Email'].map(k=>{
-    const p = (mix[k]/tot*100).toFixed(0);
-    return `<div style="margin:6px 0"><div class="row" style="justify-content:space-between"><span>${k}</span><span class="muted">${p}%</span></div><div class="bar-track"><div class="bar-fill" style="width:${p}%"></div></div></div>`;
-  }).join('');
-  toast('Report ready');
-}
-
-function downloadReport(){
-  const md = $('reportOut').innerText;
-  if(!md || md.startsWith('Click ')){ toast('Build a report first'); return; }
-  download(new Blob([md],{type:'text/markdown'}), `xgrowth-snapshot-${new Date().toISOString().slice(0,10)}.md`);
-}
-
-function mockSend(){
-  const to = val('repEmail');
-  if(!to || !/.+@.+\..+/.test(to)){ toast('Enter a valid email'); return; }
-  toast(`Snapshot queued for ${to} (demo)`);
-}
-
-function exportJSON(){
-  const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
-  download(blob, 'xgrowth-data.json');
-}
-function exportCSV(){
-  const rows = [['day','followers','impressions','engagement_rate','profile_visits']];
-  for(let i=0;i<state.metrics.followers.length;i++){
-    rows.push([i+1, state.metrics.followers[i], state.metrics.impressions[i], state.metrics.engagement[i], state.metrics.visits[i]]);
-  }
-  const csv = rows.map(r=>r.join(',')).join('\n');
-  download(new Blob([csv],{type:'text/csv'}), 'xgrowth-metrics.csv');
-}
-function download(blob, name){
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob); a.download = name; a.click();
-  URL.revokeObjectURL(a.href);
-}
 
 /* ========= Mobile drawer ========= */
 function toggleSide(force){
@@ -2101,11 +1039,9 @@ function handleGoogleCredential(resp){
   applyUser();
   toast(`Welcome, ${currentUser.name.split(' ')[0]}`);
   // Also sign into Firebase using the same Google credential
-  setSync('syncing');
   const cred = firebase.auth.GoogleAuthProvider.credential(resp.credential);
   fbAuth.signInWithCredential(cred).catch(err=>{
     console.error('Firebase sign-in failed', err);
-    setSync('error');
     toast('Cloud sync unavailable');
   });
   // loadFromCloud is triggered by onAuthStateChanged below
@@ -2135,7 +1071,6 @@ async function startGoogleSignIn(useRedirect){
   const provider = new firebase.auth.GoogleAuthProvider();
   provider.setCustomParameters({prompt:'select_account'});
   try{
-    setSync('syncing');
     if(useRedirect){
       await fbAuth.signInWithRedirect(provider);
       return;
@@ -2143,22 +1078,20 @@ async function startGoogleSignIn(useRedirect){
     await fbAuth.signInWithPopup(provider);
   }catch(err){
     if(err && err.code === 'auth/popup-blocked'){
-      // Popup blocked, fall back to redirect
       try{
         await fbAuth.signInWithRedirect(provider);
       }catch(e2){
         console.error(e2); toast('Sign-in failed: '+(e2.message||e2.code));
       }
     } else if(err && err.code === 'auth/popup-closed-by-user'){
-      setSync('offline');
+      // user dismissed — no-op
     } else {
       console.error('Sign-in error', err);
       toast('Sign-in failed: '+(err.message||err.code));
-      setSync('error');
     }
   }
 }
-// Expose for inline onclick / wrapping the "Sign in" pill
+// Expose for inline onclick
 window.startGoogleSignIn = startGoogleSignIn;
 function applyUser(){
   if(currentUser){
@@ -2181,7 +1114,6 @@ function signOut(){
   cloudLoaded = false;
   localStorage.removeItem(USER_KEY);
   fbAuth.signOut().catch(()=>{}).finally(()=>{
-    // Redirect to landing page after signout
     window.location.href = '/';
   });
 }
@@ -2203,7 +1135,6 @@ function authGateError(msg){
 let signinTriggered = false;
 fbAuth.onAuthStateChanged(user=>{
   if(user){
-    // Signed in, reveal the app
     document.body.classList.add('authed');
     if(!currentUser){
       currentUser = {
@@ -2216,43 +1147,34 @@ fbAuth.onAuthStateChanged(user=>{
     }
     applyUser();
     loadFromCloud().then(()=>{
-      // After cloud load, show welcome only if no profile exists anywhere
       if(!state.profile){ openWelcome(); }
     });
-    ceInit(); // load CE history + voice prefs
+    ceInit();
   } else {
     document.body.classList.remove('authed');
     cloudLoaded = false;
-    setSync('offline');
-    // Only act on a confirmed signed-out state (after any pending redirect result has resolved).
     if(redirectResultDone){
       runAuthGateLogic();
     } else {
-      // Show the loading spinner while Firebase is still processing the redirect.
       setAuthState('loading');
     }
   }
 });
 
 function runAuthGateLogic(){
-  if(fbAuth.currentUser) return; // signed in: nothing to do
+  if(fbAuth.currentUser) return;
   if(wantsSignin && !signinTriggered){
-    // Came from a marketing CTA: trigger Google redirect while showing "Redirecting"
     signinTriggered = true;
     setAuthState('redirecting');
     startGoogleSignIn(true).catch(err=>{
       authGateError('Could not start sign-in: ' + (err.message||err.code));
     });
   } else {
-    // User landed on /app/ without an active sign-in attempt and isn't authenticated.
-    // Most likely: pressed back from Google's sign-in page, or visited /app/ directly.
-    // Bounce to the landing page for a clean back-button history.
     window.location.replace('/');
   }
 }
 
 /* ========= Init ========= */
-window.addEventListener('resize', ()=>{ renderKPIs(); renderBars(); renderVelocity(); });
 initGoogle();
 // Show loading state until Firebase auth determines whether the user is signed in
 setAuthState('loading');
