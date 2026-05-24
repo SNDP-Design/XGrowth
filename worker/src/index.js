@@ -465,10 +465,13 @@ async function handlePreview(body, origin, allowed) {
       /<meta[^>]+content=["']([^"']{10,})["'][^>]+name=["']description["']/i,
     ]);
 
+    // Decode all HTML entities — handles &amp; &lt; &#39; &#039; &#x27; etc.
     const decode = s => s
-      .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
-      .replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&#x27;/g, "'")
-      .replace(/&nbsp;/g, ' ').trim();
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+      .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(+n))
+      .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCharCode(parseInt(h, 16)))
+      .replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&nbsp;/g, ' ').trim();
 
     return json({ ok: true, title: decode(rawTitle), description: decode(rawDesc) }, 200, origin, allowed);
   } catch (e) {

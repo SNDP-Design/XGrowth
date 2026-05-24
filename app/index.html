@@ -111,14 +111,7 @@
           <div id="ceModeUrl" class="ce-mode-panel active">
             <div class="row" style="gap:10px;align-items:stretch;flex-wrap:wrap">
               <input id="ceUrlInput" type="url" placeholder="https://techcrunch.com/2025/..." style="flex:1;min-width:180px"/>
-              <button class="btn" id="ceUrlBtn" onclick="ceFetchUrlPreview()">Get article →</button>
-            </div>
-            <div id="ceUrlPreview" style="display:none" class="ce-url-preview">
-              <label style="font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px">Article title</label>
-              <input id="ceUrlTitle" type="text" placeholder="Article title…" style="width:100%;margin-bottom:10px"/>
-              <label style="font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px">Context (optional)</label>
-              <input id="ceUrlContext" type="text" placeholder="What's the key insight from this article?" style="width:100%;margin-bottom:12px"/>
-              <button class="btn" onclick="ceGenerateFromUrl()">Generate posts →</button>
+              <button class="btn" id="ceUrlBtn" onclick="ceGenerateFromUrl()">Generate →</button>
             </div>
           </div>
           <div id="ceModeWrite" class="ce-mode-panel">

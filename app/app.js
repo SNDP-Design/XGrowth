@@ -363,30 +363,30 @@ function ceRelDate(iso){
 
 /* ── URL mode ─────────────────────────────────────────────────────────── */
 
-async function ceFetchUrlPreview(){
+async function ceGenerateFromUrl(){
   const url = $('ceUrlInput')?.value?.trim();
-  if(!url||!url.startsWith('http')){ toast('Paste a valid URL first'); return; }
+  if(!url || !url.startsWith('http')){ toast('Paste a valid URL first'); $('ceUrlInput')?.focus(); return; }
   const btn = $('ceUrlBtn');
-  if(btn){ btn.disabled=true; btn.innerHTML='<span class="ce-spinner"></span>Fetching…'; }
+  if(btn){ btn.disabled=true; btn.innerHTML='<span class="ce-spinner"></span>Generating…'; }
+
+  let title = url, angle = '';
   try {
     const data = await xgFetch('/preview', { url });
-    if(data.title){ $('ceUrlTitle').value=data.title; $('ceUrlContext').value=data.description||''; }
-    else toast('Could not extract title — enter it manually');
-  } catch(e){ toast(e.message?.includes('Sign in') ? 'Sign in first' : 'Could not fetch — enter details manually'); }
-  $('ceUrlPreview').style.display='block';
-  if(btn){ btn.disabled=false; btn.innerHTML='Get article →'; }
-}
+    if(data.title) title = data.title;
+    if(data.description) angle = data.description;
+  } catch(e){ /* fall back to URL as title */ }
 
-async function ceGenerateFromUrl(){
-  const title = $('ceUrlTitle')?.value?.trim();
-  const context = $('ceUrlContext')?.value?.trim();
-  if(!title){ toast('Enter the article title first'); $('ceUrlTitle')?.focus(); return; }
-  _ce.topic = title; _ce.article = { title, angle:context||'', url:$('ceUrlInput')?.value?.trim()||'' };
+  _ce.topic = title;
+  _ce.article = { title, angle, url };
   const pickedAt = Date.now(); _ce._pickedAt = pickedAt;
   ['linkedin','x','threads','instagram','reddit'].forEach(p => { _ce.posts[p] = {text:'',loading:false,generated:false}; });
-  $('ceTrendContext').innerHTML = `<h4>${ceEsc(title)}</h4>${context?`<p>${ceEsc(context)}</p>`:''}`;
+  $('ceTrendContext').innerHTML = `<h4>${ceEsc(title)}</h4>${angle?`<p>${ceEsc(angle)}</p>`:''}`;
   $('ceTrendContext').style.display = '';
-  ceShowControls(); ceGenerateCurrent(pickedAt);
+  ceShowControls();
+  ceGenerateCurrent(pickedAt);
+
+  if(btn){ btn.disabled=false; btn.innerHTML='Generate →'; }
+  if(window.innerWidth<=1100) $('ceStep3')?.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 /* ── Write mode ───────────────────────────────────────────────────────── */
@@ -1033,7 +1033,7 @@ function ceCopyAttr(btn){
 document.addEventListener('keydown',(e)=>{
   if(e.key!=='Enter') return;
   const id=document.activeElement?.id;
-  if(id==='ceUrlInput'){ e.preventDefault(); ceFetchUrlPreview(); }
+  if(id==='ceUrlInput'){ e.preventDefault(); ceGenerateFromUrl(); }
   else if(id==='ceXProfileInput'){ e.preventDefault(); ceFetchXProfile(); }
 });
 
