@@ -326,8 +326,9 @@ const _ce = {
   inputMode: 'url',
   topic: '',
   article: null,
-  platform: 'linkedin',
-  postType: 'hot-take',
+  platform: 'linkedin',        // legacy compat — primary state is now per-card
+  postType: 'hot-take',        // legacy compat
+  postTypes: { linkedin:'hot-take', x:'hot-take', threads:'hot-take', instagram:'hot-take', reddit:'hot-take' },
   threadMode: false,
   refineInstruction: '',
   posts: {},
@@ -335,11 +336,13 @@ const _ce = {
   history: [],
   historyOpen: false,
   _pickedAt: null,
+  _platGen: {},                // per-platform generation counter for race-guard
   _articles: [],
   _xPosts: [],
 };
 ['linkedin','x','threads','instagram','reddit'].forEach(p => {
   _ce.posts[p] = { text: '', loading: false, generated: false };
+  _ce._platGen[p] = 0;
 });
 
 /* ── Input mode switching ─────────────────────────────────────────────── */
@@ -379,11 +382,12 @@ async function ceGenerateFromUrl(){
   _ce.topic = title;
   _ce.article = { title, angle, url };
   const pickedAt = Date.now(); _ce._pickedAt = pickedAt;
-  ['linkedin','x','threads','instagram','reddit'].forEach(p => { _ce.posts[p] = {text:'',loading:false,generated:false}; });
+  ['linkedin','x','threads','instagram','reddit'].forEach(p => { _ce.posts[p] = {text:'',loading:true,generated:false}; });
   $('ceTrendContext').innerHTML = `<h4>${ceEsc(title)}</h4>${angle?`<p>${ceEsc(angle)}</p>`:''}`;
   $('ceTrendContext').style.display = '';
   ceShowControls();
-  ceGenerateCurrent(pickedAt);
+  ceRenderAllPosts();
+  ['linkedin','x','threads','instagram','reddit'].forEach(p => ceGeneratePlatform(p, pickedAt));
 
   if(btn){ btn.disabled=false; btn.innerHTML='Generate →'; }
   if(window.innerWidth<=1100) $('ceStep3')?.scrollIntoView({behavior:'smooth',block:'start'});
@@ -398,9 +402,11 @@ async function ceGenerateFromWrite(){
   _ce.topic = topic||'startup insight';
   _ce.article = { title:notes, angle:'', url:'', inputMode:'freewrite' };
   const pickedAt = Date.now(); _ce._pickedAt = pickedAt;
-  ['linkedin','x','threads','instagram','reddit'].forEach(p => { _ce.posts[p] = {text:'',loading:false,generated:false}; });
+  ['linkedin','x','threads','instagram','reddit'].forEach(p => { _ce.posts[p] = {text:'',loading:true,generated:false}; });
   $('ceTrendContext').style.display='none';
-  ceShowControls(); ceGenerateCurrent(pickedAt);
+  ceShowControls();
+  ceRenderAllPosts();
+  ['linkedin','x','threads','instagram','reddit'].forEach(p => ceGeneratePlatform(p, pickedAt));
 }
 
 /* ── X Profile mode ───────────────────────────────────────────────────── */
@@ -468,80 +474,83 @@ function ceUseXPost(idx){
     <p style="font-size:12px;color:var(--muted);margin:4px 0 0">Repurposing from X &nbsp;·&nbsp; <a href="${ceEsc(p.url)}" target="_blank" rel="noopener" style="color:var(--muted);text-decoration:underline">View original ↗</a></p>`;
   $('ceTrendContext').style.display='';
   ceShowControls();
-  ceGenerateCurrent(pickedAt);
+  ceRenderAllPosts();
+  ['linkedin','x','threads','instagram','reddit'].forEach(pl => ceGeneratePlatform(pl, pickedAt));
   if(window.innerWidth<=1100) $('ceStep3')?.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 /* ── Output controls ──────────────────────────────────────────────────── */
 
 function ceShowControls(){
-  $('ceTypeRow').style.display=''; $('cePlatformTabs').style.display=''; $('ceEmpty').style.display='none';
-  const xRow = $('ceXModeRow');
-  if(xRow) xRow.style.display = _ce.platform === 'x' ? '' : 'none';
+  $('ceEmpty').style.display='none';
 }
 function ceResetOutput(){
-  $('ceTypeRow').style.display='none'; $('cePlatformTabs').style.display='none';
-  const xRow = $('ceXModeRow'); if(xRow) xRow.style.display='none';
+  const _unused = null; // previously cleared global tabs — now removed
   $('ceTrendContext').style.display='none'; $('ceEmpty').style.display=''; $('ceGenerated').innerHTML='';
   ['linkedin','x','threads','instagram','reddit'].forEach(p => { _ce.posts[p] = {text:'',loading:false,generated:false}; });
   _ce.threadMode = false;
-  document.querySelectorAll('.ce-xmode-btn').forEach(b => b.classList.toggle('active', b.dataset.xmode==='single'));
 }
 
-/* ── Platform + type switching ────────────────────────────────────────── */
+/* ── Platform type switching (per-card) ───────────────────────────────── */
 
-function ceSwitchPlatform(platform){
-  _ce.platform = platform;
-  document.querySelectorAll('.ce-plat-tab').forEach(b => b.classList.toggle('active', b.dataset.plat===platform));
-  // Show Single/Thread toggle only on X
-  const xRow = $('ceXModeRow');
-  if(xRow) xRow.style.display = platform === 'x' ? '' : 'none';
-  // Reset thread mode when leaving X
-  if(platform !== 'x' && _ce.threadMode){
-    _ce.threadMode = false;
-    document.querySelectorAll('.ce-xmode-btn').forEach(b => b.classList.toggle('active', b.dataset.xmode === 'single'));
+function ceSetPlatformType(platform, type){
+  _ce.postTypes[platform] = type;
+  _ce.refineInstruction = '';
+  if(_ce.article){
+    _ce.posts[platform] = {text:'',loading:true,generated:false};
+    _ce._platGen[platform] = (_ce._platGen[platform]||0) + 1;
+    ceRenderPlatformCard(platform);
+    ceGeneratePlatform(platform, _ce._pickedAt);
   }
-  if(_ce.article && !_ce.posts[platform].generated && !_ce.posts[platform].loading){
-    ceGenerateCurrent(_ce._pickedAt);
-  } else { ceRenderCurrentPost(); }
 }
 
 function ceSetXMode(mode){
   const isThread = mode === 'thread';
   if(_ce.threadMode === isThread) return;
   _ce.threadMode = isThread;
-  document.querySelectorAll('.ce-xmode-btn').forEach(b => b.classList.toggle('active', b.dataset.xmode === mode));
-  // Clear cached post and regenerate
   if(_ce.article){
-    _ce.posts['x'] = { text: '', loading: false, generated: false };
-    ceGenerateCurrent(_ce._pickedAt);
-  }
-}
-
-function ceSetType(type){
-  _ce.postType = type;
-  _ce.refineInstruction = ''; // clear any active refine nudge
-  document.querySelectorAll('.ce-type-chip').forEach(b => b.classList.toggle('active', b.dataset.type===type));
-  if(_ce.article){
-    _ce.posts[_ce.platform] = {text:'',loading:false,generated:false};
-    ceGenerateCurrent(_ce._pickedAt);
+    _ce.posts['x'] = { text:'', loading:true, generated:false };
+    _ce._platGen['x'] = (_ce._platGen['x']||0) + 1;
+    ceRenderPlatformCard('x');
+    ceGeneratePlatform('x', _ce._pickedAt);
+  } else {
+    ceRenderPlatformCard('x'); // just refresh toggle button states
   }
 }
 
 /* ── Post generation ──────────────────────────────────────────────────── */
 
+// Generate a single platform's post (async, updates its card when done)
+async function ceGeneratePlatform(platform, articlePickedAt){
+  const article = _ce.article;
+  if(!article) return;
+  const myGen = _ce._platGen[platform];
+  const type = _ce.postTypes[platform] || 'hot-take';
+  const text = await ceCallAPI(platform, article, type);
+  // Stale-check: abort if article changed OR a newer gen for this platform started
+  if(_ce._pickedAt !== articlePickedAt) return;
+  if(_ce._platGen[platform] !== myGen) return;
+  _ce.posts[platform].text = text;
+  _ce.posts[platform].loading = false;
+  _ce.posts[platform].generated = true;
+  ceRenderPlatformCard(platform);
+  ceSaveToHistory(platform, text, type, article);
+}
+
+// Legacy shim — kept for any remaining call sites
 async function ceGenerateCurrent(pickedAt){
   const platform = _ce.platform, article = _ce.article;
   if(!article) return;
   _ce.posts[platform].loading=true; _ce.posts[platform].generated=false;
-  ceRenderCurrentPost();
+  _ce._platGen[platform] = (_ce._platGen[platform]||0) + 1;
+  ceRenderPlatformCard(platform);
 
-  const text = await ceCallAPI(platform, article, _ce.postType);
-  if(_ce._pickedAt !== pickedAt) return; // race guard
+  const text = await ceCallAPI(platform, article, _ce.postTypes[platform]||_ce.postType);
+  if(_ce._pickedAt !== pickedAt) return;
 
   _ce.posts[platform].text=text; _ce.posts[platform].loading=false; _ce.posts[platform].generated=true;
-  ceRenderCurrentPost();
-  ceSaveToHistory(platform, text, _ce.postType, article);
+  ceRenderPlatformCard(platform);
+  ceSaveToHistory(platform, text, _ce.postTypes[platform]||_ce.postType, article);
 }
 
 async function ceCallAPI(platform, article, type){
@@ -565,17 +574,18 @@ async function ceCallAPI(platform, article, type){
   } catch(e){ console.warn('CE API error', e); toast('Generation failed — ' + (e.message || 'please try again')); return ceFallback(platform, article); }
 }
 
-// Regenerate current platform's post (optionally with a refine instruction)
-function ceRegenerate(instruction){
+// Regenerate a specific platform's post
+function ceRegeneratePlatform(platform, instruction){
   _ce.refineInstruction = instruction || '';
-  _ce.posts[_ce.platform] = { text:'', loading:false, generated:false };
-  ceGenerateCurrent(_ce._pickedAt);
+  _ce.posts[platform] = { text:'', loading:true, generated:false };
+  _ce._platGen[platform] = (_ce._platGen[platform]||0) + 1;
+  ceRenderPlatformCard(platform);
+  ceGeneratePlatform(platform, _ce._pickedAt);
 }
 
-// Clear refine instruction and regenerate fresh
-function ceRegenerateFresh(){
-  ceRegenerate('');
-}
+// Legacy shims
+function ceRegenerate(instruction){ ceRegeneratePlatform(_ce.platform, instruction); }
+function ceRegenerateFresh(){ ceRegeneratePlatform(_ce.platform, ''); }
 
 function ceFallback(platform, article){
   const title = article?.title||'Worth a read.';
@@ -598,9 +608,131 @@ const CE_PLAT_INFO = {
 
 };
 
-function ceRenderCurrentPost(){
-  const p = _ce.posts[_ce.platform];
-  $('ceGenerated').innerHTML = cePostCard(_ce.platform, p.loading, p.text||'');
+// ── Rendering ─────────────────────────────────────────────────────────────
+
+// Render all 5 platform sections into #ceGenerated
+function ceRenderAllPosts(){
+  const gen = $('ceGenerated');
+  if(!gen) return;
+  const platforms = ['linkedin','x','threads','instagram','reddit'];
+  const anyActive = platforms.some(p => _ce.posts[p].loading || _ce.posts[p].generated);
+  if(!anyActive){ gen.innerHTML=''; return; }
+  $('ceEmpty').style.display='none';
+  gen.innerHTML = platforms.map(p => cePlatformSectionHTML(p)).join('');
+}
+
+// Re-render a single platform card in place
+function ceRenderPlatformCard(platform){
+  const existing = document.getElementById(`cePlatSec-${platform}`);
+  if(!existing){ ceRenderAllPosts(); return; }
+  const tmp = document.createElement('div');
+  tmp.innerHTML = cePlatformSectionHTML(platform);
+  existing.replaceWith(tmp.firstElementChild);
+}
+
+// Legacy shim — kept for any remaining call sites
+function ceRenderCurrentPost(){ ceRenderAllPosts(); }
+
+// Full platform section card HTML (header + type chips + content + footer)
+function cePlatformSectionHTML(platform){
+  const info = CE_PLAT_INFO[platform]||CE_PLAT_INFO.linkedin;
+  const p = _ce.posts[platform];
+  const currentType = _ce.postTypes[platform]||'hot-take';
+
+  const TYPES = [
+    {key:'hot-take',label:'Hot Take'},{key:'story',label:'Story'},{key:'teach',label:'Teach'},
+    {key:'data',label:'Data-Led'},{key:'question',label:'Question'},{key:'founder',label:'Founder'},
+  ];
+  const typeChips = TYPES.map(t =>
+    `<button class="ce-type-chip${t.key===currentType?' active':''}" onclick="ceSetPlatformType('${platform}','${t.key}')">${t.label}</button>`
+  ).join('');
+
+  const xModeRow = platform==='x' ? `<div class="ce-xmode-row" style="margin:0 0 14px">
+    <span class="ce-style-label">Format:</span>
+    <button class="ce-xmode-btn${!_ce.threadMode?' active':''}" onclick="ceSetXMode('single')">Single post</button>
+    <button class="ce-xmode-btn${_ce.threadMode?' active':''}" onclick="ceSetXMode('thread')">Thread</button>
+  </div>` : '';
+
+  // Post body
+  let body = '';
+  if(p.loading){
+    body = `<div class="ce-skeleton"><span class="ce-spinner"></span>Writing your ${info.label} post…</div>`;
+  } else if(!p.text){
+    body = `<div class="ce-skeleton" style="opacity:.3;font-size:13px">Click Generate → to create this post</div>`;
+  } else if(platform==='reddit'){
+    const {subreddit,title:rt,body:rb} = ceParseReddit(p.text);
+    const sub = subreddit||'startups';
+    body = `<div class="ce-insta">
+      <div><div class="ce-style-label" style="margin-bottom:5px">Subreddit</div><p class="ce-insta-caption" style="font-size:14px">r/${ceEsc(sub)}</p></div>
+      <div><div class="ce-style-label" style="margin-bottom:5px">Title</div><p class="ce-insta-caption">${ceEsc(rt)}</p>
+        <button class="btn ghost" style="height:28px;padding:0 10px;font-size:12px;margin-top:6px" data-ce-copy="${ceEsc(rt)}" onclick="ceCopyAttr(this)">Copy title</button></div>
+      ${rb?`<div><div class="ce-style-label" style="margin-bottom:5px">Body</div><p class="ce-insta-caption">${ceEsc(rb)}</p>
+        <button class="btn ghost" style="height:28px;padding:0 10px;font-size:12px;margin-top:6px" data-ce-copy="${ceEsc(rb)}" onclick="ceCopyAttr(this)">Copy body</button></div>`:''}
+    </div>`;
+  } else if(platform==='instagram'){
+    const {caption,hashtags} = ceParseInstagram(p.text);
+    body = `<div class="ce-insta">
+      <div><div class="ce-style-label" style="margin-bottom:5px">Caption</div><p class="ce-insta-caption">${ceEsc(caption)}</p>
+        <button class="btn ghost" style="height:28px;padding:0 10px;font-size:12px;margin-top:6px" data-ce-copy="${ceEsc(caption)}" onclick="ceCopyAttr(this)">Copy caption</button></div>
+      ${hashtags?`<div><div class="ce-style-label" style="margin-bottom:5px">Hashtags</div><p class="ce-insta-hashtags">${ceEsc(hashtags)}</p>
+        <button class="btn ghost" style="height:28px;padding:0 10px;font-size:12px;margin-top:6px" data-ce-copy="${ceEsc(hashtags)}" onclick="ceCopyAttr(this)">Copy hashtags</button></div>`:''}
+    </div>
+    <button class="ce-imggen-generate-btn" onclick="ceOpenImageModal()" style="margin:12px 0 0">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+      Generate image
+    </button>`;
+  } else if(platform==='x' && _ce.threadMode){
+    const tweets = ceParseThread(p.text);
+    if(tweets.length>=2){
+      const tweetHtml = tweets.map((t,i)=>{
+        const len=t.length,over=len>280;
+        return `<div class="ce-thread-tweet">
+          <div class="ce-thread-tweet-head"><span class="ce-thread-num">${i+1} / ${tweets.length}</span>
+            <button class="btn ghost ce-thread-copy" data-ce-copy="${ceEsc(t)}" onclick="ceCopyAttr(this)">Copy</button></div>
+          <p class="ce-thread-tweet-text">${ceEsc(t)}</p>
+          <div class="ce-thread-tweet-foot"><span class="ce-thread-char${over?' over':''}">${len}/280${over?' — over':''}</span></div>
+        </div>`;
+      }).join('<div class="ce-thread-connector"></div>');
+      body = `<div class="ce-thread">${tweetHtml}</div>`;
+    } else { body=`<p class="ce-post-text">${ceEsc(p.text)}</p>`; }
+  } else {
+    body = `<p class="ce-post-text">${ceEsc(p.text)}</p>`;
+  }
+
+  // Footer — only shown when there's generated text
+  let footer = '';
+  if(p.text && !p.loading){
+    const limit=info.limit, len=p.text.length;
+    const platUrls = {
+      linkedin:`https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(p.text.slice(0,1300))}`,
+      x:`https://twitter.com/intent/tweet?text=${encodeURIComponent(p.text.slice(0,280))}`,
+      threads:`https://www.threads.net/intent/post?text=${encodeURIComponent(p.text.slice(0,500))}`,
+      instagram:`https://www.instagram.com/`,
+      reddit:(()=>{ const m=p.text.match(/SUBREDDIT:\s*(.+)/i); const sub=(m?.[1]||'startups').replace(/^r\//i,'').trim(); const tm=p.text.match(/TITLE:\s*(.+)/i); const t=(tm?.[1]||'').trim(); const bm=p.text.match(/BODY:\s*([\s\S]+?)$/i); return `https://www.reddit.com/r/${encodeURIComponent(sub)}/submit?title=${encodeURIComponent(t)}&text=${encodeURIComponent((bm?.[1]||'').trim())}`; })(),
+    };
+    footer = `<div class="ce-section-foot">
+      <span class="ce-count${limit&&len>limit?' over':''}">${len}${limit?'/'+limit:''} chars</span>
+      <div class="ce-section-actions">
+        <button class="btn ghost" style="height:32px;font-size:13px" data-ce-copy="${ceEsc(p.text)}" onclick="ceCopyAttr(this)">Copy</button>
+        <button class="ce-regen-btn" onclick="ceRegeneratePlatform('${platform}')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+          Regenerate
+        </button>
+        <a class="btn publish" href="${platUrls[platform]||'#'}" target="_blank" rel="noopener noreferrer">Post on ${info.label} ↗</a>
+      </div>
+    </div>`;
+  }
+
+  return `<div id="cePlatSec-${platform}" class="ce-platform-section">
+    <div class="ce-section-head">
+      <span class="ce-post-platform">${info.svg} ${info.label}</span>
+      <span class="ce-ai-badge">AI</span>
+    </div>
+    <div class="ce-section-types">${typeChips}</div>
+    ${xModeRow}
+    <div class="ce-section-content">${body}</div>
+    ${footer}
+  </div>`;
 }
 
 function cePostCard(platform, loading, text){

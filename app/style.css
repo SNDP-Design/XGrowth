@@ -262,6 +262,17 @@
   .ce-trend-context{background:#0a0a0a;border:1px solid var(--line);border-left:3px solid var(--ink);border-radius:0 12px 12px 0;padding:12px 16px;margin:0 0 14px}
   .ce-trend-context h4{margin:0 0 4px;font-size:14px;color:var(--ink);font-weight:600}
   .ce-trend-context p{margin:0;font-size:13px;color:var(--muted);line-height:1.5}
+  /* ── Per-platform section cards ─────────────────────────────────────── */
+  .ce-platform-sections{display:flex;flex-direction:column;gap:20px}
+  .ce-platform-section{background:#080808;border:1px solid var(--line);border-radius:14px;padding:20px 22px}
+  .ce-section-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:14px}
+  .ce-section-types{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+  .ce-section-content{min-height:48px}
+  .ce-section-foot{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+  .ce-section-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-left:auto}
+  .ce-section-actions .btn.publish{background:linear-gradient(180deg,#fafafa,#d4d4d4);color:#0a0a0a;text-decoration:none;display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px;font-size:13px}
+  .ce-section-actions .btn.publish:hover{background:linear-gradient(180deg,#fff,#e5e5e5)}
+  /* Legacy single-card container (kept for history items etc) */
   .ce-posts{display:flex;flex-direction:column;gap:14px}
   .ce-output .ce-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:240px;border-radius:12px;background:transparent;border:1px dashed var(--line);padding:36px 22px;text-align:center}
   .ce-empty-title{font-size:15px;font-weight:600;color:var(--ink)}
