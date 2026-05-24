@@ -46,12 +46,17 @@ const FIREBASE_PROJECT_ID = 'xgrowth-351de';
 const FIREBASE_ISSUER = `https://securetoken.google.com/${FIREBASE_PROJECT_ID}`;
 const FIREBASE_JWKS_URL = 'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com';
 
-// Try models in order; first one that responds wins.
+// Try models in order; first success wins, falls back on quota/error.
 const GEMINI_MODELS = [
-  'gemini-2.0-flash',           // stable, fast, widely available
-  'gemini-2.0-flash-lite',      // lighter fallback
-  'gemini-1.5-flash-latest',    // stable 1.5 alias (always resolves)
-  'gemini-1.5-flash-002',       // explicit 1.5 stable version
+  'gemini-3.5-flash',
+  'gemini-3.1-pro-preview',
+  'gemini-3-flash-preview',
+  'gemini-3.1-flash-lite',
+  'gemini-3.1-flash-lite-preview',
+  'gemini-2.5-pro',
+  'gemini-2.5-flash',
+  'gemini-2.5-flash-lite',
+  'gemini-2.0-flash',
 ];
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models/';
 
