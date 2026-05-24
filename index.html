@@ -336,12 +336,18 @@
     section.s{padding:60px 0}
     .preview:hover{transform:none}
   }
+  /* Accessibility utilities */
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  .skip-link{position:absolute;top:-100%;left:16px;z-index:9999;padding:10px 18px;background:#fff;color:#000;font-weight:700;font-size:14px;border-radius:0 0 8px 8px;text-decoration:none;transition:top .15s}
+  .skip-link:focus{top:0}
 </style>
 </head>
 <body>
 
+<a class="skip-link" href="#main-content">Skip to main content</a>
+
 <!-- Navigation -->
-<nav class="top">
+<nav class="top" aria-label="Main navigation">
   <div class="wrap row">
     <a href="/" class="brand">
       <span class="logo"><img src="/assets/logo.svg" alt="XGrowth"/></span>
@@ -355,7 +361,7 @@
     <div class="right">
       <a href="/app/?signin=1" class="btn secondary">Sign in</a>
       <a href="/app/?signin=1" class="btn primary">Get Started <span class="arrow">→</span></a>
-      <button class="burger" id="burger" aria-label="Toggle menu" aria-expanded="false">
+      <button class="burger" id="burger" aria-label="Toggle menu" aria-expanded="false" aria-controls="mobileMenu">
         <span></span><span></span><span></span>
       </button>
     </div>
@@ -363,7 +369,7 @@
 </nav>
 
 <!-- Mobile menu -->
-<div class="mobile-menu" id="mobileMenu">
+<div class="mobile-menu" id="mobileMenu" aria-label="Mobile navigation">
   <a href="#features">Features</a>
   <a href="#how">How it works</a>
   <a href="#faq">FAQ</a>
@@ -372,6 +378,8 @@
     <a href="/app/?signin=1" class="btn primary lg">Get Started <span class="arrow">→</span></a>
   </div>
 </div>
+
+<main id="main-content">
 
 <!-- Hero -->
 <header class="hero wrap">
@@ -653,52 +661,52 @@
     <h2 class="s-title" data-reveal>Frequently asked questions.</h2>
     <div class="faq" data-reveal-stagger>
       <div class="qa open">
-        <button class="qa-head" type="button" aria-expanded="true">
+        <button class="qa-head" type="button" aria-expanded="true" aria-controls="faq-panel-1">
           <span>Who is XGrowth for?</span><span class="qa-icon" aria-hidden="true">+</span>
         </button>
-        <div class="qa-body"><div class="qa-body-inner"><p>Makers of digital products, SaaS founders, indie hackers, AI tool builders, course creators, ebook authors, plugin/template sellers. If you ship a digital product and need to market it across multiple channels without hiring an agency, XGrowth is for you.</p></div></div>
+        <div class="qa-body" id="faq-panel-1"><div class="qa-body-inner"><p>Makers of digital products, SaaS founders, indie hackers, AI tool builders, course creators, ebook authors, plugin/template sellers. If you ship a digital product and need to market it across multiple channels without hiring an agency, XGrowth is for you.</p></div></div>
       </div>
       <div class="qa">
-        <button class="qa-head" type="button" aria-expanded="false">
+        <button class="qa-head" type="button" aria-expanded="false" aria-controls="faq-panel-2">
           <span>Which platforms does it support?</span><span class="qa-icon" aria-hidden="true">+</span>
         </button>
-        <div class="qa-body"><div class="qa-body-inner"><p>X (Twitter), LinkedIn, Instagram, Threads, TikTok, YouTube descriptions, newsletters, and your own website copy. The Content Engine generates platform-tuned output; the Analytics module lets you log posts and metrics from any platform you publish on.</p></div></div>
+        <div class="qa-body" id="faq-panel-2"><div class="qa-body-inner"><p>X (Twitter), LinkedIn, Instagram, Threads, TikTok, YouTube descriptions, newsletters, and your own website copy. The Content Engine generates platform-tuned output; the Analytics module lets you log posts and metrics from any platform you publish on.</p></div></div>
       </div>
       <div class="qa">
-        <button class="qa-head" type="button" aria-expanded="false">
+        <button class="qa-head" type="button" aria-expanded="false" aria-controls="faq-panel-3">
           <span>Is this just ChatGPT with a prompt?</span><span class="qa-icon" aria-hidden="true">+</span>
         </button>
-        <div class="qa-body"><div class="qa-body-inner"><p>No. XGrowth is a structured operating system around digital-product marketing: product positioning, platform-specific hook formats, launch playbooks, conversion-funnel analytics, and content audits. ChatGPT gives you generic text. XGrowth gives you a complete marketing workflow tuned to digital products.</p></div></div>
+        <div class="qa-body" id="faq-panel-3"><div class="qa-body-inner"><p>No. XGrowth is a structured operating system around digital-product marketing: product positioning, platform-specific hook formats, launch playbooks, conversion-funnel analytics, and content audits. ChatGPT gives you generic text. XGrowth gives you a complete marketing workflow tuned to digital products.</p></div></div>
       </div>
       <div class="qa">
-        <button class="qa-head" type="button" aria-expanded="false">
+        <button class="qa-head" type="button" aria-expanded="false" aria-controls="faq-panel-4">
           <span>Do I have to connect my social accounts?</span><span class="qa-icon" aria-hidden="true">+</span>
         </button>
-        <div class="qa-body"><div class="qa-body-inner"><p>No. XGrowth is a content and analytics layer that lives alongside your social accounts. You generate content here, publish it natively on the platform, then log your top posts back into the analytics dashboard. We never ask for your social passwords or API access.</p></div></div>
+        <div class="qa-body" id="faq-panel-4"><div class="qa-body-inner"><p>No. XGrowth is a content and analytics layer that lives alongside your social accounts. You generate content here, publish it natively on the platform, then log your top posts back into the analytics dashboard. We never ask for your social passwords or API access.</p></div></div>
       </div>
       <div class="qa">
-        <button class="qa-head" type="button" aria-expanded="false">
+        <button class="qa-head" type="button" aria-expanded="false" aria-controls="faq-panel-5">
           <span>What does it cost?</span><span class="qa-icon" aria-hidden="true">+</span>
         </button>
-        <div class="qa-body"><div class="qa-body-inner"><p>Free, while we're in beta. Every feature is unlocked, no credit card required. Beta users keep early-access pricing forever once we introduce paid plans.</p></div></div>
+        <div class="qa-body" id="faq-panel-5"><div class="qa-body-inner"><p>Free, while we're in beta. Every feature is unlocked, no credit card required. Beta users keep early-access pricing forever once we introduce paid plans.</p></div></div>
       </div>
       <div class="qa">
-        <button class="qa-head" type="button" aria-expanded="false">
+        <button class="qa-head" type="button" aria-expanded="false" aria-controls="faq-panel-6">
           <span>Will my data be safe?</span><span class="qa-icon" aria-hidden="true">+</span>
         </button>
-        <div class="qa-body"><div class="qa-body-inner"><p>Yes. We only store your name, email, and profile picture (from Google Sign-In) plus the data you create inside the app. We never read your Gmail, Drive, or social accounts. We never sell data. Read the <a href="/privacy/">Privacy Policy</a> for full details.</p></div></div>
+        <div class="qa-body" id="faq-panel-6"><div class="qa-body-inner"><p>Yes. We only store your name, email, and profile picture (from Google Sign-In) plus the data you create inside the app. We never read your Gmail, Drive, or social accounts. We never sell data. Read the <a href="/privacy/">Privacy Policy</a> for full details.</p></div></div>
       </div>
       <div class="qa">
-        <button class="qa-head" type="button" aria-expanded="false">
+        <button class="qa-head" type="button" aria-expanded="false" aria-controls="faq-panel-7">
           <span>How is this different from Buffer / Hypefury / Notion?</span><span class="qa-icon" aria-hidden="true">+</span>
         </button>
-        <div class="qa-body"><div class="qa-body-inner"><p>Those are publishing schedulers or generic doc tools. They assume you've already written the content. XGrowth is the layer before publishing, generating product-specific content, launch playbooks, and audit tooling that schedulers don't touch. Pair us with a scheduler if you like.</p></div></div>
+        <div class="qa-body" id="faq-panel-7"><div class="qa-body-inner"><p>Those are publishing schedulers or generic doc tools. They assume you've already written the content. XGrowth is the layer before publishing, generating product-specific content, launch playbooks, and audit tooling that schedulers don't touch. Pair us with a scheduler if you like.</p></div></div>
       </div>
       <div class="qa">
-        <button class="qa-head" type="button" aria-expanded="false">
+        <button class="qa-head" type="button" aria-expanded="false" aria-controls="faq-panel-8">
           <span>I haven't found my niche yet. Can I still use it?</span><span class="qa-icon" aria-hidden="true">+</span>
         </button>
-        <div class="qa-body"><div class="qa-body-inner"><p>Yes, that's actually a great use case. Run the Product Brand Kit with 3–5 positioning angles you're considering. You'll get a content calendar for each one. Test which angle gets traction over 2 weeks. Then commit.</p></div></div>
+        <div class="qa-body" id="faq-panel-8"><div class="qa-body-inner"><p>Yes, that's actually a great use case. Run the Product Brand Kit with 3–5 positioning angles you're considering. You'll get a content calendar for each one. Test which angle gets traction over 2 weeks. Then commit.</p></div></div>
       </div>
     </div>
   </div>
@@ -711,8 +719,10 @@
   <div data-reveal data-delay="2"><a href="/app/?signin=1" class="btn primary lg">Try now for Free <span class="arrow">→</span></a></div>
 </section>
 
+</main>
+
 <!-- Footer -->
-<footer class="foot">
+<footer class="foot" aria-label="Site footer">
   <div class="foot-grid">
     <div class="foot-brand">
       <a href="/" class="brand">
