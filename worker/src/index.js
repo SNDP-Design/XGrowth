@@ -80,7 +80,7 @@ export default {
       return json({ error: 'Use POST' }, 405, origin, allowed);
     }
 
-    const VALID_PATHS = ['/generate', '/generate-image', '/preview', '/news'];
+    const VALID_PATHS = ['/generate', '/generate-image', '/preview', '/news', '/x-profile'];
     if (!VALID_PATHS.includes(url.pathname)) {
       return json({ error: 'Not found' }, 404, origin, allowed);
     }
@@ -150,6 +150,11 @@ export default {
     // ── /preview ──────────────────────────────────────────────────────────────
     if (url.pathname === '/preview') {
       return handlePreview(body, origin, allowed);
+    }
+
+    // ── /x-profile — fetch recent posts from an X/Twitter profile via Nitter ──
+    if (url.pathname === '/x-profile') {
+      return handleXProfile(body, origin, allowed);
     }
 
     // ── /news — multi-source RSS aggregator ───────────────────────────────────
@@ -471,6 +476,79 @@ async function handlePreview(body, origin, allowed) {
   }
 }
 
+/* ─── X / Twitter profile via Nitter RSS ─────────────────────────────────── */
+
+async function handleXProfile(body, origin, allowed) {
+  let username = (body.username || '').trim().replace(/^@/, '');
+  // If a full URL was passed, extract just the handle
+  username = username.replace(/^https?:\/\/(www\.)?(twitter|x)\.com\//i, '').split('/')[0];
+  username = username.replace(/[^A-Za-z0-9_]/g, '');
+  if (!username) return json({ error: 'username is required' }, 400, origin, allowed);
+
+  // Try multiple Nitter instances in order; return first successful one
+  const instances = [
+    'nitter.poast.org',
+    'nitter.privacydev.net',
+    'nitter.net',
+    'nitter.cz',
+    'nitter.1d4.us',
+  ];
+
+  for (const host of instances) {
+    try {
+      const ctrl = new AbortController();
+      const tid  = setTimeout(() => ctrl.abort(), 7000);
+      const res  = await fetch(`https://${host}/${username}/rss`, {
+        signal:  ctrl.signal,
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; XGrowthBot/1.0; +https://xgrowth.uno)' },
+      });
+      clearTimeout(tid);
+      if (!res.ok) continue;
+      const ct = res.headers.get('content-type') || '';
+      if (!ct.includes('xml') && !ct.includes('rss') && !ct.includes('text')) continue;
+      const xml = await res.text();
+      if (!xml.includes('<item>')) continue;
+      const posts = parseNitterRSS(xml, username);
+      if (!posts.length) continue;
+      return json({ posts, source: host }, 200, origin, allowed);
+    } catch { continue; }
+  }
+
+  return json({
+    posts: [],
+    error: "Couldn't reach X right now — Nitter instances may be rate-limited. Try again in a few minutes.",
+  }, 200, origin, allowed);
+}
+
+function parseNitterRSS(xml, username) {
+  const items = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)].map(m => m[1]);
+  const posts = [];
+  for (const item of items.slice(0, 15)) {
+    // Extract tweet text — prefer CDATA title, fall back to plain title
+    const titleCdata = (item.match(/<title><!\[CDATA\[([\s\S]*?)\]\]><\/title>/) || [])[1];
+    const titlePlain = (item.match(/<title>([^<]*)<\/title>/) || [])[1] || '';
+    const rawText    = (titleCdata || titlePlain).trim();
+
+    // Strip "R to @user:" reply prefix
+    const text = rawText.replace(/^R to @\w+:\s*/i, '').trim();
+    if (!text || text.length < 10) continue;
+
+    // pubDate
+    const pubDate = (item.match(/<pubDate>(.*?)<\/pubDate>/) || [])[1] || '';
+
+    // Link — strip nitter domain, rebuild as x.com URL
+    const rawLink = (item.match(/<link>\s*(https?:\/\/[^<\s]+)\s*<\/link>/) ||
+                     item.match(/<guid[^>]*>\s*(https?:\/\/[^<\s]+)\s*<\/guid>/) || [])[1] || '';
+    const tweetId  = (rawLink.match(/\/status\/(\d+)/) || [])[1];
+    const xUrl     = tweetId
+      ? `https://x.com/${username}/status/${tweetId}`
+      : rawLink.replace(/^https?:\/\/[^/]+/, 'https://x.com');
+
+    posts.push({ text, date: pubDate, url: xUrl });
+  }
+  return posts;
+}
+
 /* ─── trim helpers ────────────────────────────────────────────────────────── */
 
 function trimAtSentence(text, limit) {
@@ -745,9 +823,13 @@ BODY:
   const tone   = typeGuides[mode] || typeGuides['hot-take'];
   const voice  = voiceTail({ voiceNiche, voiceStyle });
 
-  const content = isWrite
-    ? `FOUNDER'S ROUGH NOTES / THOUGHTS:\n${articleTitle}`
-    : `ARTICLE TITLE: ${articleTitle}\n${articleAngle ? `ARTICLE CONTEXT: ${articleAngle}` : ''}`;
+  const isXPost = inputMode === 'xpost';
+
+  const content = isXPost
+    ? `ORIGINAL TWEET:\n"${articleTitle}"\n\nYour task: repurpose the core idea for ${platform}. Do NOT copy the tweet verbatim. Rewrite in the founder's own voice — expand the idea, add context or a contrarian angle, and make it feel native to ${platform}. If the tweet is short, build on it significantly.`
+    : isWrite
+      ? `FOUNDER'S ROUGH NOTES / THOUGHTS:\n${articleTitle}`
+      : `ARTICLE TITLE: ${articleTitle}\n${articleAngle ? `ARTICLE CONTEXT: ${articleAngle}` : ''}`;
 
   return `You are writing a social media post for a startup founder. The audience is global — many readers are non-native English speakers. Write in plain, simple, everyday English that anyone can understand.${voice}
 

@@ -377,6 +377,7 @@ const _ce = {
   historyOpen: false,
   _pickedAt: null,
   _articles: [],
+  _xPosts: [],
 };
 ['linkedin','x','threads','instagram','reddit'].forEach(p => {
   _ce.posts[p] = { text: '', loading: false, generated: false };
@@ -388,7 +389,7 @@ function ceSwitchInputMode(mode) {
   _ce.inputMode = mode;
   document.querySelectorAll('.ce-mode-tab').forEach(b => b.classList.toggle('active', b.dataset.cmode === mode));
   document.querySelectorAll('.ce-mode-panel').forEach(p => p.classList.remove('active'));
-  const panelMap = { search:'ceModeSearch', url:'ceModeUrl', write:'ceModeWrite' };
+  const panelMap = { search:'ceModeSearch', xprofile:'ceModeXProfile', url:'ceModeUrl', write:'ceModeWrite' };
   $(panelMap[mode])?.classList.add('active');
   if (mode !== 'search') $('ceNewsPanel').style.display = 'none';
 }
@@ -621,6 +622,75 @@ async function ceGenerateFromWrite(){
   ['linkedin','x','threads','instagram','reddit'].forEach(p => { _ce.posts[p] = {text:'',loading:false,generated:false}; });
   $('ceTrendContext').style.display='none';
   ceShowControls(); ceGenerateCurrent(pickedAt);
+}
+
+/* ── X Profile mode ───────────────────────────────────────────────────── */
+
+async function ceFetchXProfile(){
+  const raw = $('ceXProfileInput')?.value?.trim();
+  if(!raw){ toast('Enter a username or profile URL'); $('ceXProfileInput')?.focus(); return; }
+
+  // Extract handle from full URL or bare @handle
+  let username = raw.replace(/^https?:\/\/(www\.)?(twitter|x)\.com\//i,'').split(/[/?#]/)[0].replace(/^@/,'').trim();
+  if(!username){ toast('Could not parse username from that URL'); return; }
+
+  const btn = $('ceXProfileBtn');
+  const results = $('ceXProfileResults');
+  if(btn){ btn.disabled=true; btn.innerHTML='<span class="ce-spinner"></span>Fetching…'; }
+  if(results) results.style.display='none';
+
+  try {
+    const data = await xgFetch('/x-profile', { username });
+    const posts = data.posts || [];
+
+    if(!posts.length){
+      toast(data.error || 'No posts found for @'+username+'. The account may be private or Nitter may be down.');
+      if(btn){ btn.disabled=false; btn.innerHTML='Fetch posts →'; }
+      return;
+    }
+
+    _ce._xPosts = posts;
+
+    if(results){
+      results.innerHTML = `
+        <div class="ce-sources-lbl" style="margin-bottom:8px">@${ceEsc(username)} · ${posts.length} recent posts</div>
+        <div class="ce-trends">
+          ${posts.map((p,i) => `
+            <button type="button" class="ce-trend" onclick="ceUseXPost(${i})">
+              <div class="ce-trend-meta">
+                <span class="ce-tag">X Post</span>
+                <span class="ce-trend-source">${ceEsc(ceRelDate(p.date))}</span>
+              </div>
+              <h4>${ceEsc(p.text.slice(0,160))}${p.text.length>160?'…':''}</h4>
+              <div class="ce-trend-foot">
+                <a class="ce-trend-source" href="${ceEsc(p.url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="text-decoration:underline">View on X ↗</a>
+                <span class="ce-pick">Repurpose →</span>
+              </div>
+            </button>`).join('')}
+        </div>`;
+      results.style.display = 'block';
+    }
+  } catch(e){
+    toast('Failed to fetch — try again');
+  }
+
+  if(btn){ btn.disabled=false; btn.innerHTML='Fetch posts →'; }
+}
+
+function ceUseXPost(idx){
+  const p = _ce._xPosts?.[idx];
+  if(!p) return;
+  const pickedAt = Date.now();
+  _ce._pickedAt = pickedAt;
+  _ce.topic = 'Repurpose X post';
+  _ce.article = { title: p.text, angle: 'Repurpose this tweet into a native post.', url: p.url, inputMode: 'xpost' };
+  ['linkedin','x','threads','instagram','reddit'].forEach(pl => { _ce.posts[pl] = {text:'',loading:false,generated:false}; });
+  $('ceTrendContext').innerHTML = `<h4>${ceEsc(p.text.slice(0,140))}${p.text.length>140?'…':''}</h4>
+    <p style="font-size:12px;color:var(--muted);margin:4px 0 0">Repurposing from X &nbsp;·&nbsp; <a href="${ceEsc(p.url)}" target="_blank" rel="noopener" style="color:var(--muted);text-decoration:underline">View original ↗</a></p>`;
+  $('ceTrendContext').style.display='';
+  ceShowControls();
+  ceGenerateCurrent(pickedAt);
+  if(window.innerWidth<=1100) $('ceStep3')?.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 /* ── Output controls ──────────────────────────────────────────────────── */
@@ -1180,11 +1250,12 @@ function ceCopyAttr(btn){
   navigator.clipboard.writeText(text).then(()=>toast('Copied'));
 }
 
-// Enter-to-trigger for URL input
+// Enter-to-trigger for URL and X profile inputs
 document.addEventListener('keydown',(e)=>{
   if(e.key!=='Enter') return;
   const id=document.activeElement?.id;
   if(id==='ceUrlInput'){ e.preventDefault(); ceFetchUrlPreview(); }
+  else if(id==='ceXProfileInput'){ e.preventDefault(); ceFetchXProfile(); }
 });
 
 /* ========= Mobile drawer ========= */
