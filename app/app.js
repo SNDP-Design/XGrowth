@@ -115,13 +115,17 @@ document.querySelectorAll('.modal').forEach(m=>{
     }
   });
 });
-// Also close on Escape
+// Close modals + mobile sidebar on Escape (2.1.2 No Keyboard Trap)
 document.addEventListener('keydown', (e)=>{
   if(e.key === 'Escape'){
     document.querySelectorAll('.modal.show').forEach(m=>{
       if(m.id === 'welcome') closeWelcome(true);
       else m.classList.remove('show');
     });
+    // Image generation modal
+    if($('ceImgGenOverlay')?.classList.contains('show')) ceImgClose();
+    // Mobile sidebar drawer
+    if(document.querySelector('.side.show')) toggleSide(false);
   }
 });
 function closeWelcome(skip){
@@ -349,7 +353,12 @@ const _ce = {
 
 function ceSwitchInputMode(mode) {
   _ce.inputMode = mode;
-  document.querySelectorAll('.ce-mode-tab').forEach(b => b.classList.toggle('active', b.dataset.cmode === mode));
+  // aria-selected keeps screen readers in sync with the active tab (4.1.2)
+  document.querySelectorAll('.ce-mode-tab').forEach(b => {
+    const isActive = b.dataset.cmode === mode;
+    b.classList.toggle('active', isActive);
+    b.setAttribute('aria-selected', isActive ? 'true' : 'false');
+  });
   document.querySelectorAll('.ce-mode-panel').forEach(p => p.classList.remove('active'));
   const panelMap = { url:'ceModeUrl', write:'ceModeWrite' };
   $(panelMap[mode])?.classList.add('active');
@@ -643,8 +652,9 @@ function cePlatformSectionHTML(platform){
     {key:'hot-take',label:'Hot Take'},{key:'story',label:'Story'},{key:'teach',label:'Teach'},
     {key:'data',label:'Data-Led'},{key:'question',label:'Question'},{key:'founder',label:'Founder'},
   ];
+  // aria-pressed="true/false" exposes toggle state to screen readers (4.1.2)
   const typeChips = TYPES.map(t =>
-    `<button class="ce-type-chip${t.key===currentType?' active':''}" onclick="ceSetPlatformType('${platform}','${t.key}')">${t.label}</button>`
+    `<button class="ce-type-chip${t.key===currentType?' active':''}" onclick="ceSetPlatformType('${platform}','${t.key}')" aria-pressed="${t.key===currentType?'true':'false'}">${t.label}</button>`
   ).join('');
 
   const xModeRow = platform==='x' ? `<div class="ce-xmode-row" style="margin:0 0 14px">
@@ -656,7 +666,8 @@ function cePlatformSectionHTML(platform){
   // Post body
   let body = '';
   if(p.loading){
-    body = `<div class="ce-skeleton"><span class="ce-spinner"></span>Writing your ${info.label} post…</div>`;
+    // role="status" announces loading state to screen readers; spinner is decorative (4.1.3)
+    body = `<div class="ce-skeleton" role="status"><span class="ce-spinner" aria-hidden="true"></span>Writing your ${info.label} post…</div>`;
   } else if(!p.text){
     body = `<div class="ce-skeleton" style="opacity:.3;font-size:13px">Click Generate → to create this post</div>`;
   } else if(platform==='reddit'){
@@ -913,6 +924,9 @@ function ceToggleHistory(){
   if(!list) return;
   list.style.display=_ce.historyOpen?'flex':'none';
   if(arrow) arrow.textContent=_ce.historyOpen?'▴':'▾';
+  // Keep aria-expanded in sync (4.1.2)
+  const toggleBtn=document.querySelector('.ce-history-toggle');
+  if(toggleBtn) toggleBtn.setAttribute('aria-expanded', _ce.historyOpen?'true':'false');
   if(_ce.historyOpen) ceRenderHistoryList();
 }
 
@@ -1176,6 +1190,9 @@ function toggleSide(force){
   const open = force === undefined ? !s.classList.contains('show') : !!force;
   s.classList.toggle('show', open);
   sc.classList.toggle('show', open);
+  // Keep aria-expanded in sync with drawer state (4.1.2 Name, Role, Value)
+  const menuBtn = $('menuBtn');
+  if(menuBtn) menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
 }
 // Close drawer when nav button tapped (mobile)
 document.getElementById('nav').addEventListener('click', e=>{
@@ -1266,6 +1283,7 @@ function applyUser(){
     $('uName').textContent = currentUser.name;
     $('uEmail').textContent = currentUser.email;
     $('uAvatar').src = currentUser.picture || '';
+    $('uAvatar').alt = currentUser.name || ''; // 1.1.1 Non-text Content
     const st2 = $('sessionTag'); if(st2) st2.textContent = currentUser.name.split(' ')[0];
   }else{
     $('loginBox').style.display = 'block';

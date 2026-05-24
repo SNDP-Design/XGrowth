@@ -195,7 +195,8 @@
   label{display:block;font-size:13px;color:var(--muted);margin:10px 0 6px}
   input[type=text],input[type=number],select{width:100%;height:48px;background:#0a0a0a;border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:0 14px;outline:none;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.5}
   textarea{width:100%;background:#0a0a0a;border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:14px;outline:none;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.6;min-height:120px;resize:vertical}
-  input:focus,select:focus,textarea:focus{border-color:#3a3a3a;box-shadow:0 0 0 3px rgba(255,255,255,.04)}
+  /* Mouse/touch focus — subtle (keyboard focus handled by :focus-visible below) */
+  input:focus,select:focus,textarea:focus{border-color:#808080;box-shadow:0 0 0 3px rgba(255,255,255,.06)}
   .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:48px;background:linear-gradient(180deg,#fafafa,#d4d4d4);border:0;color:#0a0a0a;padding:0 20px;border-radius:10px;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:16px;font-weight:600;line-height:1;box-shadow:0 8px 18px rgba(0,0,0,.5);cursor:pointer}
   .btn:hover{background:linear-gradient(180deg,#fff,#e5e5e5)}
   .btn.secondary{background:transparent;border:1px solid var(--line);color:var(--ink);box-shadow:none}
@@ -428,3 +429,48 @@
   .pulse-insights{color:var(--ink);font-size:14px;line-height:1.7}
   .pulse-insights b{color:#fff;display:inline-block;margin-top:12px;margin-bottom:2px;font-size:14px;letter-spacing:.1px}
   .pulse-insights b:first-child{margin-top:0}
+
+  /* ═══════════════════════════════════════════════════════════════════
+     WCAG 2.1 AA — Accessibility fixes
+     ═══════════════════════════════════════════════════════════════════ */
+
+  /* 1 · Skip link — 2.4.1 Bypass Blocks */
+  .skip-link{position:absolute;top:-100%;left:0;z-index:9999;padding:12px 24px;background:#fff;color:#000;font-size:15px;font-weight:700;text-decoration:none;border-radius:0 0 8px 0;transition:top .1s}
+  .skip-link:focus{top:0;outline:3px solid #000;outline-offset:0}
+
+  /* 2 · Screen-reader-only utility — visually hidden, readable by AT */
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+  /* 3 · Focus visible — 2.4.7 Focus Visible, 2.4.11 Focus Appearance
+         Mouse/touch: suppress browser default (we keep hover states)
+         Keyboard: clear high-contrast ring                              */
+  :focus:not(:focus-visible){outline:none}
+  :focus-visible{outline:2px solid #d4d4d4;outline-offset:3px;border-radius:4px}
+  /* Form fields — ring + brightened border */
+  input:focus-visible,select:focus-visible,textarea:focus-visible{border-color:#a0a0a0;box-shadow:0 0 0 3px rgba(255,255,255,.12);outline:2px solid #d4d4d4;outline-offset:1px;border-radius:10px}
+  /* Buttons / chips */
+  .btn:focus-visible,.btn.ghost:focus-visible,.btn.secondary:focus-visible,
+  .nav button:focus-visible,.ce-mode-tab:focus-visible,.ce-type-chip:focus-visible,
+  .ce-regen-btn:focus-visible,.ce-xmode-btn:focus-visible,
+  .ce-history-toggle:focus-visible,.signout:focus-visible,
+  .gbtn-card:focus-visible,.portal-chip:focus-visible,.range button:focus-visible{outline:2px solid #d4d4d4;outline-offset:3px}
+
+  /* 4 · Input border contrast — #606060 on #0a0a0a ≈ 3.1:1  (1.4.11 Non-text Contrast) */
+  input[type=text],input[type=number],input[type=url],select,textarea{border-color:#606060}
+
+  /* 5 · Links — underline in content areas so they're not colour-only (1.4.1) */
+  main a:not(.btn):not(.publish),
+  .auth-foot a,
+  .ce-history-item a{text-decoration:underline;text-underline-offset:3px}
+
+  /* 6 · "Over limit" char count — prefix symbol so it's not colour-only (1.4.1) */
+  .ce-count.over::before{content:'⚠ '}
+
+  /* 7 · Announce live regions — visible loading text for screen readers */
+  .ce-skeleton{position:relative}
+  .ce-sr-announce{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+
+  /* 8 · Ensure reduced-motion is respected for spinners / animations */
+  @media(prefers-reduced-motion:reduce){
+    *{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
+  }
