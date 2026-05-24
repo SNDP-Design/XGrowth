@@ -264,14 +264,18 @@
   .ce-trend-context h4{margin:0 0 4px;font-size:14px;color:var(--ink);font-weight:600}
   .ce-trend-context p{margin:0;font-size:13px;color:var(--muted);line-height:1.5}
   /* ── Per-platform section cards ─────────────────────────────────────── */
-  .ce-platform-sections{display:flex;flex-direction:column;gap:20px}
-  .ce-platform-section{background:#080808;border:1px solid var(--line);border-radius:14px;padding:20px 22px}
-  .ce-section-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:14px}
-  .ce-section-types{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+  .ce-platform-sections{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;align-items:start}
+  @media(max-width:1200px){.ce-platform-sections{grid-template-columns:repeat(3,minmax(0,1fr))}}
+  @media(max-width:700px){.ce-platform-sections{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media(max-width:480px){.ce-platform-sections{grid-template-columns:1fr}}
+  .ce-platform-section{background:#080808;border:1px solid var(--line);border-radius:14px;padding:16px}
+  .ce-section-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
+  .ce-section-types{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-bottom:12px}
+  .ce-type-chip{height:26px;padding:0 9px;font-size:11px}
   .ce-section-content{min-height:48px}
-  .ce-section-foot{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
-  .ce-section-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-left:auto}
-  .ce-section-actions .btn.publish{background:linear-gradient(180deg,#fafafa,#d4d4d4);color:#0a0a0a;text-decoration:none;display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px;font-size:13px}
+  .ce-section-foot{display:flex;flex-direction:column;align-items:flex-start;gap:8px;margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
+  .ce-section-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap;width:100%}
+  .ce-section-actions .btn.publish{background:linear-gradient(180deg,#fafafa,#d4d4d4);color:#0a0a0a;text-decoration:none;display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;font-size:12px;flex:1;justify-content:center}
   .ce-section-actions .btn.publish:hover{background:linear-gradient(180deg,#fff,#e5e5e5)}
   /* Legacy single-card container (kept for history items etc) */
   .ce-posts{display:flex;flex-direction:column;gap:14px}

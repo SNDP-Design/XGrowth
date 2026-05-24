@@ -352,7 +352,14 @@ const _ce = {
 /* ── Input mode switching ─────────────────────────────────────────────── */
 
 function ceSwitchInputMode(mode) {
+  const prev = _ce.inputMode;
   _ce.inputMode = mode;
+  // Clear any outputs from the previous mode so they don't bleed across tabs
+  if(prev !== mode){
+    ceResetOutput();
+    _ce.article = null;
+    _ce._pickedAt = null;
+  }
   // aria-selected keeps screen readers in sync with the active tab (4.1.2)
   document.querySelectorAll('.ce-mode-tab').forEach(b => {
     const isActive = b.dataset.cmode === mode;
