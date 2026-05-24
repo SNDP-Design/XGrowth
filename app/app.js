@@ -484,7 +484,6 @@ async function ceSearchNews(){
   _ce.topic = topic;
   _ce.article = null; _ce._pickedAt = null;
   ['linkedin','x','threads','instagram','reddit'].forEach(p => { _ce.posts[p] = {text:'',loading:false,generated:false}; });
-  const srcRow = $('ceSourcesRow'); if(srcRow) srcRow.style.display='none';
 
   const cap = topic.charAt(0).toUpperCase() + topic.slice(1);
   $('ceNewsTitle').textContent = `Latest: ${cap}`;
@@ -492,7 +491,7 @@ async function ceSearchNews(){
 
   // Show which portals returned results
   const uniqueSources = [...new Set(hits.map(h => h.source))].filter(Boolean);
-  const srcRow  = $('ceSourcesRow');
+  const srcRow   = $('ceSourcesRow');
   const srcChips = $('ceSourceChips');
   if(srcRow && srcChips && uniqueSources.length){
     srcChips.innerHTML = uniqueSources.map(s =>
