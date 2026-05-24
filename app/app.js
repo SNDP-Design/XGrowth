@@ -158,14 +158,6 @@ function applyProfile(){
   const goalEl  = document.getElementById('goalTag');  if(goalEl)  goalEl.textContent  = p.goal;
   const audEl   = document.getElementById('audienceTag'); if(audEl) audEl.textContent = p.target || '—';
   const st = document.getElementById('sessionTag'); if(st) st.textContent = p.niche?.split(' ')[0] || '';
-  // Pre-select industry in the news dropdown if profile has one
-  if(p.industry){
-    const sel = document.getElementById('ceIndustrySelect');
-    if(sel && sel.value !== p.industry){
-      sel.value = p.industry;
-      ceSearchByIndustry(p.industry);
-    }
-  }
 }
 
 function parseGoals(s){
@@ -277,39 +269,6 @@ const CE_INDUSTRY_PORTALS = {
 };
 
 /* Industry → search keywords for HN Algolia (US startup/tech angle) */
-const CE_INDUSTRY_KEYWORDS = {
-  'ai-ml':        'artificial intelligence machine learning AI LLM startup',
-  'climate-tech': 'climate tech clean energy renewable solar EV battery startup',
-  'fintech':      'fintech payments banking financial technology startup',
-  'health-tech':  'health tech digital health medtech telemedicine startup',
-  'saas-b2b':     'SaaS B2B software startup enterprise growth product',
-  'ecommerce':    'ecommerce DTC direct-to-consumer retail brand startup',
-  'crypto-web3':  'crypto blockchain web3 DeFi protocol token startup',
-  'dev-tools':    'developer tools devops cloud infrastructure platform startup',
-  'biotech':      'biotech biopharma life sciences drug discovery clinical',
-  'edtech':       'edtech education technology learning online startup',
-  'general':      'startup tech venture capital funding product launch',
-};
-const CE_INDUSTRY_LABELS = {
-  'ai-ml':'AI / Machine Learning', 'climate-tech':'Climate Tech',
-  'fintech':'Fintech', 'health-tech':'Health Tech',
-  'saas-b2b':'SaaS / B2B', 'ecommerce':'E-commerce',
-  'crypto-web3':'Crypto / Web3', 'dev-tools':'Dev Tools',
-  'biotech':'Biotech', 'edtech':'EdTech', 'general':'General Tech',
-};
-
-/* Filter HN hits to US sources only (exclude obvious non-US TLDs) */
-function ceIsUsSource(url){
-  if(!url) return true;
-  try {
-    const h = new URL(url).hostname.toLowerCase();
-    const nonUs = ['.co.uk','.com.au','.co.au','.de','.fr','.eu','.in','.ca',
-                   '.nl','.se','.fi','.no','.dk','.pl','.ru','.jp','.cn',
-                   '.kr','.com.br','.com.mx','.it','.es','.pt','.ch','.at',
-                   '.be','.co.nz','.com.sg','.com.hk','.co.jp','.com.tw'];
-    return !nonUs.some(tld => h.endsWith(tld));
-  } catch { return true; }
-}
 
 /* Show/hide portal chips when industry is picked in the welcome modal */
 function ceOnboardingIndustryChange(industry){
@@ -364,7 +323,7 @@ async function xgFetch(path, payload){
 }
 
 const _ce = {
-  inputMode: 'search',
+  inputMode: 'xprofile',
   topic: '',
   article: null,
   platform: 'linkedin',
@@ -389,12 +348,9 @@ function ceSwitchInputMode(mode) {
   _ce.inputMode = mode;
   document.querySelectorAll('.ce-mode-tab').forEach(b => b.classList.toggle('active', b.dataset.cmode === mode));
   document.querySelectorAll('.ce-mode-panel').forEach(p => p.classList.remove('active'));
-  const panelMap = { search:'ceModeSearch', xprofile:'ceModeXProfile', url:'ceModeUrl', write:'ceModeWrite' };
+  const panelMap = { xprofile:'ceModeXProfile', url:'ceModeUrl', write:'ceModeWrite' };
   $(panelMap[mode])?.classList.add('active');
-  if (mode !== 'search') $('ceNewsPanel').style.display = 'none';
 }
-
-/* ── Search news mode ─────────────────────────────────────────────────── */
 
 function ceRelDate(iso){
   if(!iso) return 'recent';
@@ -403,183 +359,6 @@ function ceRelDate(iso){
   if(diff < 86400){ const dd = Math.floor(diff/86400); return dd===1?'1 day ago':`${dd} days ago`; }
   if(diff < 604800){ const w = Math.floor(diff/604800); return w===1?'1 week ago':`${w} weeks ago`; }
   return d.toLocaleDateString();
-}
-function ceDomainFromUrl(u){
-  if(!u) return '';
-  try { return new URL(u).hostname.replace(/^www\./,''); } catch { return ''; }
-}
-function ceTagFromHit(h){
-  const p=h.points||0, c=h.num_comments||0;
-  if(p>200) return 'Hot'; if(c>50) return 'Discussion'; return 'News';
-}
-function ceAngleFromHit(h){
-  const c=h.num_comments||0, p=h.points||0;
-  if(p>100&&c>50) return `Trending on Hacker News — ${p.toLocaleString()} points, ${c.toLocaleString()} comments.`;
-  if(c>30) return `Sparking ${c.toLocaleString()} comments on Hacker News.`;
-  if(p>50) return `${p} points on Hacker News. Early signal worth a take.`;
-  return `Posted to Hacker News (${p} points, ${c} comments).`;
-}
-
-/* ── Multi-source news fetching ───────────────────────────────────────── */
-
-// Hacker News via Algolia — great for tech/startup topics
-async function ceFetchHN(topic){
-  try {
-    const oneYearAgo = Math.floor(Date.now()/1000) - 365*24*3600;
-    const url = `https://hn.algolia.com/api/v1/search_by_date?query=${encodeURIComponent(topic)}&tags=story&hitsPerPage=24&numericFilters=created_at_i>${oneYearAgo}`;
-    const ctrl = new AbortController();
-    const tid = setTimeout(()=>ctrl.abort(), 6000);
-    const res = await fetch(url, { signal: ctrl.signal });
-    clearTimeout(tid);
-    if(!res.ok) return null;
-    const data = await res.json();
-    let hits = (data.hits||[]).filter(h => h.title && h.url && ((h.points||0)>=3||(h.num_comments||0)>=2));
-    if(!hits.length) hits = (data.hits||[]).filter(h => h.title && h.url);
-    // US-only filter
-    hits = hits.filter(h => ceIsUsSource(h.url));
-    hits = hits.slice(0,8);
-    if(!hits.length) return null;
-    return hits.map(h => ({
-      tag: ceTagFromHit(h), source: ceDomainFromUrl(h.url)||'news.ycombinator.com',
-      date: ceRelDate(h.created_at), title: h.title, angle: ceAngleFromHit(h),
-      url: h.url||`https://news.ycombinator.com/item?id=${h.objectID}`
-    }));
-  } catch { return null; }
-}
-
-// Industry-routed RSS news — fetched via Worker (no CORS, no API key)
-async function ceFetchWorkerNews(topic, industry, portals){
-  try {
-    const ind  = industry || state.profile?.industry || '';
-    const prts = portals  || state.profile?.newsPortals || [];
-    const data = await xgFetch('/news', { topic, industry: ind, portals: prts });
-    if(!data.articles || !data.articles.length) return null;
-    return data.articles.map(a => ({
-      tag:   a.source,
-      source:a.source,
-      date:  ceRelDate(a.pubDate),
-      title: a.title,
-      angle: a.description ? a.description.slice(0,180) : `From ${a.source}.`,
-      url:   a.url,
-    }));
-  } catch { return null; }
-}
-
-// Short badge text for each known portal name
-function ceSourceBadge(source){
-  const map = {
-    'TechCrunch':'TC','TechCrunch AI':'TC·AI','TechCrunch Fintech':'TC·Fin',
-    'TechCrunch Commerce':'TC·Com','TechCrunch EdTech':'TC·Ed',
-    'The Verge':'Verge','Wired':'Wired','VentureBeat':'VB','VentureBeat AI':'VB·AI',
-    'Ars Technica':'Ars','MIT Tech Review':'MIT','The New Stack':'NewStack',
-    'CleanTechnica':'CT','Electrek':'Electrek','Carbon Brief':'CarbonBf',
-    'GreenBiz':'GreenBiz','Canary Media':'Canary',
-    'Finextra':'Finextra','Payments Dive':'PyDive','Banking Dive':'BkDive',
-    'STAT News':'STAT','MedCity News':'MedCity','Healthcare Dive':'HcDive',
-    'Fierce Healthcare':'FcHC','Fierce Biotech':'FcBio','BioPharma Dive':'BPDive',
-    'Endpoints News':'Endpts','SaaStr':'SaaStr',
-    'Modern Retail':'ModRet','Retail Dive':'RetDive',
-    'CoinDesk':'CDesk','CoinTelegraph':'CoinTG','Decrypt':'Decrypt',
-    'The Block':'Block','Dev.to':'Dev.to','InfoQ':'InfoQ','EdSurge':'EdSurge',
-    'AI News':'AI·News','The Register':'Register',
-  };
-  return map[source] || source.slice(0,7);
-}
-
-// Fan out to all sources in parallel, merge and deduplicate
-async function ceFetchLiveNews(topic, industry, portals){
-  const [hnResult, workerResult] = await Promise.allSettled([
-    ceFetchHN(topic),
-    ceFetchWorkerNews(topic, industry, portals),
-  ]);
-
-  let articles = [];
-  if(hnResult.status === 'fulfilled' && hnResult.value) articles.push(...hnResult.value);
-  if(workerResult.status === 'fulfilled' && workerResult.value) articles.push(...workerResult.value);
-
-  if(!articles.length) return null;
-
-  // Deduplicate by first 40 chars of title (catches reposts / near-duplicates)
-  const seen = new Set();
-  articles = articles.filter(a => {
-    const key = a.title.toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,40);
-    if(seen.has(key)) return false;
-    seen.add(key); return true;
-  });
-
-  return articles.slice(0, 14);
-}
-
-const CE_FALLBACK_ARTICLES = [
-  { tag:'AI',      source:'Hacker News', date:'this week', title:'AI agents are eating the SaaS UI layer', angle:'Customers are asking for chat-first interfaces. The configure-it-yourself era is fading.' },
-  { tag:'Growth',  source:'Lenny\'s',    date:'this week', title:'The activation metrics that actually predict retention at scale', angle:'What you measure in week 1 shapes your year-1 curve.' },
-  { tag:'Pricing', source:'SaaStr',      date:'this week', title:'Usage-based pricing is now table stakes — flat per-seat is losing deals', angle:'Hybrid models are winning RFPs that pure subscription would lose.' },
-  { tag:'Product', source:'Reforge',     date:'this week', title:'Habit loops are dead — here\'s what actually drives daily active use', angle:'The engagement playbook has changed since 2020.' },
-  { tag:'GTM',     source:'First Round', date:'this week', title:'Founder-led content is outperforming brand-led content 5–10x', angle:'Audiences trust people, not logos.' },
-];
-
-async function ceSearchByIndustry(industry){
-  if(!industry) return;
-  const sel = $('ceIndustrySelect');
-  if(sel) sel.disabled = true;
-
-  const keywords = CE_INDUSTRY_KEYWORDS[industry] || industry;
-  const label    = CE_INDUSTRY_LABELS[industry]   || industry;
-  const profIndustry = state.profile?.industry || '';
-  const portals = (profIndustry === industry && state.profile?.newsPortals?.length)
-    ? state.profile.newsPortals
-    : (CE_INDUSTRY_PORTALS[industry] || []).map(pr => pr.id);
-
-  let hits = await ceFetchLiveNews(keywords, industry, portals);
-  if(!hits || !hits.length) hits = CE_FALLBACK_ARTICLES;
-
-  _ce.topic = label;
-  _ce.article = null; _ce._pickedAt = null;
-  ['linkedin','x','threads','instagram','reddit'].forEach(pl => { _ce.posts[pl] = {text:'',loading:false,generated:false}; });
-
-  $('ceNewsTitle').textContent = `${label} News · US`;
-  $('ceNewsHelper').textContent = `${hits.length} article${hits.length===1?'':'s'} — pick one to generate posts.`;
-
-  // Show which portals returned results
-  const uniqueSources = [...new Set(hits.map(h => h.source))].filter(Boolean);
-  const srcRow   = $('ceSourcesRow');
-  const srcChips = $('ceSourceChips');
-  if(srcRow && srcChips && uniqueSources.length){
-    srcChips.innerHTML = uniqueSources.map(s =>
-      `<span class="ce-tag" style="font-size:10px;padding:2px 7px">${ceEsc(ceSourceBadge(s))}</span>`
-    ).join('');
-    srcRow.style.display = 'flex';
-  } else if(srcRow){ srcRow.style.display = 'none'; }
-
-  _ce._articles = hits;
-  $('ceTrends').innerHTML = hits.map((t,i) => `
-    <button type="button" class="ce-trend" onclick="cePickArticle(${i})">
-      <div class="ce-trend-meta">
-        <span class="ce-tag">${ceEsc(t.tag||'News')}</span>
-        <span class="ce-trend-source">${ceEsc(t.source||'')} · ${ceEsc(t.date||'')}</span>
-      </div>
-      <h4>${ceEsc(t.title)}</h4>
-      <p>${ceEsc(t.angle)}</p>
-      <div class="ce-trend-foot"><span class="ce-pick">Generate post →</span></div>
-    </button>`).join('');
-
-  $('ceNewsPanel').style.display = 'block';
-  ceResetOutput();
-  if(sel) sel.disabled = false;
-  if(window.innerWidth<=1100) $('ceNewsPanel')?.scrollIntoView({behavior:'smooth',block:'start'});
-}
-
-async function cePickArticle(idx){
-  const t = _ce._articles[idx];
-  if(!t) return;
-  const pickedAt = Date.now();
-  _ce._pickedAt = pickedAt; _ce.article = t; _ce.topic = _ce.topic || t.title;
-  ['linkedin','x','threads','instagram','reddit'].forEach(p => { _ce.posts[p] = {text:'',loading:false,generated:false}; });
-  $('ceTrendContext').innerHTML = `<h4>${ceEsc(t.title)}</h4><p>${ceEsc(t.angle)}</p>`;
-  $('ceTrendContext').style.display = '';
-  ceShowControls();
-  ceGenerateCurrent(pickedAt);
-  if(window.innerWidth<=1100) $('ceStep3')?.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 /* ── URL mode ─────────────────────────────────────────────────────────── */
