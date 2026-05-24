@@ -98,100 +98,81 @@
 
     <!-- CONTENT ENGINE -->
     <section data-view="content">
-      <!-- Two-column grid -->
-      <div class="ce-grid">
-        <!-- LEFT: input + news list -->
-        <div class="ce-left" id="ceLeftCol">
-          <!-- Input step -->
-          <div class="ce-step">
-            <!-- Input mode tabs -->
-            <div class="ce-mode-tabs" style="margin-bottom:14px">
-              <button class="ce-mode-tab active" data-cmode="xprofile" onclick="ceSwitchInputMode('xprofile')">X Profile</button>
-              <button class="ce-mode-tab" data-cmode="url" onclick="ceSwitchInputMode('url')">Paste a URL</button>
-              <button class="ce-mode-tab" data-cmode="write" onclick="ceSwitchInputMode('write')">Write your own</button>
+      <div class="ce-step ce-output" id="ceStep3" style="position:static;max-height:none;overflow:visible">
+
+        <!-- Input mode tabs -->
+        <div class="ce-mode-tabs" style="margin-bottom:14px">
+          <button class="ce-mode-tab active" data-cmode="url" onclick="ceSwitchInputMode('url')">Paste a URL</button>
+          <button class="ce-mode-tab" data-cmode="write" onclick="ceSwitchInputMode('write')">Write your own</button>
+        </div>
+
+        <!-- Input panels -->
+        <div class="ce-input-wrap" style="margin-bottom:16px">
+          <div id="ceModeUrl" class="ce-mode-panel active">
+            <div class="row" style="gap:10px;align-items:stretch;flex-wrap:wrap">
+              <input id="ceUrlInput" type="url" placeholder="https://techcrunch.com/2025/..." style="flex:1;min-width:180px"/>
+              <button class="btn" id="ceUrlBtn" onclick="ceFetchUrlPreview()">Get article →</button>
             </div>
-            <!-- Input panels -->
-            <div class="ce-input-wrap" style="margin-bottom:0">
-              <div id="ceModeXProfile" class="ce-mode-panel active">
-                <div class="row" style="gap:10px;align-items:stretch">
-                  <input id="ceXProfileInput" type="text" placeholder="@username or https://x.com/username" style="flex:1;min-width:180px"/>
-                  <button class="btn" id="ceXProfileBtn" onclick="ceFetchXProfile()">Fetch posts →</button>
-                </div>
-                <p class="muted" style="margin:6px 0 0;font-size:12px">Fetches recent posts via public RSS · pick one to repurpose across all platforms</p>
-                <div id="ceXProfileResults" style="display:none;margin-top:10px"></div>
-              </div>
-              <div id="ceModeUrl" class="ce-mode-panel">
-                <div class="row" style="gap:10px;align-items:stretch;flex-wrap:wrap">
-                  <input id="ceUrlInput" type="url" placeholder="https://techcrunch.com/2025/..." style="flex:1;min-width:180px"/>
-                  <button class="btn" id="ceUrlBtn" onclick="ceFetchUrlPreview()">Get article →</button>
-                </div>
-                <div id="ceUrlPreview" style="display:none" class="ce-url-preview">
-                  <label style="font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px">Article title</label>
-                  <input id="ceUrlTitle" type="text" placeholder="Article title…" style="width:100%;margin-bottom:10px"/>
-                  <label style="font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px">Context (optional)</label>
-                  <input id="ceUrlContext" type="text" placeholder="What's the key insight from this article?" style="width:100%;margin-bottom:12px"/>
-                  <button class="btn" onclick="ceGenerateFromUrl()">Generate posts →</button>
-                </div>
-              </div>
-              <div id="ceModeWrite" class="ce-mode-panel">
-                <textarea id="ceWriteInput" placeholder="Paste rough notes, bullet points, or a half-formed idea. We'll turn it into polished posts for every platform…" style="min-height:110px;width:100%;resize:vertical;margin-bottom:10px"></textarea>
-                <div class="row" style="gap:10px;align-items:stretch;flex-wrap:wrap">
-                  <input id="ceWriteTopic" type="text" placeholder="Topic (optional): e.g., AI pricing" style="flex:1;min-width:140px"/>
-                  <button class="btn" id="ceWriteBtn" onclick="ceGenerateFromWrite()">Generate →</button>
-                </div>
-              </div>
+            <div id="ceUrlPreview" style="display:none" class="ce-url-preview">
+              <label style="font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px">Article title</label>
+              <input id="ceUrlTitle" type="text" placeholder="Article title…" style="width:100%;margin-bottom:10px"/>
+              <label style="font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px">Context (optional)</label>
+              <input id="ceUrlContext" type="text" placeholder="What's the key insight from this article?" style="width:100%;margin-bottom:12px"/>
+              <button class="btn" onclick="ceGenerateFromUrl()">Generate posts →</button>
+            </div>
+          </div>
+          <div id="ceModeWrite" class="ce-mode-panel">
+            <textarea id="ceWriteInput" placeholder="Paste rough notes, bullet points, or a half-formed idea. We'll turn it into polished posts for every platform…" style="min-height:110px;width:100%;resize:vertical;margin-bottom:10px"></textarea>
+            <div class="row" style="gap:10px;align-items:stretch;flex-wrap:wrap">
+              <input id="ceWriteTopic" type="text" placeholder="Topic (optional): e.g., AI pricing" style="flex:1;min-width:140px"/>
+              <button class="btn" id="ceWriteBtn" onclick="ceGenerateFromWrite()">Generate →</button>
             </div>
           </div>
         </div>
 
-        <!-- RIGHT: output (sticky) -->
-        <div class="ce-right">
-          <div class="ce-step ce-output" id="ceStep3">
-            <!-- Selected article context -->
-            <div class="ce-trend-context" id="ceTrendContext" style="display:none"></div>
+        <!-- Selected article context -->
+        <div class="ce-trend-context" id="ceTrendContext" style="display:none"></div>
 
-            <!-- Post type chips -->
-            <div id="ceTypeRow" class="ce-type-row" style="display:none">
-              <span class="ce-style-label">Type:</span>
-              <button class="ce-type-chip active" data-type="hot-take" onclick="ceSetType('hot-take')">Hot Take</button>
-              <button class="ce-type-chip" data-type="story" onclick="ceSetType('story')">Story</button>
-              <button class="ce-type-chip" data-type="teach" onclick="ceSetType('teach')">Teach</button>
-              <button class="ce-type-chip" data-type="data" onclick="ceSetType('data')">Data-Led</button>
-              <button class="ce-type-chip" data-type="question" onclick="ceSetType('question')">Question</button>
-              <button class="ce-type-chip" data-type="founder" onclick="ceSetType('founder')">Founder</button>
-            </div>
+        <!-- Post type chips -->
+        <div id="ceTypeRow" class="ce-type-row" style="display:none">
+          <span class="ce-style-label">Type:</span>
+          <button class="ce-type-chip active" data-type="hot-take" onclick="ceSetType('hot-take')">Hot Take</button>
+          <button class="ce-type-chip" data-type="story" onclick="ceSetType('story')">Story</button>
+          <button class="ce-type-chip" data-type="teach" onclick="ceSetType('teach')">Teach</button>
+          <button class="ce-type-chip" data-type="data" onclick="ceSetType('data')">Data-Led</button>
+          <button class="ce-type-chip" data-type="question" onclick="ceSetType('question')">Question</button>
+          <button class="ce-type-chip" data-type="founder" onclick="ceSetType('founder')">Founder</button>
+        </div>
 
-            <!-- Platform tabs -->
-            <div id="cePlatformTabs" class="ce-platform-tabs" style="display:none">
-              <button class="ce-plat-tab active" data-plat="linkedin" onclick="ceSwitchPlatform('linkedin')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14zM8.5 17V10h-2v7h2zm-1-7.9a1.1 1.1 0 1 0 0-2.2 1.1 1.1 0 0 0 0 2.2zM18 17v-3.9c0-2.1-1.1-3.1-2.6-3.1-1.2 0-1.7.7-2 1.2V10h-2v7h2v-4c0-1 .2-2 1.4-2s1.2 1.1 1.2 2v4H18z"/></svg>LinkedIn</button>
-              <button class="ce-plat-tab" data-plat="x" onclick="ceSwitchPlatform('x')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2H21.5l-7.36 8.41L23 22h-6.84l-5.21-6.81L4.91 22H1.65l7.86-8.98L1.5 2h6.99l4.71 6.23L18.244 2z"/></svg>X</button>
-              <button class="ce-plat-tab" data-plat="threads" onclick="ceSwitchPlatform('threads')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.186 24h-.007c-3.581-.024-6.334-1.205-8.184-3.509C2.35 18.44 1.5 15.586 1.473 12.01v-.017c.027-3.579.877-6.43 2.525-8.482C5.845 1.205 8.6.024 12.18 0h.014c2.746.02 5.043.725 6.826 2.098 1.677 1.29 2.858 3.13 3.509 5.467l-2.04.569c-.505-1.865-1.406-3.348-2.67-4.29-1.283-.963-2.95-1.467-5.07-1.482-2.678.02-4.758.853-6.184 2.476-1.406 1.6-2.124 3.958-2.145 7.011.021 3.054.739 5.41 2.145 7.012 1.426 1.622 3.506 2.455 6.184 2.474 1.996-.015 3.491-.438 4.651-1.298.952-.708 1.673-1.72 2.145-3.003l2.03.618c-.627 1.626-1.564 2.914-2.8 3.832-1.454 1.052-3.289 1.6-5.588 1.617z"/></svg>Threads</button>
-              <button class="ce-plat-tab" data-plat="instagram" onclick="ceSwitchPlatform('instagram')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>Instagram</button>
-              <button class="ce-plat-tab" data-plat="reddit" onclick="ceSwitchPlatform('reddit')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.13 4.87-7.004 4.87-3.874 0-7.004-2.176-7.004-4.87 0-.183.015-.366.043-.534A1.748 1.748 0 0 1 4.028 12c0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.487l.885-4.182a.342.342 0 0 1 .14-.197.35.35 0 0 1 .238-.042l2.906.617a1.214 1.214 0 0 1 1.108-.701zM9.25 12C8.561 12 8 12.562 8 13.25c0 .687.561 1.248 1.25 1.248.687 0 1.248-.561 1.248-1.249 0-.688-.561-1.249-1.249-1.249zm5.5 0c-.687 0-1.248.561-1.248 1.25 0 .687.561 1.248 1.249 1.248.688 0 1.249-.561 1.249-1.249 0-.687-.562-1.249-1.25-1.249zm-5.466 3.99a.327.327 0 0 0-.231.094.33.33 0 0 0 0 .463c.842.842 2.484.913 2.961.913.477 0 2.105-.056 2.961-.913a.361.361 0 0 0 .029-.463.33.33 0 0 0-.464 0c-.547.533-1.684.73-2.512.73-.828 0-1.979-.196-2.512-.73a.326.326 0 0 0-.232-.095z"/></svg>Reddit</button>
-            </div>
+        <!-- Platform tabs -->
+        <div id="cePlatformTabs" class="ce-platform-tabs" style="display:none">
+          <button class="ce-plat-tab active" data-plat="linkedin" onclick="ceSwitchPlatform('linkedin')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14zM8.5 17V10h-2v7h2zm-1-7.9a1.1 1.1 0 1 0 0-2.2 1.1 1.1 0 0 0 0 2.2zM18 17v-3.9c0-2.1-1.1-3.1-2.6-3.1-1.2 0-1.7.7-2 1.2V10h-2v7h2v-4c0-1 .2-2 1.4-2s1.2 1.1 1.2 2v4H18z"/></svg>LinkedIn</button>
+          <button class="ce-plat-tab" data-plat="x" onclick="ceSwitchPlatform('x')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2H21.5l-7.36 8.41L23 22h-6.84l-5.21-6.81L4.91 22H1.65l7.86-8.98L1.5 2h6.99l4.71 6.23L18.244 2z"/></svg>X</button>
+          <button class="ce-plat-tab" data-plat="threads" onclick="ceSwitchPlatform('threads')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.186 24h-.007c-3.581-.024-6.334-1.205-8.184-3.509C2.35 18.44 1.5 15.586 1.473 12.01v-.017c.027-3.579.877-6.43 2.525-8.482C5.845 1.205 8.6.024 12.18 0h.014c2.746.02 5.043.725 6.826 2.098 1.677 1.29 2.858 3.13 3.509 5.467l-2.04.569c-.505-1.865-1.406-3.348-2.67-4.29-1.283-.963-2.95-1.467-5.07-1.482-2.678.02-4.758.853-6.184 2.476-1.406 1.6-2.124 3.958-2.145 7.011.021 3.054.739 5.41 2.145 7.012 1.426 1.622 3.506 2.455 6.184 2.474 1.996-.015 3.491-.438 4.651-1.298.952-.708 1.673-1.72 2.145-3.003l2.03.618c-.627 1.626-1.564 2.914-2.8 3.832-1.454 1.052-3.289 1.6-5.588 1.617z"/></svg>Threads</button>
+          <button class="ce-plat-tab" data-plat="instagram" onclick="ceSwitchPlatform('instagram')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>Instagram</button>
+          <button class="ce-plat-tab" data-plat="reddit" onclick="ceSwitchPlatform('reddit')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.13 4.87-7.004 4.87-3.874 0-7.004-2.176-7.004-4.87 0-.183.015-.366.043-.534A1.748 1.748 0 0 1 4.028 12c0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.487l.885-4.182a.342.342 0 0 1 .14-.197.35.35 0 0 1 .238-.042l2.906.617a1.214 1.214 0 0 1 1.108-.701zM9.25 12C8.561 12 8 12.562 8 13.25c0 .687.561 1.248 1.25 1.248.687 0 1.248-.561 1.248-1.249 0-.688-.561-1.249-1.249-1.249zm5.5 0c-.687 0-1.248.561-1.248 1.25 0 .687.561 1.248 1.249 1.248.688 0 1.249-.561 1.249-1.249 0-.687-.562-1.249-1.25-1.249zm-5.466 3.99a.327.327 0 0 0-.231.094.33.33 0 0 0 0 .463c.842.842 2.484.913 2.961.913.477 0 2.105-.056 2.961-.913a.361.361 0 0 0 .029-.463.33.33 0 0 0-.464 0c-.547.533-1.684.73-2.512.73-.828 0-1.979-.196-2.512-.73a.326.326 0 0 0-.232-.095z"/></svg>Reddit</button>
+        </div>
 
-            <!-- X thread toggle — only visible when X tab is active -->
-            <div id="ceXModeRow" class="ce-xmode-row" style="display:none">
-              <span class="ce-style-label">Format:</span>
-              <button class="ce-xmode-btn active" data-xmode="single" onclick="ceSetXMode('single')">Single post</button>
-              <button class="ce-xmode-btn" data-xmode="thread" onclick="ceSetXMode('thread')">Thread</button>
-            </div>
+        <!-- X thread toggle — only visible when X tab is active -->
+        <div id="ceXModeRow" class="ce-xmode-row" style="display:none">
+          <span class="ce-style-label">Format:</span>
+          <button class="ce-xmode-btn active" data-xmode="single" onclick="ceSetXMode('single')">Single post</button>
+          <button class="ce-xmode-btn" data-xmode="thread" onclick="ceSetXMode('thread')">Thread</button>
+        </div>
 
-            <div class="ce-posts" id="ceGenerated"></div>
+        <div class="ce-posts" id="ceGenerated"></div>
 
-            <div class="ce-empty" id="ceEmpty">
-              <div class="ce-empty-title">Your post will appear here</div>
-              <span style="color:var(--muted);font-size:14px">Search news and pick an article · paste a URL · or write your own brief.</span>
-            </div>
+        <div class="ce-empty" id="ceEmpty">
+          <div class="ce-empty-title">Your post will appear here</div>
+          <span style="color:var(--muted);font-size:14px">Paste a URL or write your own brief to generate posts.</span>
+        </div>
 
-            <div id="ceHistorySection" style="display:none" class="ce-history">
-              <button class="ce-history-toggle" onclick="ceToggleHistory()">
-                History <span class="ce-history-count" id="ceHistoryCount">0</span>
-                <span id="ceHistoryArrow">▾</span>
-              </button>
-              <div id="ceHistoryList" style="display:none" class="ce-history-list"></div>
-            </div>
-          </div>
+        <div id="ceHistorySection" style="display:none" class="ce-history">
+          <button class="ce-history-toggle" onclick="ceToggleHistory()">
+            History <span class="ce-history-count" id="ceHistoryCount">0</span>
+            <span id="ceHistoryArrow">▾</span>
+          </button>
+          <div id="ceHistoryList" style="display:none" class="ce-history-list"></div>
         </div>
       </div>
     </section>

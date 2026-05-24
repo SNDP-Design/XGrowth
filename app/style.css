@@ -242,13 +242,7 @@
   body.authed .auth-gate{display:none !important}
   /* Content Engine module */
   .ce-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap}
-  .ce-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start}
-  @media (max-width:1100px){.ce-grid{grid-template-columns:1fr}}
-  .ce-left{display:flex;flex-direction:column;gap:0;min-width:0}
-  .ce-right{position:sticky;top:14px;min-width:0}
-  @media (max-width:1100px){.ce-right{position:static;top:auto}}
-  .ce-output{max-height:calc(100vh - 28px);overflow-y:auto;display:flex;flex-direction:column}
-  @media (max-width:1100px){.ce-output{max-height:none;overflow:visible}}
+  .ce-output{display:flex;flex-direction:column}
   .ce-step{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-bottom:14px}
   .ce-step-head{display:flex;align-items:center;gap:12px;margin:0 0 6px;flex-wrap:wrap}
   .ce-step-head h3{margin:0;font-size:17px;letter-spacing:-.2px}

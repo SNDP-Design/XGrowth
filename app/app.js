@@ -323,7 +323,7 @@ async function xgFetch(path, payload){
 }
 
 const _ce = {
-  inputMode: 'xprofile',
+  inputMode: 'url',
   topic: '',
   article: null,
   platform: 'linkedin',
@@ -348,7 +348,7 @@ function ceSwitchInputMode(mode) {
   _ce.inputMode = mode;
   document.querySelectorAll('.ce-mode-tab').forEach(b => b.classList.toggle('active', b.dataset.cmode === mode));
   document.querySelectorAll('.ce-mode-panel').forEach(p => p.classList.remove('active'));
-  const panelMap = { xprofile:'ceModeXProfile', url:'ceModeUrl', write:'ceModeWrite' };
+  const panelMap = { url:'ceModeUrl', write:'ceModeWrite' };
   $(panelMap[mode])?.classList.add('active');
 }
 
