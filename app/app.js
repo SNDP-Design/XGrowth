@@ -157,7 +157,15 @@ function applyProfile(){
   const stageEl = document.getElementById('stageTag'); if(stageEl) stageEl.textContent = p.stage;
   const goalEl  = document.getElementById('goalTag');  if(goalEl)  goalEl.textContent  = p.goal;
   const audEl   = document.getElementById('audienceTag'); if(audEl) audEl.textContent = p.target || '—';
-  const st = document.getElementById('sessionTag'); if(st) st.textContent = p.niche.split(' ')[0];
+  const st = document.getElementById('sessionTag'); if(st) st.textContent = p.niche?.split(' ')[0] || '';
+  // Pre-select industry in the news dropdown if profile has one
+  if(p.industry){
+    const sel = document.getElementById('ceIndustrySelect');
+    if(sel && sel.value !== p.industry){
+      sel.value = p.industry;
+      ceSearchByIndustry(p.industry);
+    }
+  }
 }
 
 function parseGoals(s){
@@ -268,6 +276,41 @@ const CE_INDUSTRY_PORTALS = {
   ],
 };
 
+/* Industry → search keywords for HN Algolia (US startup/tech angle) */
+const CE_INDUSTRY_KEYWORDS = {
+  'ai-ml':        'artificial intelligence machine learning AI LLM startup',
+  'climate-tech': 'climate tech clean energy renewable solar EV battery startup',
+  'fintech':      'fintech payments banking financial technology startup',
+  'health-tech':  'health tech digital health medtech telemedicine startup',
+  'saas-b2b':     'SaaS B2B software startup enterprise growth product',
+  'ecommerce':    'ecommerce DTC direct-to-consumer retail brand startup',
+  'crypto-web3':  'crypto blockchain web3 DeFi protocol token startup',
+  'dev-tools':    'developer tools devops cloud infrastructure platform startup',
+  'biotech':      'biotech biopharma life sciences drug discovery clinical',
+  'edtech':       'edtech education technology learning online startup',
+  'general':      'startup tech venture capital funding product launch',
+};
+const CE_INDUSTRY_LABELS = {
+  'ai-ml':'AI / Machine Learning', 'climate-tech':'Climate Tech',
+  'fintech':'Fintech', 'health-tech':'Health Tech',
+  'saas-b2b':'SaaS / B2B', 'ecommerce':'E-commerce',
+  'crypto-web3':'Crypto / Web3', 'dev-tools':'Dev Tools',
+  'biotech':'Biotech', 'edtech':'EdTech', 'general':'General Tech',
+};
+
+/* Filter HN hits to US sources only (exclude obvious non-US TLDs) */
+function ceIsUsSource(url){
+  if(!url) return true;
+  try {
+    const h = new URL(url).hostname.toLowerCase();
+    const nonUs = ['.co.uk','.com.au','.co.au','.de','.fr','.eu','.in','.ca',
+                   '.nl','.se','.fi','.no','.dk','.pl','.ru','.jp','.cn',
+                   '.kr','.com.br','.com.mx','.it','.es','.pt','.ch','.at',
+                   '.be','.co.nz','.com.sg','.com.hk','.co.jp','.com.tw'];
+    return !nonUs.some(tld => h.endsWith(tld));
+  } catch { return true; }
+}
+
 /* Show/hide portal chips when industry is picked in the welcome modal */
 function ceOnboardingIndustryChange(industry){
   const portals = CE_INDUSTRY_PORTALS[industry] || [];
@@ -335,7 +378,7 @@ const _ce = {
   _pickedAt: null,
   _articles: [],
 };
-['linkedin','x','threads','instagram','reddit'].forEach(p => {
+['linkedin','x','threads','instagram'].forEach(p => {
   _ce.posts[p] = { text: '', loading: false, generated: false };
 });
 
@@ -391,6 +434,8 @@ async function ceFetchHN(topic){
     const data = await res.json();
     let hits = (data.hits||[]).filter(h => h.title && h.url && ((h.points||0)>=3||(h.num_comments||0)>=2));
     if(!hits.length) hits = (data.hits||[]).filter(h => h.title && h.url);
+    // US-only filter
+    hits = hits.filter(h => ceIsUsSource(h.url));
     hits = hits.slice(0,8);
     if(!hits.length) return null;
     return hits.map(h => ({
@@ -402,11 +447,11 @@ async function ceFetchHN(topic){
 }
 
 // Industry-routed RSS news — fetched via Worker (no CORS, no API key)
-async function ceFetchWorkerNews(topic){
+async function ceFetchWorkerNews(topic, industry, portals){
   try {
-    const industry = state.profile?.industry || '';
-    const portals  = state.profile?.newsPortals || [];
-    const data = await xgFetch('/news', { topic, industry, portals });
+    const ind  = industry || state.profile?.industry || '';
+    const prts = portals  || state.profile?.newsPortals || [];
+    const data = await xgFetch('/news', { topic, industry: ind, portals: prts });
     if(!data.articles || !data.articles.length) return null;
     return data.articles.map(a => ({
       tag:   a.source,
@@ -441,10 +486,10 @@ function ceSourceBadge(source){
 }
 
 // Fan out to all sources in parallel, merge and deduplicate
-async function ceFetchLiveNews(topic){
+async function ceFetchLiveNews(topic, industry, portals){
   const [hnResult, workerResult] = await Promise.allSettled([
     ceFetchHN(topic),
-    ceFetchWorkerNews(topic),
+    ceFetchWorkerNews(topic, industry, portals),
   ]);
 
   let articles = [];
@@ -472,21 +517,26 @@ const CE_FALLBACK_ARTICLES = [
   { tag:'GTM',     source:'First Round', date:'this week', title:'Founder-led content is outperforming brand-led content 5–10x', angle:'Audiences trust people, not logos.' },
 ];
 
-async function ceSearchNews(){
-  const topic = $('ceTopicInput')?.value?.trim();
-  if(!topic){ toast('Type a topic first'); $('ceTopicInput')?.focus(); return; }
-  const btn = $('ceSearchBtn');
-  if(btn){ btn.disabled=true; btn.innerHTML='<span class="ce-spinner"></span>Searching…'; }
+async function ceSearchByIndustry(industry){
+  if(!industry) return;
+  const sel = $('ceIndustrySelect');
+  if(sel) sel.disabled = true;
 
-  let hits = await ceFetchLiveNews(topic);
-  if(!hits) hits = CE_FALLBACK_ARTICLES;
+  const keywords = CE_INDUSTRY_KEYWORDS[industry] || industry;
+  const label    = CE_INDUSTRY_LABELS[industry]   || industry;
+  const profIndustry = state.profile?.industry || '';
+  const portals = (profIndustry === industry && state.profile?.newsPortals?.length)
+    ? state.profile.newsPortals
+    : (CE_INDUSTRY_PORTALS[industry] || []).map(pr => pr.id);
 
-  _ce.topic = topic;
+  let hits = await ceFetchLiveNews(keywords, industry, portals);
+  if(!hits || !hits.length) hits = CE_FALLBACK_ARTICLES;
+
+  _ce.topic = label;
   _ce.article = null; _ce._pickedAt = null;
-  ['linkedin','x','threads','instagram','reddit'].forEach(p => { _ce.posts[p] = {text:'',loading:false,generated:false}; });
+  ['linkedin','x','threads','instagram'].forEach(pl => { _ce.posts[pl] = {text:'',loading:false,generated:false}; });
 
-  const cap = topic.charAt(0).toUpperCase() + topic.slice(1);
-  $('ceNewsTitle').textContent = `Latest: ${cap}`;
+  $('ceNewsTitle').textContent = `${label} News · US`;
   $('ceNewsHelper').textContent = `${hits.length} article${hits.length===1?'':'s'} — pick one to generate posts.`;
 
   // Show which portals returned results
@@ -514,7 +564,7 @@ async function ceSearchNews(){
 
   $('ceNewsPanel').style.display = 'block';
   ceResetOutput();
-  if(btn){ btn.disabled=false; btn.innerHTML='Search news →'; }
+  if(sel) sel.disabled = false;
   if(window.innerWidth<=1100) $('ceNewsPanel')?.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
@@ -523,7 +573,7 @@ async function cePickArticle(idx){
   if(!t) return;
   const pickedAt = Date.now();
   _ce._pickedAt = pickedAt; _ce.article = t; _ce.topic = _ce.topic || t.title;
-  ['linkedin','x','threads','instagram','reddit'].forEach(p => { _ce.posts[p] = {text:'',loading:false,generated:false}; });
+  ['linkedin','x','threads','instagram'].forEach(p => { _ce.posts[p] = {text:'',loading:false,generated:false}; });
   $('ceTrendContext').innerHTML = `<h4>${ceEsc(t.title)}</h4><p>${ceEsc(t.angle)}</p>`;
   $('ceTrendContext').style.display = '';
   ceShowControls();
@@ -553,7 +603,7 @@ async function ceGenerateFromUrl(){
   if(!title){ toast('Enter the article title first'); $('ceUrlTitle')?.focus(); return; }
   _ce.topic = title; _ce.article = { title, angle:context||'', url:$('ceUrlInput')?.value?.trim()||'' };
   const pickedAt = Date.now(); _ce._pickedAt = pickedAt;
-  ['linkedin','x','threads','instagram','reddit'].forEach(p => { _ce.posts[p] = {text:'',loading:false,generated:false}; });
+  ['linkedin','x','threads','instagram'].forEach(p => { _ce.posts[p] = {text:'',loading:false,generated:false}; });
   $('ceTrendContext').innerHTML = `<h4>${ceEsc(title)}</h4>${context?`<p>${ceEsc(context)}</p>`:''}`;
   $('ceTrendContext').style.display = '';
   ceShowControls(); ceGenerateCurrent(pickedAt);
@@ -568,7 +618,7 @@ async function ceGenerateFromWrite(){
   _ce.topic = topic||'startup insight';
   _ce.article = { title:notes, angle:'', url:'', inputMode:'freewrite' };
   const pickedAt = Date.now(); _ce._pickedAt = pickedAt;
-  ['linkedin','x','threads','instagram','reddit'].forEach(p => { _ce.posts[p] = {text:'',loading:false,generated:false}; });
+  ['linkedin','x','threads','instagram'].forEach(p => { _ce.posts[p] = {text:'',loading:false,generated:false}; });
   $('ceTrendContext').style.display='none';
   ceShowControls(); ceGenerateCurrent(pickedAt);
 }
@@ -584,7 +634,7 @@ function ceResetOutput(){
   $('ceTypeRow').style.display='none'; $('cePlatformTabs').style.display='none';
   const xRow = $('ceXModeRow'); if(xRow) xRow.style.display='none';
   $('ceTrendContext').style.display='none'; $('ceEmpty').style.display=''; $('ceGenerated').innerHTML='';
-  ['linkedin','x','threads','instagram','reddit'].forEach(p => { _ce.posts[p] = {text:'',loading:false,generated:false}; });
+  ['linkedin','x','threads','instagram'].forEach(p => { _ce.posts[p] = {text:'',loading:false,generated:false}; });
   _ce.threadMode = false;
   document.querySelectorAll('.ce-xmode-btn').forEach(b => b.classList.toggle('active', b.dataset.xmode==='single'));
 }
@@ -683,7 +733,7 @@ function ceFallback(platform, article){
   if(platform==='x') return title.slice(0,277)+(title.length>277?'…':'');
   if(platform==='threads') return title.slice(0,497)+(title.length>497?'…':'');
   if(platform==='instagram') return `CAPTION:\n${title.slice(0,240)}\n\nHASHTAGS:\n#startup #saas #founder #buildinpublic #indiehacker #productlaunch #b2b #growthmarketing #startuplife #solofounder #makersgonnamake #sideproject #bootstrapped #indiemaker #techstartup`;
-  if(platform==='reddit') return `SUBREDDIT: r/startups\n\nTITLE: ${title.slice(0,190)}\n\nBODY:\nSharing this because it sparked a real reaction. Curious what others are seeing in this space.`;
+
   return title;
 }
 
@@ -694,7 +744,7 @@ const CE_PLAT_INFO = {
   x:         { label:'X / Twitter',limit:280,  svg:`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2H21.5l-7.36 8.41L23 22h-6.84l-5.21-6.81L4.91 22H1.65l7.86-8.98L1.5 2h6.99l4.71 6.23L18.244 2z"/></svg>` },
   threads:   { label:'Threads',    limit:500,  svg:`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.186 24h-.007c-3.581-.024-6.334-1.205-8.184-3.509C2.35 18.44 1.5 15.586 1.473 12.01v-.017c.027-3.579.877-6.43 2.525-8.482C5.845 1.205 8.6.024 12.18 0h.014c2.746.02 5.043.725 6.826 2.098 1.677 1.29 2.858 3.13 3.509 5.467l-2.04.569c-.505-1.865-1.406-3.348-2.67-4.29-1.283-.963-2.95-1.467-5.07-1.482-2.678.02-4.758.853-6.184 2.476-1.406 1.6-2.124 3.958-2.145 7.011.021 3.054.739 5.41 2.145 7.012 1.426 1.622 3.506 2.455 6.184 2.474 1.996-.015 3.491-.438 4.651-1.298.952-.708 1.673-1.72 2.145-3.003l2.03.618c-.627 1.626-1.564 2.914-2.8 3.832-1.454 1.052-3.289 1.6-5.588 1.617z"/></svg>` },
   instagram: { label:'Instagram',  limit:2200, svg:`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>` },
-  reddit:    { label:'Reddit',     limit:null, svg:`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.13 4.87-7.004 4.87-3.874 0-7.004-2.176-7.004-4.87 0-.183.015-.366.043-.534A1.748 1.748 0 0 1 4.028 12c0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.487l.885-4.182a.342.342 0 0 1 .14-.197.35.35 0 0 1 .238-.042l2.906.617a1.214 1.214 0 0 1 1.108-.701zM9.25 12C8.561 12 8 12.562 8 13.25c0 .687.561 1.248 1.25 1.248.687 0 1.248-.561 1.248-1.249 0-.688-.561-1.249-1.249-1.249zm5.5 0c-.687 0-1.248.561-1.248 1.25 0 .687.561 1.248 1.249 1.248.688 0 1.249-.561 1.249-1.249 0-.687-.562-1.249-1.25-1.249zm-5.466 3.99a.327.327 0 0 0-.231.094.33.33 0 0 0 0 .463c.842.842 2.484.913 2.961.913.477 0 2.105-.056 2.961-.913a.361.361 0 0 0 .029-.463.33.33 0 0 0-.464 0c-.547.533-1.684.73-2.512.73-.828 0-1.979-.196-2.512-.73a.326.326 0 0 0-.232-.095z"/></svg>` },
+
 };
 
 function ceRenderCurrentPost(){
@@ -729,17 +779,6 @@ function cePostCard(platform, loading, text){
     // Fall through to single-tweet renderer if parsing failed
   }
 
-  if(platform==='reddit'){
-    const {subreddit, title, body} = ceParseReddit(text);
-    return `<div class="ce-post" data-platform="reddit"><div class="ce-post-head"><span class="ce-post-platform">${info.svg} ${info.label}</span><span class="ce-ai-badge">AI</span></div>
-    <div class="ce-reddit">
-      ${subreddit?`<div class="ce-reddit-section"><label>Suggested subreddit</label><p>${ceEsc(subreddit)}</p><button class="btn ghost" style="height:28px;padding:0 10px;font-size:12px;margin-top:8px" data-ce-copy="${ceEsc(subreddit)}" onclick="ceCopyAttr(this)">Copy</button></div>`:''}
-      ${title?`<div class="ce-reddit-section"><label>Post title</label><p>${ceEsc(title)}</p><button class="btn ghost" style="height:28px;padding:0 10px;font-size:12px;margin-top:8px" data-ce-copy="${ceEsc(title)}" onclick="ceCopyAttr(this)">Copy title</button></div>`:''}
-      ${body?`<div class="ce-reddit-section"><label>Post body</label><p class="ce-post-text" style="font-size:14px">${ceEsc(body)}</p><button class="btn ghost" style="height:28px;padding:0 10px;font-size:12px;margin-top:8px" data-ce-copy="${ceEsc(body)}" onclick="ceCopyAttr(this)">Copy body</button></div>`:''}
-    </div>
-    <div class="ce-post-foot"><span class="ce-count">${text.length} chars</span><div class="ce-post-actions"><button class="btn ghost" data-ce-copy="${ceEsc(text)}" onclick="ceCopyAttr(this)">Copy all</button><a class="btn publish" href="https://www.reddit.com/submit" target="_blank" rel="noopener noreferrer">Post on Reddit ↗</a></div></div>
-    ${ceRefineBar()}</div>`;
-  }
 
   const limit = info.limit, len = text.length;
   const postUrl = {
@@ -756,24 +795,12 @@ function cePostCard(platform, loading, text){
 
 /* ── Parsers ──────────────────────────────────────────────────────────── */
 
-const CE_REFINE_CHIPS = [
-  { label:'Shorter',           instruction:'Make it noticeably shorter. Cut every word that doesn\'t earn its place.' },
-  { label:'Punchier hook',     instruction:'Rewrite with a stronger, more arresting opening line. Hook within the first 6 words.' },
-  { label:'Add a story',       instruction:'Reframe as a short personal narrative: setup, tension, resolution. First person.' },
-  { label:'Lead with data',    instruction:'Open with the most concrete number or stat. Anchor the whole post around it.' },
-  { label:'More casual',       instruction:'Make the tone conversational, like texting a smart friend. Loosen the register.' },
-];
-
 function ceRefineBar(){
-  const chips = CE_REFINE_CHIPS.map(c =>
-    `<button class="ce-refine-chip" onclick="ceRegenerate(${JSON.stringify(c.instruction)})">${c.label}</button>`
-  ).join('');
   return `<div class="ce-refine-bar">
     <button class="ce-regen-btn" onclick="ceRegenerateFresh()" title="New variation">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
       Regenerate
     </button>
-    <div class="ce-refine-chips">${chips}</div>
   </div>`;
 }
 
@@ -840,18 +867,6 @@ function ceParseInstagram(text){
   return { caption:text, hashtags:'' };
 }
 
-function ceParseReddit(text){
-  // SUBREDDIT: may include "r/" prefix or not — normalise
-  const subMatch = text.match(/SUBREDDIT:\s*(.+)/i);
-  const sub = (subMatch?.[1]||'').trim();
-  // TITLE: everything to end of that line
-  const titleMatch = text.match(/TITLE:\s*(.+)/i);
-  const title = (titleMatch?.[1]||'').trim();
-  // BODY: everything after BODY: label to end of string
-  const bodyMatch = text.match(/BODY:\s*([\s\S]+?)$/i);
-  const body = (bodyMatch?.[1]||'').trim();
-  return { subreddit: sub, title, body };
-}
 
 /* ── History ──────────────────────────────────────────────────────────── */
 
@@ -896,7 +911,7 @@ function ceToggleHistory(){
 
 function ceRenderHistoryList(){
   const list=$('ceHistoryList'); if(!list) return;
-  const LABELS={linkedin:'LinkedIn',x:'X',threads:'Threads',instagram:'Instagram',reddit:'Reddit'};
+  const LABELS={linkedin:'LinkedIn',x:'X',threads:'Threads',instagram:'Instagram'};
   if(!_ce.history.length){ list.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px 0">No posts generated yet.</div>'; return; }
   list.innerHTML=_ce.history.map(h=>`
     <div class="ce-history-item">
@@ -1139,12 +1154,11 @@ function ceCopyAttr(btn){
   navigator.clipboard.writeText(text).then(()=>toast('Copied'));
 }
 
-// Enter-to-trigger for search + URL inputs
+// Enter-to-trigger for URL input
 document.addEventListener('keydown',(e)=>{
   if(e.key!=='Enter') return;
   const id=document.activeElement?.id;
-  if(id==='ceTopicInput'){ e.preventDefault(); ceSearchNews(); }
-  else if(id==='ceUrlInput'){ e.preventDefault(); ceFetchUrlPreview(); }
+  if(id==='ceUrlInput'){ e.preventDefault(); ceFetchUrlPreview(); }
 });
 
 /* ========= Mobile drawer ========= */
