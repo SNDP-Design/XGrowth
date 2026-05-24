@@ -103,7 +103,6 @@
           <h2 class="section" style="margin-bottom:4px">Content Engine</h2>
           <p class="lede" style="margin:0">One brief → ready-to-post content for every platform.</p>
         </div>
-        <button class="btn ghost" onclick="ceVoiceOpen()" style="flex-shrink:0;margin-top:4px">Voice settings</button>
       </div>
 
       <!-- Two-column grid -->
@@ -250,25 +249,6 @@
 
 <div class="toast" id="toast">Copied</div>
 
-<!-- Voice settings modal -->
-<div class="ce-voice-overlay" id="ceVoiceOverlay" onclick="if(event.target===this)ceVoiceClose()">
-  <div class="ce-voice-modal">
-    <h3>Voice settings</h3>
-    <span class="vm-label">Writing style</span>
-    <div class="ce-voice-style-row">
-      <button class="ce-voice-style-btn active" data-vstyle="casual" onclick="ceVoiceSetStyle('casual')">Casual</button>
-      <button class="ce-voice-style-btn" data-vstyle="professional" onclick="ceVoiceSetStyle('professional')">Professional</button>
-      <button class="ce-voice-style-btn" data-vstyle="bold" onclick="ceVoiceSetStyle('bold')">Bold</button>
-    </div>
-    <span class="vm-label">Your niche / context</span>
-    <input id="ceVoiceNiche" type="text" placeholder="e.g., B2B SaaS for HR teams · indie maker · fintech founder" style="width:100%;margin-bottom:20px"/>
-    <p style="color:var(--muted);font-size:13px;margin:0 0 18px;line-height:1.5">This context is sent to the AI with every post you generate — it personalises the voice to your audience.</p>
-    <div class="row" style="justify-content:flex-end;gap:10px">
-      <button class="btn secondary" onclick="ceVoiceClose()">Cancel</button>
-      <button class="btn" onclick="ceVoiceSave()">Save</button>
-    </div>
-  </div>
-</div>
 
 <!-- Image generation modal -->
 <div class="ce-imggen-overlay" id="ceImgGenOverlay" onclick="if(event.target===this)ceImgClose()">

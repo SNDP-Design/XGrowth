@@ -281,7 +281,10 @@ function ceAngleFromHit(h){
   return `Posted to Hacker News (${p} points, ${c} comments).`;
 }
 
-async function ceFetchLiveNews(topic){
+/* ── Multi-source news fetching ───────────────────────────────────────── */
+
+// Hacker News via Algolia — great for tech/startup topics
+async function ceFetchHN(topic){
   try {
     const oneYearAgo = Math.floor(Date.now()/1000) - 365*24*3600;
     const url = `https://hn.algolia.com/api/v1/search_by_date?query=${encodeURIComponent(topic)}&tags=story&hitsPerPage=24&numericFilters=created_at_i>${oneYearAgo}`;
@@ -293,7 +296,7 @@ async function ceFetchLiveNews(topic){
     const data = await res.json();
     let hits = (data.hits||[]).filter(h => h.title && h.url && ((h.points||0)>=3||(h.num_comments||0)>=2));
     if(!hits.length) hits = (data.hits||[]).filter(h => h.title && h.url);
-    hits = hits.slice(0,10);
+    hits = hits.slice(0,8);
     if(!hits.length) return null;
     return hits.map(h => ({
       tag: ceTagFromHit(h), source: ceDomainFromUrl(h.url)||'news.ycombinator.com',
@@ -301,6 +304,52 @@ async function ceFetchLiveNews(topic){
       url: h.url||`https://news.ycombinator.com/item?id=${h.objectID}`
     }));
   } catch { return null; }
+}
+
+// TechCrunch, The Verge, Wired, VentureBeat — via Worker /news endpoint (RSS proxy)
+async function ceFetchWorkerNews(topic){
+  try {
+    const data = await xgFetch('/news', { topic });
+    if(!data.articles || !data.articles.length) return null;
+    return data.articles.map(a => ({
+      tag: ceSourceBadge(a.source),
+      source: a.source,
+      date: ceRelDate(a.pubDate),
+      title: a.title,
+      angle: a.description ? a.description.slice(0,180) : `Recent coverage from ${a.source}.`,
+      url: a.url,
+    }));
+  } catch { return null; }
+}
+
+function ceSourceBadge(source){
+  const map = { 'TechCrunch':'TC', 'The Verge':'Verge', 'Wired':'Wired',
+                'VentureBeat':'VB', 'Ars Technica':'Ars', 'MIT Tech Review':'MIT' };
+  return map[source] || source.slice(0,6);
+}
+
+// Fan out to all sources in parallel, merge and deduplicate
+async function ceFetchLiveNews(topic){
+  const [hnResult, workerResult] = await Promise.allSettled([
+    ceFetchHN(topic),
+    ceFetchWorkerNews(topic),
+  ]);
+
+  let articles = [];
+  if(hnResult.status === 'fulfilled' && hnResult.value) articles.push(...hnResult.value);
+  if(workerResult.status === 'fulfilled' && workerResult.value) articles.push(...workerResult.value);
+
+  if(!articles.length) return null;
+
+  // Deduplicate by first 40 chars of title (catches reposts / near-duplicates)
+  const seen = new Set();
+  articles = articles.filter(a => {
+    const key = a.title.toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,40);
+    if(seen.has(key)) return false;
+    seen.add(key); return true;
+  });
+
+  return articles.slice(0, 14);
 }
 
 const CE_FALLBACK_ARTICLES = [
@@ -740,37 +789,7 @@ function ceRenderHistoryList(){
     </div>`).join('');
 }
 
-/* ── Voice settings ───────────────────────────────────────────────────── */
-
-function ceVoiceOpen(){
-  $('ceVoiceOverlay').classList.add('show');
-  $('ceVoiceNiche').value=_ce.voice.niche||'';
-  document.querySelectorAll('.ce-voice-style-btn').forEach(b=>b.classList.toggle('active',b.dataset.vstyle===(_ce.voice.style||'casual')));
-}
-function ceVoiceClose(){ $('ceVoiceOverlay').classList.remove('show'); }
-function ceVoiceSetStyle(style){
-  _ce.voice.style=style;
-  document.querySelectorAll('.ce-voice-style-btn').forEach(b=>b.classList.toggle('active',b.dataset.vstyle===style));
-}
-async function ceVoiceSave(){
-  _ce.voice.niche=($('ceVoiceNiche')?.value||'').trim();
-  if(fbAuth.currentUser){
-    try{
-      await db.collection('users').doc(fbAuth.currentUser.uid).collection('prefs').doc('ceVoice').set({style:_ce.voice.style,niche:_ce.voice.niche});
-      toast('Voice saved');
-    }catch{ toast('Saved locally'); }
-  } else { toast('Voice saved (sign in to sync)'); }
-  ceVoiceClose();
-}
-async function ceLoadVoice(){
-  if(!fbAuth.currentUser) return;
-  try{
-    const doc=await db.collection('users').doc(fbAuth.currentUser.uid).collection('prefs').doc('ceVoice').get();
-    if(doc.exists){ const d=doc.data(); _ce.voice.style=d.style||'casual'; _ce.voice.niche=d.niche||''; }
-  }catch(e){ console.warn('Voice load', e); }
-}
-
-function ceInit(){ ceLoadHistory(); ceLoadVoice(); }
+function ceInit(){ ceLoadHistory(); }
 
 /* ── Image generation — 6-model parallel grid ────────────────────────────── */
 

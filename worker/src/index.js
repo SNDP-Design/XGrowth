@@ -80,7 +80,7 @@ export default {
       return json({ error: 'Use POST' }, 405, origin, allowed);
     }
 
-    const VALID_PATHS = ['/generate', '/generate-image', '/preview'];
+    const VALID_PATHS = ['/generate', '/generate-image', '/preview', '/news'];
     if (!VALID_PATHS.includes(url.pathname)) {
       return json({ error: 'Not found' }, 404, origin, allowed);
     }
@@ -152,6 +152,11 @@ export default {
       return handlePreview(body, origin, allowed);
     }
 
+    // ── /news — multi-source RSS aggregator ───────────────────────────────────
+    if (url.pathname === '/news') {
+      return handleNews(body, origin, allowed);
+    }
+
     // ── /generate ─────────────────────────────────────────────────────────────
     const kind = body.kind || 'post';
     if (!env.GEMINI_API_KEY) {
@@ -212,6 +217,127 @@ export default {
     }
   },
 };
+
+/* ─── /news — multi-source RSS aggregator ────────────────────────────────── */
+
+// RSS feeds we proxy.  All are public, no API key required.
+const NEWS_FEEDS = [
+  { name: 'TechCrunch',      url: 'https://techcrunch.com/feed/' },
+  { name: 'The Verge',       url: 'https://www.theverge.com/rss/index.xml' },
+  { name: 'Wired',           url: 'https://www.wired.com/feed/rss' },
+  { name: 'VentureBeat',     url: 'https://venturebeat.com/feed/' },
+  { name: 'Ars Technica',    url: 'https://feeds.arstechnica.com/arstechnica/index' },
+  { name: 'MIT Tech Review', url: 'https://www.technologyreview.com/feed/' },
+];
+
+async function handleNews(body, origin, allowed) {
+  const topic = ((body && body.topic) || '').trim();
+  if (!topic) return json({ error: 'topic required' }, 400, origin, allowed);
+
+  // Split topic into keywords — skip very short words
+  const keywords = topic.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+
+  // Fetch all feeds in parallel, 5 s timeout each
+  const feedResults = await Promise.allSettled(
+    NEWS_FEEDS.map(feed => fetchAndFilterFeed(feed, keywords))
+  );
+
+  let articles = [];
+  for (const r of feedResults) {
+    if (r.status === 'fulfilled' && Array.isArray(r.value)) {
+      articles.push(...r.value);
+    }
+  }
+
+  // Sort newest first, cap at 20 total
+  articles.sort((a, b) => {
+    const da = a.pubDate ? new Date(a.pubDate).getTime() : 0;
+    const db2 = b.pubDate ? new Date(b.pubDate).getTime() : 0;
+    return db2 - da;
+  });
+  articles = articles.slice(0, 20);
+
+  return json({ ok: true, articles }, 200, origin, allowed);
+}
+
+async function fetchAndFilterFeed(feed, keywords) {
+  try {
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), 5000);
+    const res = await fetch(feed.url, {
+      signal: ctrl.signal,
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; XGrowthBot/1.0; +https://xgrowth.uno)' },
+    });
+    clearTimeout(tid);
+    if (!res.ok) return [];
+    const xml = await res.text();
+    const articles = parseRssXml(xml, feed.name);
+    // Filter to articles that contain at least one keyword in title or description
+    return articles.filter(a => {
+      const hay = (a.title + ' ' + a.description).toLowerCase();
+      return keywords.some(kw => hay.includes(kw));
+    }).slice(0, 5); // max 5 per source
+  } catch {
+    return [];
+  }
+}
+
+/* Lightweight RSS/Atom parser — no DOM dependency, regex-based.
+   Handles CDATA sections, both RSS <item> and Atom <entry> formats. */
+function parseRssXml(xml, sourceName) {
+  const articles = [];
+
+  // Determine format: RSS uses <item>, Atom uses <entry>
+  const isAtom = !/<item[\s>]/i.test(xml) && /<entry[\s>]/i.test(xml);
+  const blockTag = isAtom ? 'entry' : 'item';
+  const blockRe = new RegExp(`<${blockTag}[^>]*>([\\s\\S]*?)<\\/${blockTag}>`, 'gi');
+
+  let m;
+  while ((m = blockRe.exec(xml)) !== null) {
+    const block = m[1];
+    const title   = rssField(block, 'title');
+    const link    = rssField(block, 'link') || rssAttrHref(block, 'link');
+    const desc    = rssField(block, 'description') || rssField(block, 'summary') || rssField(block, 'content\\:encoded') || rssField(block, 'content');
+    const pubDate = rssField(block, 'pubDate') || rssField(block, 'published') || rssField(block, 'updated') || rssField(block, 'dc:date');
+    if (title && link) {
+      articles.push({
+        title,
+        url:         link,
+        description: stripHtml(desc).slice(0, 250),
+        pubDate,
+        source:      sourceName,
+      });
+    }
+  }
+
+  return articles;
+}
+
+// Extract text content of an XML element (handles CDATA and plain text)
+function rssField(block, tag) {
+  const re = new RegExp(`<${tag}[^>]*><!\\[CDATA\\[([\\s\\S]*?)\\]\\]><\\/${tag}>`, 'i');
+  let m = re.exec(block);
+  if (m) return m[1].trim();
+  const re2 = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, 'i');
+  m = re2.exec(block);
+  if (m) return stripHtml(m[1]).trim();
+  return '';
+}
+
+// Extract href attribute from a self-closing or opening tag (e.g. Atom <link href="..."/>)
+function rssAttrHref(block, tag) {
+  const m = new RegExp(`<${tag}[^>]*\\shref="([^"]+)"`, 'i').exec(block);
+  return m ? m[1].trim() : '';
+}
+
+function stripHtml(s) {
+  return (s || '')
+    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/gi, '$1')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, ' ')
+    .replace(/\s{2,}/g, ' ').trim();
+}
 
 /* ─── /preview handler ────────────────────────────────────────────────────── */
 
