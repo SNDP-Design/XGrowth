@@ -58,6 +58,19 @@ const GEMINI_MODELS = [
   'gemini-2.5-flash-lite',
   'gemini-2.0-flash',
 ];
+
+// Models that support thinkingConfig — set budget to 0 to suppress reasoning bleed-through.
+// Older models (2.0 and below) reject this field with a 400, so they are excluded.
+const THINKING_MODELS = new Set([
+  'gemini-3.5-flash',
+  'gemini-3.1-pro-preview',
+  'gemini-3-flash-preview',
+  'gemini-3.1-flash-lite',
+  'gemini-3.1-flash-lite-preview',
+  'gemini-2.5-pro',
+  'gemini-2.5-flash',
+  'gemini-2.5-flash-lite',
+]);
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models/';
 
 export default {
@@ -865,7 +878,7 @@ PLAIN ENGLISH — these rules are non-negotiable:
 - Be SPECIFIC to the actual content above. No generic filler.
 - First person, present tense. Sound like a real person talking, not a marketer writing.
 
-Return ONLY the post content. No preamble. No explanation. No quote marks. Just the content.${refineInstruction ? `\n\nREFINEMENT INSTRUCTION (apply this on top): ${refineInstruction}` : ''}`;
+Return ONLY the finished post. No preamble, no explanation, no quote marks, no word counts, no character counts, no self-evaluation, no annotations of any kind. Just the post text exactly as it would appear when published.${refineInstruction ? `\n\nREFINEMENT INSTRUCTION (apply this on top): ${refineInstruction}` : ''}`;
 }
 
 function buildCampaignPrompt(body) {
@@ -1561,23 +1574,28 @@ async function callGeminiImage(apiKey, prompt) {
 /* ─── Gemini client ────────────────────────────────────────────────────────── */
 
 async function callGemini(apiKey, prompt) {
-  const body = JSON.stringify({
-    contents: [{ role: 'user', parts: [{ text: prompt }] }],
-    generationConfig: {
+  const errors = [];
+  for (const model of GEMINI_MODELS) {
+    // thinkingConfig suppresses chain-of-thought bleed-through on thinking-capable models.
+    // Older models (2.0 and below) reject this field → only send it for known thinking models.
+    const generationConfig = {
       temperature: 0.85,
       topP: 0.95,
       maxOutputTokens: 2048,
-    },
-    safetySettings: [
-      { category: 'HARM_CATEGORY_HARASSMENT',        threshold: 'BLOCK_ONLY_HIGH' },
-      { category: 'HARM_CATEGORY_HATE_SPEECH',        threshold: 'BLOCK_ONLY_HIGH' },
-      { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',  threshold: 'BLOCK_ONLY_HIGH' },
-      { category: 'HARM_CATEGORY_DANGEROUS_CONTENT',  threshold: 'BLOCK_ONLY_HIGH' },
-    ],
-  });
+      ...(THINKING_MODELS.has(model) ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
+    };
 
-  const errors = [];
-  for (const model of GEMINI_MODELS) {
+    const body = JSON.stringify({
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig,
+      safetySettings: [
+        { category: 'HARM_CATEGORY_HARASSMENT',        threshold: 'BLOCK_ONLY_HIGH' },
+        { category: 'HARM_CATEGORY_HATE_SPEECH',        threshold: 'BLOCK_ONLY_HIGH' },
+        { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',  threshold: 'BLOCK_ONLY_HIGH' },
+        { category: 'HARM_CATEGORY_DANGEROUS_CONTENT',  threshold: 'BLOCK_ONLY_HIGH' },
+      ],
+    });
+
     try {
       const url = `${GEMINI_BASE}${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
       const resp = await fetch(url, {
