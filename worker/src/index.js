@@ -48,9 +48,10 @@ const FIREBASE_JWKS_URL = 'https://www.googleapis.com/robot/v1/metadata/x509/sec
 
 // Try models in order; first one that responds wins.
 const GEMINI_MODELS = [
-  'gemini-2.0-flash',          // stable, fast, widely available
-  'gemini-2.0-flash-lite',     // lighter fallback
-  'gemini-1.5-flash',          // last resort — always available
+  'gemini-2.0-flash',           // stable, fast, widely available
+  'gemini-2.0-flash-lite',      // lighter fallback
+  'gemini-1.5-flash-latest',    // stable 1.5 alias (always resolves)
+  'gemini-1.5-flash-002',       // explicit 1.5 stable version
 ];
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models/';
 
@@ -1596,7 +1597,6 @@ async function callGemini(apiKey, prompt) {
       }
       return { text: text.trim(), model };
     } catch (e) {
-      if (String(e.message || '').startsWith('Gemini 400')) throw e;
       errors.push(`${model}: ${e.message || e}`);
     }
   }
