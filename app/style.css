@@ -326,16 +326,13 @@
   .ce-history-item-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
   .ce-history-item-meta{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
   .ce-history-item-text{font-size:13px;color:#cfcfcf;line-height:1.5;white-space:pre-wrap;word-break:break-word;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-  /* Voice settings modal */
-  .ce-voice-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:none;align-items:center;justify-content:center;padding:16px}
-  .ce-voice-overlay.show{display:flex}
-  .ce-voice-modal{background:linear-gradient(180deg,#111,#0a0a0a);border:1px solid var(--line);border-radius:16px;padding:24px;width:100%;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
-  .ce-voice-modal h3{margin:0 0 18px;font-size:18px;letter-spacing:-.2px}
-  .ce-voice-modal .vm-label{display:block;font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
-  .ce-voice-style-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
-  .ce-voice-style-btn{height:36px;padding:0 16px;background:var(--chip);border:1px solid var(--line);color:var(--muted);font:600 13px system-ui,-apple-system,sans-serif;border-radius:10px;cursor:pointer;transition:.15s}
-  .ce-voice-style-btn:hover{color:var(--ink)}
-  .ce-voice-style-btn.active{background:linear-gradient(180deg,#fafafa,#d4d4d4);color:#0a0a0a;border-color:#fafafa}
+  /* ── Industry portal picker (onboarding) ──────────────────────────────── */
+  .portal-chip{height:30px;padding:0 12px;background:var(--chip);border:1.5px solid var(--line);color:var(--muted);font:500 12px system-ui,-apple-system,sans-serif;border-radius:999px;cursor:pointer;transition:.15s;white-space:nowrap;letter-spacing:.1px}
+  .portal-chip:hover{color:var(--ink);border-color:#3a3a3a}
+  .portal-chip.active{background:rgba(255,255,255,.08);border-color:#555;color:var(--ink)}
+  /* Sources row in news panel */
+  .ce-sources-row{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:6px;padding-top:8px;border-top:1px solid var(--line)}
+  .ce-sources-lbl{font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);flex-shrink:0}
 
   /* ── Regenerate + refine bar ───────────────────────────────────────────── */
   .ce-refine-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 14px 12px;border-top:1px solid var(--line);margin-top:2px}

@@ -127,17 +127,23 @@ document.addEventListener('keydown', (e)=>{
 function closeWelcome(skip){
   document.getElementById('welcome').classList.remove('show');
   if(skip && !state.profile){
-    state.profile = {niche:'AI SaaS', stage:'Pre-seed', target:'Both', goal:'10k followers'};
+    state.profile = {niche:'AI SaaS', stage:'Pre-seed', target:'Both', goal:'10k followers', industry:'', newsPortals:[]};
     save();
   }
   applyProfile();
 }
 function saveProfile(){
+  const industry = $('pIndustry')?.value || '';
+  // Collect which portal chips are active (all on by default, users can deselect)
+  const selected = [...document.querySelectorAll('.portal-chip.active')].map(b => b.dataset.pid);
+  const allForIndustry = (CE_INDUSTRY_PORTALS[industry] || []).map(p => p.id);
   state.profile = {
     niche: val('pNiche') || 'AI SaaS',
     stage: val('pStage'),
     target: val('pTarget'),
-    goal:  val('pGoal') || '10k followers'
+    goal:  val('pGoal') || '10k followers',
+    industry,
+    newsPortals: selected.length ? selected : allForIndustry,
   };
   state.goals = parseGoals(state.profile.goal);
   save(); closeWelcome(false);
@@ -184,8 +190,97 @@ function p(){ return state.profile || {niche:'AI SaaS', stage:'Pre-seed', target
 
 /* =========================================================
    CONTENT ENGINE — full rebuild
-   3 input modes · 5 platforms · 6 post types · history · voice
+   3 input modes · 5 platforms · 6 post types · history
+   Industry-aware news portal routing
    ========================================================= */
+
+/* ── Industry → portal catalog ────────────────────────────────────────── */
+// Portal definitions shown in the onboarding picker and used to label sources.
+// IDs must match PORTAL_CATALOG keys in the Worker.
+const CE_INDUSTRY_PORTALS = {
+  'ai-ml': [
+    { id:'venturebeat-ai',  name:'VentureBeat AI' },
+    { id:'techcrunch-ai',   name:'TechCrunch AI' },
+    { id:'mit-tech-review', name:'MIT Tech Review' },
+    { id:'ai-news',         name:'AI News' },
+    { id:'the-register-ai', name:'The Register' },
+  ],
+  'climate-tech': [
+    { id:'cleantechnica',   name:'CleanTechnica' },
+    { id:'electrek',        name:'Electrek' },
+    { id:'carbon-brief',    name:'Carbon Brief' },
+    { id:'greenbiz',        name:'GreenBiz' },
+    { id:'canary-media',    name:'Canary Media' },
+  ],
+  'fintech': [
+    { id:'finextra',           name:'Finextra' },
+    { id:'techcrunch-fintech', name:'TechCrunch Fintech' },
+    { id:'payments-dive',      name:'Payments Dive' },
+    { id:'banking-dive',       name:'Banking Dive' },
+  ],
+  'health-tech': [
+    { id:'stat-news',        name:'STAT News' },
+    { id:'medcity-news',     name:'MedCity News' },
+    { id:'healthcare-dive',  name:'Healthcare Dive' },
+    { id:'fierce-healthcare',name:'Fierce Healthcare' },
+  ],
+  'saas-b2b': [
+    { id:'saastr',     name:'SaaStr' },
+    { id:'techcrunch', name:'TechCrunch' },
+    { id:'venturebeat',name:'VentureBeat' },
+    { id:'the-verge',  name:'The Verge' },
+  ],
+  'ecommerce': [
+    { id:'modern-retail',       name:'Modern Retail' },
+    { id:'retail-dive',         name:'Retail Dive' },
+    { id:'techcrunch-commerce', name:'TechCrunch Commerce' },
+  ],
+  'crypto-web3': [
+    { id:'coindesk',      name:'CoinDesk' },
+    { id:'cointelegraph', name:'CoinTelegraph' },
+    { id:'decrypt',       name:'Decrypt' },
+    { id:'the-block',     name:'The Block' },
+  ],
+  'dev-tools': [
+    { id:'the-new-stack', name:'The New Stack' },
+    { id:'ars-technica',  name:'Ars Technica' },
+    { id:'devto',         name:'Dev.to' },
+    { id:'infoq',         name:'InfoQ' },
+  ],
+  'biotech': [
+    { id:'stat-news',      name:'STAT News' },
+    { id:'fierce-biotech', name:'Fierce Biotech' },
+    { id:'biopharma-dive', name:'BioPharma Dive' },
+    { id:'endpoints-news', name:'Endpoints News' },
+  ],
+  'edtech': [
+    { id:'edsurge',          name:'EdSurge' },
+    { id:'techcrunch-edtech',name:'TechCrunch EdTech' },
+    { id:'the-verge',        name:'The Verge' },
+  ],
+  'general': [
+    { id:'techcrunch',    name:'TechCrunch' },
+    { id:'the-verge',     name:'The Verge' },
+    { id:'wired',         name:'Wired' },
+    { id:'venturebeat',   name:'VentureBeat' },
+    { id:'ars-technica',  name:'Ars Technica' },
+    { id:'mit-tech-review',name:'MIT Tech Review' },
+  ],
+};
+
+/* Show/hide portal chips when industry is picked in the welcome modal */
+function ceOnboardingIndustryChange(industry){
+  const portals = CE_INDUSTRY_PORTALS[industry] || [];
+  const row    = $('pPortalsRow');
+  const chips  = $('pPortalChips');
+  if(!portals.length){ if(row) row.style.display='none'; return; }
+  if(chips){
+    chips.innerHTML = portals.map(p =>
+      `<button type="button" class="portal-chip active" data-pid="${p.id}" onclick="this.classList.toggle('active')">${p.name}</button>`
+    ).join('');
+  }
+  if(row) row.style.display='';
+}
 function ceEsc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 /* ── CE state ───────────────────────────────────────────────────────────── */
@@ -306,26 +401,43 @@ async function ceFetchHN(topic){
   } catch { return null; }
 }
 
-// TechCrunch, The Verge, Wired, VentureBeat — via Worker /news endpoint (RSS proxy)
+// Industry-routed RSS news — fetched via Worker (no CORS, no API key)
 async function ceFetchWorkerNews(topic){
   try {
-    const data = await xgFetch('/news', { topic });
+    const industry = state.profile?.industry || '';
+    const portals  = state.profile?.newsPortals || [];
+    const data = await xgFetch('/news', { topic, industry, portals });
     if(!data.articles || !data.articles.length) return null;
     return data.articles.map(a => ({
-      tag: ceSourceBadge(a.source),
-      source: a.source,
-      date: ceRelDate(a.pubDate),
+      tag:   a.source,
+      source:a.source,
+      date:  ceRelDate(a.pubDate),
       title: a.title,
-      angle: a.description ? a.description.slice(0,180) : `Recent coverage from ${a.source}.`,
-      url: a.url,
+      angle: a.description ? a.description.slice(0,180) : `From ${a.source}.`,
+      url:   a.url,
     }));
   } catch { return null; }
 }
 
+// Short badge text for each known portal name
 function ceSourceBadge(source){
-  const map = { 'TechCrunch':'TC', 'The Verge':'Verge', 'Wired':'Wired',
-                'VentureBeat':'VB', 'Ars Technica':'Ars', 'MIT Tech Review':'MIT' };
-  return map[source] || source.slice(0,6);
+  const map = {
+    'TechCrunch':'TC','TechCrunch AI':'TC·AI','TechCrunch Fintech':'TC·Fin',
+    'TechCrunch Commerce':'TC·Com','TechCrunch EdTech':'TC·Ed',
+    'The Verge':'Verge','Wired':'Wired','VentureBeat':'VB','VentureBeat AI':'VB·AI',
+    'Ars Technica':'Ars','MIT Tech Review':'MIT','The New Stack':'NewStack',
+    'CleanTechnica':'CT','Electrek':'Electrek','Carbon Brief':'CarbonBf',
+    'GreenBiz':'GreenBiz','Canary Media':'Canary',
+    'Finextra':'Finextra','Payments Dive':'PyDive','Banking Dive':'BkDive',
+    'STAT News':'STAT','MedCity News':'MedCity','Healthcare Dive':'HcDive',
+    'Fierce Healthcare':'FcHC','Fierce Biotech':'FcBio','BioPharma Dive':'BPDive',
+    'Endpoints News':'Endpts','SaaStr':'SaaStr',
+    'Modern Retail':'ModRet','Retail Dive':'RetDive',
+    'CoinDesk':'CDesk','CoinTelegraph':'CoinTG','Decrypt':'Decrypt',
+    'The Block':'Block','Dev.to':'Dev.to','InfoQ':'InfoQ','EdSurge':'EdSurge',
+    'AI News':'AI·News','The Register':'Register',
+  };
+  return map[source] || source.slice(0,7);
 }
 
 // Fan out to all sources in parallel, merge and deduplicate
@@ -372,10 +484,22 @@ async function ceSearchNews(){
   _ce.topic = topic;
   _ce.article = null; _ce._pickedAt = null;
   ['linkedin','x','threads','instagram','reddit'].forEach(p => { _ce.posts[p] = {text:'',loading:false,generated:false}; });
+  const srcRow = $('ceSourcesRow'); if(srcRow) srcRow.style.display='none';
 
   const cap = topic.charAt(0).toUpperCase() + topic.slice(1);
   $('ceNewsTitle').textContent = `Latest: ${cap}`;
-  $('ceNewsHelper').textContent = `${hits.length} articles — pick one to generate posts.`;
+  $('ceNewsHelper').textContent = `${hits.length} article${hits.length===1?'':'s'} — pick one to generate posts.`;
+
+  // Show which portals returned results
+  const uniqueSources = [...new Set(hits.map(h => h.source))].filter(Boolean);
+  const srcRow  = $('ceSourcesRow');
+  const srcChips = $('ceSourceChips');
+  if(srcRow && srcChips && uniqueSources.length){
+    srcChips.innerHTML = uniqueSources.map(s =>
+      `<span class="ce-tag" style="font-size:10px;padding:2px 7px">${ceEsc(ceSourceBadge(s))}</span>`
+    ).join('');
+    srcRow.style.display = 'flex';
+  } else if(srcRow){ srcRow.style.display = 'none'; }
 
   _ce._articles = hits;
   $('ceTrends').innerHTML = hits.map((t,i) => `

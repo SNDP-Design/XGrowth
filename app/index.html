@@ -153,8 +153,12 @@
               <span class="ce-step-num">2</span>
               <h3 id="ceNewsTitle">Latest news</h3>
             </div>
-            <p class="muted" id="ceNewsHelper" style="margin:0 0 14px;font-size:14px"></p>
-            <div class="ce-trends" id="ceTrends"></div>
+            <p class="muted" id="ceNewsHelper" style="margin:0 0 10px;font-size:14px"></p>
+            <div id="ceSourcesRow" class="ce-sources-row" style="display:none">
+              <span class="ce-sources-lbl">Sources</span>
+              <div id="ceSourceChips" style="display:flex;gap:5px;flex-wrap:wrap"></div>
+            </div>
+            <div class="ce-trends" id="ceTrends" style="margin-top:12px"></div>
           </div>
         </div>
 
@@ -215,9 +219,9 @@
 
 <!-- Welcome modal -->
 <div class="modal" id="welcome">
-  <div class="box">
+  <div class="box" style="max-width:600px">
     <h2 style="margin:0 0 6px">Welcome, let's set up your marketing OS.</h2>
-    <p class="muted" style="margin:0 0 12px">Tell me about your brand and goals. We'll tune every output to your niche, audience, and platform mix.</p>
+    <p class="muted" style="margin:0 0 14px">Tell me about your brand and goals. We'll tune every output to your niche and show you news from the portals that actually matter to you.</p>
     <div class="grid cols-2">
       <div>
         <label>Niche</label>
@@ -239,8 +243,31 @@
         <label>Top goal</label>
         <input id="pGoal" type="text" placeholder="10k X followers, 5 investor DMs"/>
       </div>
+      <!-- Industry — full width -->
+      <div style="grid-column:1/-1">
+        <label>Industry <span style="font-weight:400;color:var(--muted);font-size:12px">— picks your news portals</span></label>
+        <select id="pIndustry" onchange="ceOnboardingIndustryChange(this.value)">
+          <option value="">Select your industry…</option>
+          <option value="ai-ml">AI / Machine Learning</option>
+          <option value="climate-tech">Climate Tech / Clean Energy</option>
+          <option value="fintech">Fintech / Finance</option>
+          <option value="health-tech">Health Tech / MedTech</option>
+          <option value="saas-b2b">SaaS / B2B Software</option>
+          <option value="ecommerce">E-commerce / DTC</option>
+          <option value="crypto-web3">Crypto / Web3</option>
+          <option value="dev-tools">Dev Tools / Infrastructure</option>
+          <option value="biotech">Biotech / Life Sciences</option>
+          <option value="edtech">EdTech</option>
+          <option value="general">General Tech</option>
+        </select>
+      </div>
+      <!-- Portal picker — appears after industry is selected -->
+      <div id="pPortalsRow" style="grid-column:1/-1;display:none">
+        <label>News portals <span style="font-weight:400;color:var(--muted);font-size:12px">· All on by default — tap to deselect</span></label>
+        <div id="pPortalChips" style="display:flex;gap:7px;flex-wrap:wrap;margin-top:6px"></div>
+      </div>
     </div>
-    <div class="row" style="margin-top:14px;justify-content:flex-end">
+    <div class="row" style="margin-top:16px;justify-content:flex-end">
       <button class="btn secondary" onclick="closeWelcome(true)">Skip</button>
       <button class="btn" onclick="saveProfile()">Save & Continue</button>
     </div>

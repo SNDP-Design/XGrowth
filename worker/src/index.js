@@ -220,36 +220,112 @@ export default {
 
 /* ─── /news — multi-source RSS aggregator ────────────────────────────────── */
 
-// RSS feeds we proxy.  All are public, no API key required.
-const NEWS_FEEDS = [
-  { name: 'TechCrunch',      url: 'https://techcrunch.com/feed/' },
-  { name: 'The Verge',       url: 'https://www.theverge.com/rss/index.xml' },
-  { name: 'Wired',           url: 'https://www.wired.com/feed/rss' },
-  { name: 'VentureBeat',     url: 'https://venturebeat.com/feed/' },
-  { name: 'Ars Technica',    url: 'https://feeds.arstechnica.com/arstechnica/index' },
-  { name: 'MIT Tech Review', url: 'https://www.technologyreview.com/feed/' },
-];
+// Full portal catalog — id → { name, url }.  All are free public RSS feeds.
+const PORTAL_CATALOG = {
+  // AI / ML
+  'venturebeat-ai':   { name:'VentureBeat AI',      url:'https://venturebeat.com/category/ai/feed/' },
+  'techcrunch-ai':    { name:'TechCrunch AI',        url:'https://techcrunch.com/category/artificial-intelligence/feed/' },
+  'mit-tech-review':  { name:'MIT Tech Review',      url:'https://www.technologyreview.com/feed/' },
+  'ai-news':          { name:'AI News',              url:'https://www.artificialintelligence-news.com/feed/' },
+  'the-register-ai':  { name:'The Register',         url:'https://www.theregister.com/emergent_tech/ai-and-ml/headlines.atom' },
+  // Climate Tech
+  'cleantechnica':    { name:'CleanTechnica',        url:'https://cleantechnica.com/feed/' },
+  'electrek':         { name:'Electrek',             url:'https://electrek.co/feed/' },
+  'carbon-brief':     { name:'Carbon Brief',         url:'https://www.carbonbrief.org/feed' },
+  'greenbiz':         { name:'GreenBiz',             url:'https://www.greenbiz.com/feeds/rss' },
+  'canary-media':     { name:'Canary Media',         url:'https://www.canarymedia.com/articles.rss' },
+  // Fintech
+  'finextra':            { name:'Finextra',              url:'https://www.finextra.com/rss/pressrelease.xml' },
+  'techcrunch-fintech':  { name:'TechCrunch Fintech',    url:'https://techcrunch.com/category/fintech/feed/' },
+  'payments-dive':       { name:'Payments Dive',         url:'https://www.paymentsdive.com/feeds/news/' },
+  'banking-dive':        { name:'Banking Dive',          url:'https://www.bankingdive.com/feeds/news/' },
+  // Health Tech
+  'stat-news':         { name:'STAT News',           url:'https://www.statnews.com/feed/' },
+  'medcity-news':      { name:'MedCity News',        url:'https://medcitynews.com/feed/' },
+  'healthcare-dive':   { name:'Healthcare Dive',     url:'https://www.healthcaredive.com/feeds/news/' },
+  'fierce-healthcare': { name:'Fierce Healthcare',   url:'https://www.fiercehealthcare.com/rss/xml' },
+  // SaaS / B2B
+  'saastr':      { name:'SaaStr',       url:'https://www.saastr.com/feed/' },
+  'techcrunch':  { name:'TechCrunch',   url:'https://techcrunch.com/feed/' },
+  'venturebeat': { name:'VentureBeat',  url:'https://venturebeat.com/feed/' },
+  'the-verge':   { name:'The Verge',    url:'https://www.theverge.com/rss/index.xml' },
+  // E-commerce
+  'modern-retail':        { name:'Modern Retail',         url:'https://www.modernretail.co/feed/' },
+  'retail-dive':          { name:'Retail Dive',           url:'https://www.retaildive.com/feeds/news/' },
+  'techcrunch-commerce':  { name:'TechCrunch Commerce',   url:'https://techcrunch.com/category/e-commerce/feed/' },
+  // Crypto / Web3
+  'coindesk':      { name:'CoinDesk',      url:'https://www.coindesk.com/arc/outboundfeeds/rss/' },
+  'cointelegraph': { name:'CoinTelegraph', url:'https://cointelegraph.com/rss' },
+  'decrypt':       { name:'Decrypt',       url:'https://decrypt.co/feed' },
+  'the-block':     { name:'The Block',     url:'https://www.theblock.co/rss/all' },
+  // Dev Tools
+  'the-new-stack': { name:'The New Stack', url:'https://thenewstack.io/blog/feed/' },
+  'ars-technica':  { name:'Ars Technica',  url:'https://feeds.arstechnica.com/arstechnica/index' },
+  'devto':         { name:'Dev.to',        url:'https://dev.to/feed' },
+  'infoq':         { name:'InfoQ',         url:'https://www.infoq.com/feed/' },
+  // Biotech
+  'fierce-biotech':  { name:'Fierce Biotech',  url:'https://www.fiercebiotech.com/rss/xml' },
+  'biopharma-dive':  { name:'BioPharma Dive',  url:'https://www.biopharmadive.com/feeds/news/' },
+  'endpoints-news':  { name:'Endpoints News',  url:'https://endpts.com/feed/' },
+  // EdTech
+  'edsurge':           { name:'EdSurge',            url:'https://www.edsurge.com/news.rss' },
+  'techcrunch-edtech': { name:'TechCrunch EdTech',  url:'https://techcrunch.com/category/edtech/feed/' },
+  // Shared / General
+  'wired':         { name:'Wired',         url:'https://www.wired.com/feed/rss' },
+};
+
+// Industry → default portals (used when user hasn't set custom portals)
+const INDUSTRY_DEFAULT_PORTALS = {
+  'ai-ml':        ['venturebeat-ai','techcrunch-ai','mit-tech-review','ai-news','the-register-ai'],
+  'climate-tech': ['cleantechnica','electrek','carbon-brief','greenbiz','canary-media'],
+  'fintech':      ['finextra','techcrunch-fintech','payments-dive','banking-dive'],
+  'health-tech':  ['stat-news','medcity-news','healthcare-dive','fierce-healthcare'],
+  'saas-b2b':     ['saastr','techcrunch','venturebeat','the-verge'],
+  'ecommerce':    ['modern-retail','retail-dive','techcrunch-commerce'],
+  'crypto-web3':  ['coindesk','cointelegraph','decrypt','the-block'],
+  'dev-tools':    ['the-new-stack','ars-technica','devto','infoq'],
+  'biotech':      ['stat-news','fierce-biotech','biopharma-dive','endpoints-news'],
+  'edtech':       ['edsurge','techcrunch-edtech','the-verge'],
+  'general':      ['techcrunch','the-verge','wired','venturebeat','ars-technica','mit-tech-review'],
+};
 
 async function handleNews(body, origin, allowed) {
   const topic = ((body && body.topic) || '').trim();
   if (!topic) return json({ error: 'topic required' }, 400, origin, allowed);
 
-  // Split topic into keywords — skip very short words
   const keywords = topic.toLowerCase().split(/\s+/).filter(w => w.length > 2);
 
-  // Fetch all feeds in parallel, 5 s timeout each
+  // Determine which portals to use:
+  //   1. User-selected portals from their profile (explicit list)
+  //   2. Industry defaults (when user set industry but no explicit portal list)
+  //   3. General defaults (fallback)
+  let portalIds = Array.isArray(body.portals) && body.portals.length ? body.portals : null;
+  if (!portalIds) {
+    const ind = (body.industry || 'general').toLowerCase().trim().replace(/[^a-z-]/g, '');
+    portalIds = INDUSTRY_DEFAULT_PORTALS[ind] || INDUSTRY_DEFAULT_PORTALS['general'];
+  }
+
+  // Resolve portal IDs → feed objects (skip unknown IDs gracefully)
+  const feeds = portalIds
+    .filter(id => PORTAL_CATALOG[id])
+    .map(id => ({ name: PORTAL_CATALOG[id].name, url: PORTAL_CATALOG[id].url }));
+
+  // Safety: always have at least the general defaults
+  if (!feeds.length) {
+    INDUSTRY_DEFAULT_PORTALS['general'].forEach(id => {
+      if (PORTAL_CATALOG[id]) feeds.push({ name: PORTAL_CATALOG[id].name, url: PORTAL_CATALOG[id].url });
+    });
+  }
+
   const feedResults = await Promise.allSettled(
-    NEWS_FEEDS.map(feed => fetchAndFilterFeed(feed, keywords))
+    feeds.map(feed => fetchAndFilterFeed(feed, keywords))
   );
 
   let articles = [];
   for (const r of feedResults) {
-    if (r.status === 'fulfilled' && Array.isArray(r.value)) {
-      articles.push(...r.value);
-    }
+    if (r.status === 'fulfilled' && Array.isArray(r.value)) articles.push(...r.value);
   }
 
-  // Sort newest first, cap at 20 total
   articles.sort((a, b) => {
     const da = a.pubDate ? new Date(a.pubDate).getTime() : 0;
     const db2 = b.pubDate ? new Date(b.pubDate).getTime() : 0;
