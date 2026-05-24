@@ -48,9 +48,9 @@ const FIREBASE_JWKS_URL = 'https://www.googleapis.com/robot/v1/metadata/x509/sec
 
 // Try models in order; first one that responds wins.
 const GEMINI_MODELS = [
-  'gemini-2.5-flash',      // fastest reliable model
-  'gemini-2.5-pro',        // higher quality fallback
-  'gemini-2.0-flash',      // last resort fallback
+  'gemini-2.0-flash',          // stable, fast, widely available
+  'gemini-2.0-flash-lite',     // lighter fallback
+  'gemini-1.5-flash',          // last resort — always available
 ];
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models/';
 
@@ -1561,7 +1561,6 @@ async function callGemini(apiKey, prompt) {
       temperature: 0.85,
       topP: 0.95,
       maxOutputTokens: 2048,
-      thinkingConfig: { thinkingBudget: 0 },
     },
     safetySettings: [
       { category: 'HARM_CATEGORY_HARASSMENT',        threshold: 'BLOCK_ONLY_HIGH' },
@@ -1584,8 +1583,7 @@ async function callGemini(apiKey, prompt) {
       if (!resp.ok) {
         const t = await resp.text();
         errors.push(`${model}: ${resp.status} ${t.slice(0, 100)}`);
-        if (resp.status === 400) throw new Error(`Gemini 400 (bad request): ${t.slice(0, 200)}`);
-        continue;
+        continue; // try next model regardless of status code
       }
 
       const data = await resp.json();

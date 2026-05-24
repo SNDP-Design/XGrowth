@@ -562,7 +562,7 @@ async function ceCallAPI(platform, article, type){
     if(_ce.refineInstruction) payload.refineInstruction = _ce.refineInstruction;
     const data = await xgFetch('/generate', payload);
     return data.text || ceFallback(platform, article);
-  } catch(e){ console.warn('CE API error', e); return ceFallback(platform, article); }
+  } catch(e){ console.warn('CE API error', e); toast('Generation failed — ' + (e.message || 'please try again')); return ceFallback(platform, article); }
 }
 
 // Regenerate current platform's post (optionally with a refine instruction)
