@@ -343,6 +343,7 @@ const _ce = {
   _platGen: {},                // per-platform generation counter for race-guard
   _articles: [],
   _xPosts: [],
+  _modeState: {},   // saved output state keyed by input mode
 };
 ['linkedin','x','instagram','reddit'].forEach(p => {
   _ce.posts[p] = { text: '', loading: false, generated: false };
@@ -354,11 +355,32 @@ const _ce = {
 function ceSwitchInputMode(mode) {
   const prev = _ce.inputMode;
   _ce.inputMode = mode;
-  // Clear any outputs from the previous mode so they don't bleed across tabs
   if(prev !== mode){
-    ceResetOutput();
-    _ce.article = null;
-    _ce._pickedAt = null;
+    // Snapshot the leaving tab's output so it can be restored on return
+    _ce._modeState[prev] = {
+      posts: JSON.parse(JSON.stringify(_ce.posts)),
+      article: _ce.article,
+      pickedAt: _ce._pickedAt,
+      threadMode: _ce.threadMode,
+      html: $('ceGenerated').innerHTML,
+      emptyDisplay: $('ceEmpty').style.display,
+      trendDisplay: $('ceTrendContext').style.display,
+    };
+    // Restore the arriving tab's saved state, or start fresh
+    const saved = _ce._modeState[mode];
+    if(saved){
+      ['linkedin','x','instagram','reddit'].forEach(p => { _ce.posts[p] = saved.posts[p]; });
+      _ce.article = saved.article;
+      _ce._pickedAt = saved.pickedAt;
+      _ce.threadMode = saved.threadMode;
+      $('ceGenerated').innerHTML = saved.html;
+      $('ceEmpty').style.display = saved.emptyDisplay;
+      $('ceTrendContext').style.display = saved.trendDisplay;
+    } else {
+      ceResetOutput();
+      _ce.article = null;
+      _ce._pickedAt = null;
+    }
   }
   // aria-selected keeps screen readers in sync with the active tab (4.1.2)
   document.querySelectorAll('.ce-mode-tab').forEach(b => {
