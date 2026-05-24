@@ -332,7 +332,7 @@ const _ce = {
   article: null,
   platform: 'linkedin',        // legacy compat — primary state is now per-card
   postType: 'hot-take',        // legacy compat
-  postTypes: { linkedin:'hot-take', x:'hot-take', threads:'hot-take', instagram:'hot-take', reddit:'hot-take' },
+  postTypes: { linkedin:'hot-take', x:'hot-take', instagram:'hot-take', reddit:'hot-take' },
   threadMode: false,
   refineInstruction: '',
   posts: {},
@@ -344,7 +344,7 @@ const _ce = {
   _articles: [],
   _xPosts: [],
 };
-['linkedin','x','threads','instagram','reddit'].forEach(p => {
+['linkedin','x','instagram','reddit'].forEach(p => {
   _ce.posts[p] = { text: '', loading: false, generated: false };
   _ce._platGen[p] = 0;
 });
@@ -398,12 +398,12 @@ async function ceGenerateFromUrl(){
   _ce.topic = title;
   _ce.article = { title, angle, url };
   const pickedAt = Date.now(); _ce._pickedAt = pickedAt;
-  ['linkedin','x','threads','instagram','reddit'].forEach(p => { _ce.posts[p] = {text:'',loading:true,generated:false}; });
+  ['linkedin','x','instagram','reddit'].forEach(p => { _ce.posts[p] = {text:'',loading:true,generated:false}; });
   $('ceTrendContext').innerHTML = `<h4>${ceEsc(title)}</h4>${angle?`<p>${ceEsc(angle)}</p>`:''}`;
   $('ceTrendContext').style.display = '';
   ceShowControls();
   ceRenderAllPosts();
-  ['linkedin','x','threads','instagram','reddit'].forEach(p => ceGeneratePlatform(p, pickedAt));
+  ['linkedin','x','instagram','reddit'].forEach(p => ceGeneratePlatform(p, pickedAt));
 
   if(btn){ btn.disabled=false; btn.innerHTML='Generate →'; }
   if(window.innerWidth<=1100) $('ceStep3')?.scrollIntoView({behavior:'smooth',block:'start'});
@@ -418,11 +418,11 @@ async function ceGenerateFromWrite(){
   _ce.topic = topic||'startup insight';
   _ce.article = { title:notes, angle:'', url:'', inputMode:'freewrite' };
   const pickedAt = Date.now(); _ce._pickedAt = pickedAt;
-  ['linkedin','x','threads','instagram','reddit'].forEach(p => { _ce.posts[p] = {text:'',loading:true,generated:false}; });
+  ['linkedin','x','instagram','reddit'].forEach(p => { _ce.posts[p] = {text:'',loading:true,generated:false}; });
   $('ceTrendContext').style.display='none';
   ceShowControls();
   ceRenderAllPosts();
-  ['linkedin','x','threads','instagram','reddit'].forEach(p => ceGeneratePlatform(p, pickedAt));
+  ['linkedin','x','instagram','reddit'].forEach(p => ceGeneratePlatform(p, pickedAt));
 }
 
 /* ── X Profile mode ───────────────────────────────────────────────────── */
@@ -485,13 +485,13 @@ function ceUseXPost(idx){
   _ce._pickedAt = pickedAt;
   _ce.topic = 'Repurpose X post';
   _ce.article = { title: p.text, angle: 'Repurpose this tweet into a native post.', url: p.url, inputMode: 'xpost' };
-  ['linkedin','x','threads','instagram','reddit'].forEach(pl => { _ce.posts[pl] = {text:'',loading:false,generated:false}; });
+  ['linkedin','x','instagram','reddit'].forEach(pl => { _ce.posts[pl] = {text:'',loading:false,generated:false}; });
   $('ceTrendContext').innerHTML = `<h4>${ceEsc(p.text.slice(0,140))}${p.text.length>140?'…':''}</h4>
     <p style="font-size:12px;color:var(--muted);margin:4px 0 0">Repurposing from X &nbsp;·&nbsp; <a href="${ceEsc(p.url)}" target="_blank" rel="noopener" style="color:var(--muted);text-decoration:underline">View original ↗</a></p>`;
   $('ceTrendContext').style.display='';
   ceShowControls();
   ceRenderAllPosts();
-  ['linkedin','x','threads','instagram','reddit'].forEach(pl => ceGeneratePlatform(pl, pickedAt));
+  ['linkedin','x','instagram','reddit'].forEach(pl => ceGeneratePlatform(pl, pickedAt));
   if(window.innerWidth<=1100) $('ceStep3')?.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
@@ -503,7 +503,7 @@ function ceShowControls(){
 function ceResetOutput(){
   const _unused = null; // previously cleared global tabs — now removed
   $('ceTrendContext').style.display='none'; $('ceEmpty').style.display=''; $('ceGenerated').innerHTML='';
-  ['linkedin','x','threads','instagram','reddit'].forEach(p => { _ce.posts[p] = {text:'',loading:false,generated:false}; });
+  ['linkedin','x','instagram','reddit'].forEach(p => { _ce.posts[p] = {text:'',loading:false,generated:false}; });
   _ce.threadMode = false;
 }
 
@@ -606,7 +606,6 @@ function ceRegenerateFresh(){ ceRegeneratePlatform(_ce.platform, ''); }
 function ceFallback(platform, article){
   const title = article?.title||'Worth a read.';
   if(platform==='x') return title.slice(0,277)+(title.length>277?'…':'');
-  if(platform==='threads') return title.slice(0,497)+(title.length>497?'…':'');
   if(platform==='instagram') return `CAPTION:\n${title.slice(0,240)}\n\nHASHTAGS:\n#startup #saas #founder #buildinpublic #indiehacker #productlaunch #b2b #growthmarketing #startuplife #solofounder #makersgonnamake #sideproject #bootstrapped #indiemaker #techstartup`;
   if(platform==='reddit') return `SUBREDDIT: startups\n\nTITLE: ${title.slice(0,300)}\n\nBODY:\n${article?.angle||title}`;
 
@@ -618,7 +617,6 @@ function ceFallback(platform, article){
 const CE_PLAT_INFO = {
   linkedin:  { label:'LinkedIn',  limit:3000,  svg:`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14zM8.5 17V10h-2v7h2zm-1-7.9a1.1 1.1 0 1 0 0-2.2 1.1 1.1 0 0 0 0 2.2zM18 17v-3.9c0-2.1-1.1-3.1-2.6-3.1-1.2 0-1.7.7-2 1.2V10h-2v7h2v-4c0-1 .2-2 1.4-2s1.2 1.1 1.2 2v4H18z"/></svg>` },
   x:         { label:'X / Twitter',limit:280,  svg:`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2H21.5l-7.36 8.41L23 22h-6.84l-5.21-6.81L4.91 22H1.65l7.86-8.98L1.5 2h6.99l4.71 6.23L18.244 2z"/></svg>` },
-  threads:   { label:'Threads',    limit:500,  svg:`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.186 24h-.007c-3.581-.024-6.334-1.205-8.184-3.509C2.35 18.44 1.5 15.586 1.473 12.01v-.017c.027-3.579.877-6.43 2.525-8.482C5.845 1.205 8.6.024 12.18 0h.014c2.746.02 5.043.725 6.826 2.098 1.677 1.29 2.858 3.13 3.509 5.467l-2.04.569c-.505-1.865-1.406-3.348-2.67-4.29-1.283-.963-2.95-1.467-5.07-1.482-2.678.02-4.758.853-6.184 2.476-1.406 1.6-2.124 3.958-2.145 7.011.021 3.054.739 5.41 2.145 7.012 1.426 1.622 3.506 2.455 6.184 2.474 1.996-.015 3.491-.438 4.651-1.298.952-.708 1.673-1.72 2.145-3.003l2.03.618c-.627 1.626-1.564 2.914-2.8 3.832-1.454 1.052-3.289 1.6-5.588 1.617z"/></svg>` },
   instagram: { label:'Instagram',  limit:2200, svg:`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>` },
   reddit:    { label:'Reddit',     limit:40000, svg:`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.13 4.87-7.004 4.87-3.874 0-7.004-2.176-7.004-4.87 0-.183.015-.366.043-.534A1.748 1.748 0 0 1 4.028 12c0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.487l.885-4.182a.342.342 0 0 1 .14-.197.35.35 0 0 1 .238-.042l2.906.617a1.214 1.214 0 0 1 1.108-.701zM9.25 12C8.561 12 8 12.562 8 13.25c0 .687.561 1.248 1.25 1.248.687 0 1.248-.561 1.248-1.249 0-.688-.561-1.249-1.249-1.249zm5.5 0c-.687 0-1.248.561-1.248 1.25 0 .687.561 1.248 1.249 1.248.688 0 1.249-.561 1.249-1.249 0-.687-.562-1.249-1.25-1.249zm-5.466 3.99a.327.327 0 0 0-.231.094.33.33 0 0 0 0 .463c.842.842 2.484.913 2.961.913.477 0 2.105-.056 2.961-.913a.361.361 0 0 0 .029-.463.33.33 0 0 0-.464 0c-.547.533-1.684.73-2.512.73-.828 0-1.979-.196-2.512-.73a.326.326 0 0 0-.232-.095z"/></svg>` },
 
@@ -630,7 +628,7 @@ const CE_PLAT_INFO = {
 function ceRenderAllPosts(){
   const gen = $('ceGenerated');
   if(!gen) return;
-  const platforms = ['linkedin','x','threads','instagram','reddit'];
+  const platforms = ['linkedin','x','instagram','reddit'];
   const anyActive = platforms.some(p => _ce.posts[p].loading || _ce.posts[p].generated);
   if(!anyActive){ gen.innerHTML=''; return; }
   $('ceEmpty').style.display='none';
@@ -724,7 +722,6 @@ function cePlatformSectionHTML(platform){
     const platUrls = {
       linkedin:`https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(p.text.slice(0,1300))}`,
       x:`https://twitter.com/intent/tweet?text=${encodeURIComponent(p.text.slice(0,280))}`,
-      threads:`https://www.threads.net/intent/post?text=${encodeURIComponent(p.text.slice(0,500))}`,
       instagram:`https://www.instagram.com/`,
       reddit:(()=>{ const m=p.text.match(/SUBREDDIT:\s*(.+)/i); const sub=(m?.[1]||'startups').replace(/^r\//i,'').trim(); const tm=p.text.match(/TITLE:\s*(.+)/i); const t=(tm?.[1]||'').trim(); const bm=p.text.match(/BODY:\s*([\s\S]+?)$/i); return `https://www.reddit.com/r/${encodeURIComponent(sub)}/submit?title=${encodeURIComponent(t)}&text=${encodeURIComponent((bm?.[1]||'').trim())}`; })(),
     };
@@ -799,7 +796,6 @@ function cePostCard(platform, loading, text){
   const postUrl = {
     linkedin: `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(text.slice(0,1300))}`,
     x:        `https://twitter.com/intent/tweet?text=${encodeURIComponent(text.slice(0,280))}`,
-    threads:  `https://www.threads.net/intent/post?text=${encodeURIComponent(text.slice(0,500))}`,
   }[platform]||'#';
 
   return `<div class="ce-post" data-platform="${platform}"><div class="ce-post-head"><span class="ce-post-platform">${info.svg} ${info.label}</span><span class="ce-ai-badge">AI</span></div>
@@ -939,7 +935,7 @@ function ceToggleHistory(){
 
 function ceRenderHistoryList(){
   const list=$('ceHistoryList'); if(!list) return;
-  const LABELS={linkedin:'LinkedIn',x:'X',threads:'Threads',instagram:'Instagram',reddit:'Reddit'};
+  const LABELS={linkedin:'LinkedIn',x:'X',instagram:'Instagram',reddit:'Reddit'};
   if(!_ce.history.length){ list.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px 0">No posts generated yet.</div>'; return; }
   list.innerHTML=_ce.history.map(h=>`
     <div class="ce-history-item">
