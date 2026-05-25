@@ -1150,39 +1150,34 @@ function buildImagePromptPrompt(body) {
   if (niche)        contextLines.push(`NICHE: ${niche}`);
   const context = contextLines.join('\n\n');
 
-  return `You are a visual creative director writing prompts for an AI image generator.
+  return `You are a visual creative director. Write one image generation prompt for a 1080×1080 Instagram post based on this content:
 
 ${context}
 
-Your job: read the content above, identify the SPECIFIC SUBJECT the post is about, and write one image generation prompt that depicts THAT SUBJECT directly.
+PROCESS:
+1. Name the EXACT subject (specific product, brand, tool, or concept the post is about)
+2. Write a prompt showing a CONCRETE SCENE or OBJECT related to that subject — not abstract swirling art
 
-STEP 1 — Identify the subject:
-Extract the specific product, technology, company, person, or concept the post is actually about.
-- "Google Gemini" → subject is Gemini AI
-- "TypeScript 5.0" → subject is TypeScript / code
-- "founder burnout" → subject is exhausted founder
-- "SaaS pricing strategy" → subject is pricing / money / SaaS dashboard
-- "GPT-4o" → subject is OpenAI / AI model
+RULES FOR THE PROMPT:
+- NO abstract swirling light streams or random particle effects — those look like clip art
+- NO human faces, NO text/letters, NO real app UI screenshots
+- USE concrete, specific objects and forms:
+  → Named AI product (Gemini, ChatGPT, Claude, Copilot, Grok): glowing 3D crystal or geometric gem in that brand's exact colors, on dark surface, product photography style, studio lighting — e.g. "glowing four-pointed crystal star, Google blue red yellow green facets, dark premium surface, product photography, studio rim lighting, 4K"
+  → Named company (Google, Apple, Microsoft, OpenAI): brand color palette in structured geometric form — prism, orb, cube — premium 3D render
+  → Coding / developer tool: dark terminal screen close-up, specific language syntax color highlighting, mechanical keyboard keys, shallow depth of field — no swirling lights
+  → SaaS / dashboard / product: clean floating UI card with glow on dark background, premium product shot, depth of field
+  → Business / finance: physical objects — coins stacked, ledger, calculator on premium surface, studio lighting
+  → Founder / burnout / human story: real atmospheric scene — dim laptop glow at night, cluttered desk, warm lamp, coffee cup
+  → Growth / marketing / social: upward graph made of neon light tubes, dark surface, 3D render
+- Mention: specific object or shape, exact colors, lighting style, background, render style
+- 25–45 words. Concrete nouns only. No abstract concepts as visual descriptors.
 
-STEP 2 — Write a prompt that shows THAT subject:
-- If it's a named AI product (Gemini, GPT, Claude, Copilot): show abstract AI visualization in that product's brand colors — glowing neural network, floating geometric shapes, data streams
-- If it's a named company (Google, Apple, OpenAI): show brand-associated colors, aesthetic, abstract representation
-- If it's a developer tool / code: show dark code editor aesthetic, syntax highlighting glow, terminal feel
-- If it's a business concept: show the most concrete visual metaphor (NOT the abstract word — show the THING)
-- If it's a founder / human story: show atmospheric scene — dim office, warm desk lamp, notebook, coffee
-
-RULES:
-- The image must be about the SPECIFIC thing in the post, not a generic tech/startup scene
-- Describe subject + art style + lighting + colors + mood
-- Art styles allowed: digital art, 3D render, abstract visualization, cinematic photography, editorial product shot, dark studio photography
-- NO human faces, NO text or letters in frame, NO real app UI screenshots
-- 20–45 words total. Dense and specific.
-
-Examples of SUBJECT-FIRST prompts:
-- Post about Gemini AI → "Abstract Gemini AI visualization, glowing neural network in Google's blue red yellow green palette, geometric diamond shapes, dark background, digital art, 4K, dramatic lighting"
-- Post about TypeScript → "Dark code editor with TypeScript syntax highlighting, blue-white glow on black screen, shallow depth of field, developer aesthetic, cinematic close-up"
-- Post about SaaS pricing → "Minimalist product pricing cards floating in dark space, subtle glow, clean typography shadows, deep navy background, 3D render, editorial"
-- Post about founder burnout → "Lone laptop screen glowing at 2am on a cluttered dark desk, empty coffee cup, dim warm light, cinematic, moody, shallow focus"
+GOOD examples — notice concrete objects, not abstract swirls:
+- Gemini AI post → "Glowing four-pointed crystal gem with Google blue red yellow green facets, rotating on dark matte surface, soft caustic light, premium product photography, 8K render"
+- ChatGPT post → "Sleek white rounded cube with subtle circuit patterns, soft white glow, dark minimal background, product photography, studio lighting, 3D render"
+- TypeScript post → "Mechanical keyboard close-up, keys glowing blue typescript logo color, dark developer desk, shallow depth of field, cinematic product shot"
+- SaaS pricing post → "Three floating pricing cards glowing white on deep navy background, clean shadows, depth of field, premium product shot, 3D render"
+- Startup launch post → "Small metallic rocket on dark launch pad with exhaust glow, minimal studio background, dramatic upward lighting, 3D product render"
 
 Return ONLY the image prompt. No quotes, no labels, no explanation.`;
 }
