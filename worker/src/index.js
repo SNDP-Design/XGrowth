@@ -1553,17 +1553,11 @@ async function callHuggingFaceImage(token, prompt, modelKey = 'hf-flux') {
 
 /* ─── Gemini image client ─────────────────────────────────────────────────── */
 
-// Gemini native image generation models — tries each in order until one works
+// Gemini image generation models — only models that support responseModalities:IMAGE
+// (regular chat models like gemini-2.5-flash do NOT support image output)
 const GEMINI_IMAGE_MODELS = [
-  'gemini-3.5-flash',
-  'gemini-3.1-pro-preview',
-  'gemini-3-flash-preview',
-  'gemini-3.1-flash-lite',
-  'gemini-3.1-flash-lite-preview',
-  'gemini-2.5-pro',
-  'gemini-2.5-flash',
-  'gemini-2.5-flash-lite',
-  'gemini-2.0-flash',
+  'gemini-2.0-flash-exp-image-generation',    // primary free-tier image gen model
+  'gemini-2.0-flash-preview-image-generation', // regional alias fallback
 ];
 
 async function callGeminiImage(apiKey, prompt) {
