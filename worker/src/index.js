@@ -150,20 +150,45 @@ export default {
         }
       }
 
-      // HF / Gemini — return base64 JSON as before
-      try {
-        let result;
-        if (provider.startsWith('hf-')) {
-          if (!env.HF_TOKEN) return json({ error: 'HF_TOKEN secret not configured — run: npx wrangler secret put HF_TOKEN' }, 500, origin, allowed);
-          result = await callHuggingFaceImage(env.HF_TOKEN, prompt, provider);
-        } else {
-          if (!env.GEMINI_API_KEY) return json({ error: 'Server missing GEMINI_API_KEY secret' }, 500, origin, allowed);
-          result = await callGeminiImage(env.GEMINI_API_KEY, prompt);
+      // HF — explicit HF model
+      if (provider.startsWith('hf-')) {
+        try {
+          if (!env.HF_TOKEN) return json({ error: 'HF_TOKEN secret not configured' }, 500, origin, allowed);
+          const result = await callHuggingFaceImage(env.HF_TOKEN, prompt, provider);
+          return json({ ok: true, ...result }, 200, origin, allowed);
+        } catch (err) {
+          return json({ error: 'HF image failed: ' + (err.message || 'unknown') }, 502, origin, allowed);
         }
-        return json({ ok: true, ...result }, 200, origin, allowed);
-      } catch (err) {
-        return json({ error: 'Image generation failed: ' + (err.message || 'unknown') }, 502, origin, allowed);
       }
+
+      // Gemini → Cloudflare Workers AI fallback chain
+      const errors = [];
+
+      // 1. Try Gemini image generation
+      if (env.GEMINI_API_KEY) {
+        try {
+          const result = await callGeminiImage(env.GEMINI_API_KEY, prompt);
+          return json({ ok: true, ...result }, 200, origin, allowed);
+        } catch (err) {
+          errors.push('Gemini: ' + (err.message || 'failed'));
+        }
+      } else {
+        errors.push('Gemini: GEMINI_API_KEY not set');
+      }
+
+      // 2. Fall back to Cloudflare Workers AI (SDXL Lightning — fast, good quality)
+      if (env.AI) {
+        try {
+          const result = await callCFAIImage(env.AI, prompt);
+          return json({ ok: true, ...result }, 200, origin, allowed);
+        } catch (err) {
+          errors.push('CFAI: ' + (err.message || 'failed'));
+        }
+      } else {
+        errors.push('CFAI: AI binding not available');
+      }
+
+      return json({ error: 'Image generation failed. ' + errors.join(' | ') }, 502, origin, allowed);
     }
 
     // ── /preview ──────────────────────────────────────────────────────────────
@@ -1667,4 +1692,40 @@ async function callGemini(apiKey, prompt) {
   }
 
   throw new Error(`All models failed. ${errors.join(' | ')}`);
+}
+
+/* ─── Cloudflare Workers AI image client ──────────────────────────────────── */
+// Falls back to this when Gemini image gen is unavailable.
+// Uses SDXL-Lightning (fast, good quality, 1024×1024).
+// Requires [ai] binding in wrangler.toml — no extra API key needed.
+
+async function callCFAIImage(ai, prompt) {
+  // Try fastest model first, fall back to base SDXL
+  const models = [
+    '@cf/bytedance/stable-diffusion-xl-lightning',  // fastest (~3s), good quality
+    '@cf/stabilityai/stable-diffusion-xl-base-1.0', // slower (~10s), best quality
+  ];
+
+  const errs = [];
+  for (const model of models) {
+    try {
+      const result = await ai.run(model, {
+        prompt,
+        num_steps: model.includes('lightning') ? 4 : 20,
+        width: 1024,
+        height: 1024,
+      });
+      // result is a ReadableStream of PNG bytes — convert to base64
+      const bytes = new Uint8Array(await new Response(result).arrayBuffer());
+      let binary = '';
+      const chunk = 8192;
+      for (let i = 0; i < bytes.length; i += chunk) {
+        binary += String.fromCharCode(...bytes.subarray(i, Math.min(i + chunk, bytes.length)));
+      }
+      return { imageData: btoa(binary), mimeType: 'image/png' };
+    } catch (e) {
+      errs.push(`${model}: ${e.message || e}`);
+    }
+  }
+  throw new Error(`CFAI image gen failed: ${errs.join(' | ')}`);
 }

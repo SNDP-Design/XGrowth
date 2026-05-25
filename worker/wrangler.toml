@@ -6,3 +6,6 @@ compatibility_date = "2024-12-01"
 # The Worker will be served at:
 #   https://xgrowth-api.xgrowth.workers.dev
 # The Gemini API key is stored as a secret (see README) — never in this file.
+
+[ai]
+binding = "AI"
