@@ -1081,11 +1081,12 @@ async function ceImgLoadOne(prompt, model, idx){
   } catch(e){
     const cell = $(`imgCell${idx}`);
     if(!cell) return;
+    const errSnippet = (e.message||'unknown error').slice(0,120);
     cell.className = 'imggen-cell error';
     cell.innerHTML = `
-      <div class="imggen-status">
-        <span style="font-size:24px;opacity:.3">✕</span>
-        <span class="imggen-status-lbl">${model.label}</span>
+      <div class="imggen-status" style="padding:0 10px">
+        <span style="font-size:20px;opacity:.3">✕</span>
+        <span class="imggen-status-lbl" style="text-align:center;white-space:normal;line-height:1.4">${ceEsc(errSnippet)}</span>
         <button class="btn ghost" style="height:26px;padding:0 10px;font-size:11px;margin-top:6px"
           onclick="event.stopPropagation();ceImgRetryOne(${idx})">Retry</button>
       </div>`;
