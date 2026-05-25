@@ -1150,34 +1150,34 @@ function buildImagePromptPrompt(body) {
   if (niche)        contextLines.push(`NICHE: ${niche}`);
   const context = contextLines.join('\n\n');
 
-  return `You are a visual creative director. Write one image generation prompt for a 1080×1080 Instagram post based on this content:
+  return `You are a visual creative director creating Instagram images. Read the post content and extract its CORE MESSAGE — the single most powerful idea or feeling the post communicates. Then write a photorealistic or cinematic image prompt that SHOWS that idea.
 
 ${context}
 
-PROCESS:
-1. Name the EXACT subject (specific product, brand, tool, or concept the post is about)
-2. Write a prompt showing a CONCRETE SCENE or OBJECT related to that subject — not abstract swirling art
+HOW TO THINK ABOUT THIS:
+Do NOT try to show a brand logo or product UI — AI image models cannot render those accurately.
+Instead, ask: "What does this post make the reader FEEL or IMAGINE?"
+Then describe a real, tangible scene or object that captures that feeling.
 
-RULES FOR THE PROMPT:
-- NO abstract swirling light streams or random particle effects — those look like clip art
-- NO human faces, NO text/letters, NO real app UI screenshots
-- USE concrete, specific objects and forms:
-  → Named AI product (Gemini, ChatGPT, Claude, Copilot, Grok): glowing 3D crystal or geometric gem in that brand's exact colors, on dark surface, product photography style, studio lighting — e.g. "glowing four-pointed crystal star, Google blue red yellow green facets, dark premium surface, product photography, studio rim lighting, 4K"
-  → Named company (Google, Apple, Microsoft, OpenAI): brand color palette in structured geometric form — prism, orb, cube — premium 3D render
-  → Coding / developer tool: dark terminal screen close-up, specific language syntax color highlighting, mechanical keyboard keys, shallow depth of field — no swirling lights
-  → SaaS / dashboard / product: clean floating UI card with glow on dark background, premium product shot, depth of field
-  → Business / finance: physical objects — coins stacked, ledger, calculator on premium surface, studio lighting
-  → Founder / burnout / human story: real atmospheric scene — dim laptop glow at night, cluttered desk, warm lamp, coffee cup
-  → Growth / marketing / social: upward graph made of neon light tubes, dark surface, 3D render
-- Mention: specific object or shape, exact colors, lighting style, background, render style
-- 25–45 words. Concrete nouns only. No abstract concepts as visual descriptors.
+MAPPING CORE IDEAS TO IMAGES:
+- AI seeing/hearing the world, real-time perception → close-up of a human eye with circuit iris overlay, soft glow, cinematic, shallow depth of field
+- AI speed, instant processing → light-speed tunnel of data, photographic motion blur, neon blue, dark background
+- Multimodal AI (audio + video + text together) → three glowing orbs connected by light beams in a triangle, studio photography
+- AI changing everything, paradigm shift → old clock mechanism with gears transforming into glowing digital nodes, macro photography
+- Coding / developer tool → dark terminal with syntax-highlighted code reflecting on mechanical keyboard, cinematic, shallow DOF
+- SaaS / software product → floating translucent UI cards on dark background, soft rim light, 3D product render
+- Startup growth / revenue → tiny metallic rocket launching from a glass desk, warm office glow, macro, cinematic
+- Founder burnout / stress → dim laptop at 2am, cold screen glow, messy desk, empty coffee cup, film grain
+- Business strategy → chess king piece in spotlight, dark marble surface, dramatic chiaroscuro
+- Social media / content → smartphone face-down with notification glow on wooden desk, warm ambient light
+- Fundraising / investment → two hands with a glowing ember passing between them, warm light, dark background, cinematic
 
-GOOD examples — notice concrete objects, not abstract swirls:
-- Gemini AI post → "Glowing four-pointed crystal gem with Google blue red yellow green facets, rotating on dark matte surface, soft caustic light, premium product photography, 8K render"
-- ChatGPT post → "Sleek white rounded cube with subtle circuit patterns, soft white glow, dark minimal background, product photography, studio lighting, 3D render"
-- TypeScript post → "Mechanical keyboard close-up, keys glowing blue typescript logo color, dark developer desk, shallow depth of field, cinematic product shot"
-- SaaS pricing post → "Three floating pricing cards glowing white on deep navy background, clean shadows, depth of field, premium product shot, 3D render"
-- Startup launch post → "Small metallic rocket on dark launch pad with exhaust glow, minimal studio background, dramatic upward lighting, 3D product render"
+RULES:
+- Describe a real scene or object — no abstract swirling particles, no random geometric solids
+- Photographic or cinematic style preferred: "macro photography", "cinematic close-up", "studio product shot", "film still"
+- Include: main subject, lighting quality, background, color palette, camera style
+- NO human faces visible, NO readable text in frame, NO brand logos
+- 25–45 words. Specific. Vivid. Cinematic.
 
 Return ONLY the image prompt. No quotes, no labels, no explanation.`;
 }
