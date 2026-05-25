@@ -245,6 +245,13 @@ export default {
         prompt = buildBrandKitPrompt(body);
       } else if (kind === 'image-prompt') {
         prompt = buildImagePromptPrompt(body);
+        const { text: rawText, model } = await callGemini(env.GEMINI_API_KEY, prompt);
+        // Extract just the PROMPT: line, strip the CHOICE: line
+        const promptLine = rawText.split('\n').find(l => l.trim().toUpperCase().startsWith('PROMPT:'));
+        const imagePrompt = promptLine
+          ? promptLine.replace(/^PROMPT:\s*/i, '').trim()
+          : rawText.trim();
+        return json({ ok: true, text: imagePrompt, kind, model }, 200, origin, allowed);
       } else if (kind === 'email-sequence') {
         prompt = buildEmailSequencePrompt(body);
       } else if (kind === 'growth-experiments') {
@@ -1150,30 +1157,34 @@ function buildImagePromptPrompt(body) {
   if (niche)        contextLines.push(`NICHE: ${niche}`);
   const context = contextLines.join('\n\n');
 
-  return `You are a visual creative director. Your job is to read an Instagram post and write one image generation prompt that visually communicates WHAT THE POST IS ARGUING OR SAYING — not what random words appear in the text.
+  return `Read this Instagram post and pick the SINGLE best visual concept from the menu below. Then write an image generation prompt using that concept.
 
-${context}
+POST:
+${caption.slice(0, 500)}
+${articleTitle ? `\nSOURCE: ${articleTitle}` : ''}
 
-STEP 1 — What is the post's central argument or message? (One sentence)
-STEP 2 — What single image would make a viewer instantly FEEL that message?
-STEP 3 — Write that image as a cinematic prompt.
+VISUAL CONCEPT MENU — pick exactly one letter:
 
-CRITICAL: Read the MEANING, not the words.
-- A post saying "AI won't replace you, you still need to lead" → the message is HUMAN LEADERSHIP OVER AI → image: a human hand confidently steering a glowing dial or chess king piece in spotlight — NOT a pen, NOT a robot
-- A post saying "Gemini can see and hear in real time" → the message is AI PERCEPTION → image: a glowing eye with circuit patterns, or a camera lens with data streams
-- A post saying "most founders fail at pricing" → the message is PRICING MISTAKES → image: price tag with dramatic shadow, or stacked coins tipping over
-- A post saying "we launched our product" → message is PRODUCT LAUNCH MOMENT → image: small rocket lifting off from a desk in warm light
-- A post saying "use AI as a tool" → message is TOOL EMPOWERMENT → image: human hand gripping a glowing futuristic tool, close-up, confident angle
+A) HUMAN + TECHNOLOGY: Hands typing on a glowing keyboard or touching a bright screen. Use for: AI tools, using tech, productivity, software.
+B) LEADERSHIP / DECISION: A single chess king piece in a dramatic spotlight on a dark marble surface. Use for: leadership, strategy, decisions, human advantage, not being replaced.
+C) AI / TECH PRODUCT: A dark laptop or monitor screen glowing with colorful data streams. Use for: AI models, new tech products, software launches, digital tools.
+D) GROWTH / MOMENTUM: A metallic upward-pointing arrow or ascending staircase steps under studio lighting. Use for: growth, revenue, followers, improvement.
+E) STARTUP / NEW IDEA: A small metallic rocket or lit compass on a dark desk with warm side light. Use for: launching, new ventures, startups, beginning something.
+F) CODE / DEVELOPER: Dark terminal screen close-up with syntax-highlighted code reflecting on a mechanical keyboard. Use for: coding, programming, developer tools.
+G) LATE NIGHT / HUSTLE: A dim laptop screen glowing in a dark room, empty coffee cup beside it, film grain. Use for: hard work, burnout, grinding, founder life.
+H) CONTENT / VOICE: A professional microphone or camera lens on a clean dark surface, studio rim light. Use for: social media, content creation, communication, speaking.
+I) KNOWLEDGE / LEARNING: An open book or notebook with warm lamp light, dark background, macro shot. Use for: advice, tips, lessons learned, sharing insights.
+J) MONEY / BUSINESS: Stacked coins or a clean calculator on a dark premium surface, dramatic top light. Use for: pricing, revenue, funding, business strategy.
 
-VISUAL RULES:
-- NO abstract swirling particles or random geometric shapes
+RULES FOR YOUR PROMPT:
+- Start with the chosen concept's core object
+- Add: lighting style, background, camera angle, mood
 - NO human faces, NO readable text, NO brand logos
-- Use REAL objects: hands, tools, chess pieces, books, keyboards, clocks, doors, keys, compasses, maps, dashboards
-- Style: cinematic photography, macro close-up, editorial product shot, dramatic studio lighting
-- Dominant mood over busy composition — one clear subject, strong lighting
-- 25–45 words. Concrete. Cinematic.
+- 20–35 words maximum
 
-Return ONLY the image prompt. No explanation, no preamble, no quotes.`;
+Output format — two lines only:
+CHOICE: [letter]
+PROMPT: [your image generation prompt]`;
 }
 
 function buildReportPrompt(body) {
