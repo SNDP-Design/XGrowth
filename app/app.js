@@ -122,8 +122,6 @@ document.addEventListener('keydown', (e)=>{
       if(m.id === 'welcome') closeWelcome(true);
       else m.classList.remove('show');
     });
-    // Image generation modal
-    if($('ceImgGenOverlay')?.classList.contains('show')) ceImgClose();
     // Mobile sidebar drawer
     if(document.querySelector('.side.show')) toggleSide(false);
   }
@@ -291,24 +289,6 @@ function ceEsc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;
 
 /* ── CE state ───────────────────────────────────────────────────────────── */
 const CE_API = 'https://xgrowth-api.xgrowth.workers.dev';
-
-// Image generation state
-const _imgGen = { selectedUrl: '', selectedIdx: -1 };
-
-// 4 Gemini style variants — generated server-side through the worker (no ad-blocker issues)
-const IMGGEN_GRID_MODELS = [
-  { label: 'Editorial',  tag: 'Clean & professional', styleHint: '' },
-  { label: 'Vibrant',    tag: 'Bold & colorful',      styleHint: 'vibrant colors, bold palette, lifestyle photography, colorful background' },
-  { label: 'Minimalist', tag: 'Clean & simple',       styleHint: 'minimalist, white or light background, clean composition, simple' },
-  { label: 'Dark Mood',  tag: 'Cinematic & moody',    styleHint: 'dark moody aesthetic, dramatic lighting, deep shadows, cinematic' },
-];
-
-/* base64 string → Blob */
-function b64toBlob(b64, mime){
-  const bytes = atob(b64), arr = new Uint8Array(bytes.length);
-  for(let i=0;i<bytes.length;i++) arr[i] = bytes.charCodeAt(i);
-  return new Blob([arr], { type: mime || 'image/jpeg' });
-}
 
 // Authed POST to the Worker. Attaches the user's Firebase ID token.
 async function xgFetch(path, payload){
@@ -726,11 +706,7 @@ function cePlatformSectionHTML(platform){
         <button class="btn ghost" style="height:28px;padding:0 10px;font-size:12px;margin-top:6px" data-ce-copy="${ceEsc(caption)}" onclick="ceCopyAttr(this)">Copy caption</button></div>
       ${hashtags?`<div><div class="ce-style-label" style="margin-bottom:5px">Hashtags</div><p class="ce-insta-hashtags">${ceEsc(hashtags)}</p>
         <button class="btn ghost" style="height:28px;padding:0 10px;font-size:12px;margin-top:6px" data-ce-copy="${ceEsc(hashtags)}" onclick="ceCopyAttr(this)">Copy hashtags</button></div>`:''}
-    </div>
-    <button class="ce-imggen-generate-btn" onclick="ceOpenImageModal()" style="margin:12px 0 0">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
-      Generate image
-    </button>`;
+    </div>`;
   } else if(platform==='x' && _ce.threadMode){
     const tweets = ceParseThread(p.text);
     if(tweets.length>=2){
@@ -810,10 +786,6 @@ function cePostCard(platform, loading, text){
       <div><div class="ce-style-label" style="margin-bottom:6px">Caption</div><p class="ce-insta-caption">${ceEsc(caption)}</p><button class="btn ghost" style="height:30px;padding:0 12px;font-size:12px;margin-top:8px" data-ce-copy="${ceEsc(caption)}" onclick="ceCopyAttr(this)">Copy caption</button></div>
       ${hashtags?`<div><div class="ce-style-label" style="margin-bottom:6px">Hashtags</div><p class="ce-insta-hashtags">${ceEsc(hashtags)}</p><button class="btn ghost" style="height:30px;padding:0 12px;font-size:12px;margin-top:8px" data-ce-copy="${ceEsc(hashtags)}" onclick="ceCopyAttr(this)">Copy hashtags</button></div>`:''}
     </div>
-    <button class="ce-imggen-generate-btn" onclick="ceOpenImageModal()" style="margin:4px 0 0">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
-      Generate image
-    </button>
     <div class="ce-post-foot"><span class="ce-count">${text.length} chars</span><div class="ce-post-actions"><button class="btn ghost" data-ce-copy="${ceEsc(text)}" onclick="ceCopyAttr(this)">Copy all</button><a class="btn publish" href="https://www.instagram.com/" target="_blank" rel="noopener noreferrer">Post ↗</a></div></div>
     ${ceRefineBar()}</div>`;
   }
@@ -986,161 +958,6 @@ function ceRenderHistoryList(){
 }
 
 function ceInit(){ ceLoadHistory(); }
-
-/* ── Image generation — 6-model parallel grid ────────────────────────────── */
-
-async function ceOpenImageModal(){
-  // Parse the clean caption (strip "CAPTION:" prefix and hashtags)
-  const rawText = _ce.posts['instagram']?.text || '';
-  const { caption: parsedCaption } = ceParseInstagram(rawText);
-  const caption = parsedCaption || rawText;
-
-  // Reset state
-  _imgGen.selectedUrl = '';
-  _imgGen.selectedIdx = -1;
-
-  // Open modal
-  $('ceImgGenOverlay').classList.add('show');
-  document.body.style.overflow = 'hidden';
-  $('ceImgPromptInput').value = '';
-  $('ceImgDownloadBtn').disabled = true;
-  $('ceImgGenBtn').disabled = true;
-
-  // Show grid in "writing prompt" loading state
-  ceImgRenderGrid('prompt');
-
-  try {
-    const data = await xgFetch('/generate', {
-      kind:         'image-prompt',
-      caption,
-      topic:        _ce.topic || '',
-      articleTitle: _ce.article?.title || '',
-      niche:        state.profile?.niche || '',
-    });
-    $('ceImgPromptInput').value = data.text || '';
-    $('ceImgGenBtn').disabled = false;
-    ceImgGenerate(); // auto-kick all 6
-  } catch(e) {
-    ceImgRenderGrid('error');
-    $('ceImgGenBtn').disabled = false;
-    toast('Could not auto-generate prompt — type one above and click Regenerate all');
-  }
-}
-
-/* Render 6 shimmer cells (phase: 'prompt' | 'loading' | 'error') */
-function ceImgRenderGrid(phase){
-  const grid = $('ceImgGrid');
-  if(!grid) return;
-  const label = phase === 'prompt' ? 'Writing prompt…' : phase === 'error' ? 'Enter prompt above' : '';
-  grid.innerHTML = IMGGEN_GRID_MODELS.map((m, i) => `
-    <div class="imggen-cell loading" id="imgCell${i}" onclick="ceImgSelectCell(${i})" title="${m.label} · ${m.tag}">
-      <div class="imggen-shimmer"></div>
-      <div class="imggen-status">
-        <span class="ce-spinner"></span>
-        <span class="imggen-status-lbl">${label || m.label}</span>
-      </div>
-    </div>`).join('');
-}
-
-/* Generate all 4 style variants in parallel via the worker (Gemini image gen).
-   Worker returns base64 which we convert to a blob URL — no ad-blocker issues. */
-async function ceImgGenerate(){
-  const prompt = ($('ceImgPromptInput')?.value || '').trim();
-  if(!prompt){ toast('Enter a prompt first'); return; }
-
-  _imgGen.selectedUrl = '';
-  _imgGen.selectedIdx = -1;
-  $('ceImgDownloadBtn').disabled = true;
-  $('ceImgGenBtn').disabled = true;
-  ceImgRenderGrid('loading');
-
-  // All 4 cells fire at once — each worker call is independent
-  await Promise.allSettled(
-    IMGGEN_GRID_MODELS.map((model, i) => ceImgLoadOne(prompt, model, i))
-  );
-  $('ceImgGenBtn').disabled = false;
-}
-
-/* Call /generate-image on the worker with provider:'gemini'.
-   Worker returns { ok, imageData (base64), mimeType }.
-   Convert to a local blob URL so download is a direct <a> click. */
-async function ceImgLoadOne(prompt, model, idx){
-  // styleHint refines the look of the subject — it never replaces it
-  const fullPrompt = model.styleHint
-    ? `${prompt}, ${model.styleHint}, square 1:1 format, Instagram-ready, high quality`
-    : `${prompt}, square 1:1 format, Instagram-ready, high quality`;
-  try {
-    const data = await xgFetch('/generate-image', { prompt: fullPrompt, provider: 'gemini' });
-    const blobUrl = URL.createObjectURL(b64toBlob(data.imageData, data.mimeType));
-    const cell = $(`imgCell${idx}`);
-    if(!cell) return;
-    cell.className   = 'imggen-cell done';
-    cell.dataset.url = blobUrl;
-    cell.innerHTML   = `
-      <img src="${blobUrl}" alt="${model.label}">
-      <div class="imggen-label"><strong>${model.label}</strong><span>${model.tag}</span></div>`;
-  } catch(e){
-    const cell = $(`imgCell${idx}`);
-    if(!cell) return;
-    const errSnippet = (e.message||'unknown error').slice(0,120);
-    cell.className = 'imggen-cell error';
-    cell.innerHTML = `
-      <div class="imggen-status" style="padding:0 10px">
-        <span style="font-size:20px;opacity:.3">✕</span>
-        <span class="imggen-status-lbl" style="text-align:center;white-space:normal;line-height:1.4">${ceEsc(errSnippet)}</span>
-        <button class="btn ghost" style="height:26px;padding:0 10px;font-size:11px;margin-top:6px"
-          onclick="event.stopPropagation();ceImgRetryOne(${idx})">Retry</button>
-      </div>`;
-    console.warn('Image gen failed:', model.label, e.message);
-  }
-}
-
-/* Retry a single failed cell */
-function ceImgRetryOne(idx){
-  const model  = IMGGEN_GRID_MODELS[idx];
-  const prompt = ($('ceImgPromptInput')?.value || '').trim();
-  if(!prompt) return;
-
-  const cell = $(`imgCell${idx}`);
-  if(!cell) return;
-  cell.className = 'imggen-cell loading';
-  cell.innerHTML = `
-    <div class="imggen-shimmer"></div>
-    <div class="imggen-status">
-      <span class="ce-spinner"></span>
-      <span class="imggen-status-lbl">${model.label}</span>
-    </div>`;
-
-  ceImgLoadOne(prompt, model, idx);
-}
-
-/* Tap a loaded cell to select it */
-function ceImgSelectCell(idx){
-  const cell = $(`imgCell${idx}`);
-  if(!cell || !cell.dataset.url) return; // still loading or errored
-  $('ceImgGrid')?.querySelectorAll('.imggen-cell').forEach(c => c.classList.remove('selected'));
-  cell.classList.add('selected');
-  _imgGen.selectedUrl = cell.dataset.url;
-  _imgGen.selectedIdx = idx;
-  $('ceImgDownloadBtn').disabled = false;
-}
-
-/* Download the selected image.
-   selectedUrl is a local blob: URL so no CORS or ad-blocker issues — direct download. */
-function ceImgDownload(){
-  if(!_imgGen.selectedUrl){ toast('Tap an image to select it first'); return; }
-  const a = document.createElement('a');
-  a.href = _imgGen.selectedUrl;
-  a.download = `xgrowth-insta-${Date.now()}.jpg`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-}
-
-function ceImgClose(){
-  $('ceImgGenOverlay').classList.remove('show');
-  document.body.style.overflow = '';
-}
 
 /* ── Copy util ────────────────────────────────────────────────────────── */
 

@@ -99,7 +99,7 @@ export default {
       return json({ error: 'Use POST' }, 405, origin, allowed);
     }
 
-    const VALID_PATHS = ['/generate', '/generate-image', '/preview', '/news', '/x-profile'];
+    const VALID_PATHS = ['/generate', '/preview', '/news', '/x-profile'];
     if (!VALID_PATHS.includes(url.pathname)) {
       return json({ error: 'Not found' }, 404, origin, allowed);
     }
@@ -121,74 +121,6 @@ export default {
       body = await request.json();
     } catch {
       return json({ error: 'Invalid JSON body' }, 400, origin, allowed);
-    }
-
-    // ── /generate-image ───────────────────────────────────────────────────────
-    if (url.pathname === '/generate-image') {
-      const { prompt, provider = 'gemini' } = body;
-      if (!prompt || typeof prompt !== 'string') {
-        return json({ error: 'Missing prompt' }, 400, origin, allowed);
-      }
-
-      // Pollinations: stream image binary directly — zero base64/CPU overhead,
-      // and the request is server-to-server so browser ad-blockers can't interfere.
-      if (provider === 'pollinations') {
-        const { model: pollinationsModel = 'flux', seed } = body;
-        try {
-          const imgResp = await callPollinationsProxy(prompt, pollinationsModel, seed);
-          const ct = imgResp.headers.get('content-type') || 'image/jpeg';
-          return new Response(imgResp.body, {
-            status: 200,
-            headers: {
-              'Content-Type': ct.split(';')[0].trim(),
-              'Cache-Control': 'no-store',
-              ...corsHeaders(origin, allowed),
-            },
-          });
-        } catch (err) {
-          return json({ error: 'Image generation failed: ' + (err.message || 'unknown') }, 502, origin, allowed);
-        }
-      }
-
-      // HF — explicit HF model
-      if (provider.startsWith('hf-')) {
-        try {
-          if (!env.HF_TOKEN) return json({ error: 'HF_TOKEN secret not configured' }, 500, origin, allowed);
-          const result = await callHuggingFaceImage(env.HF_TOKEN, prompt, provider);
-          return json({ ok: true, ...result }, 200, origin, allowed);
-        } catch (err) {
-          return json({ error: 'HF image failed: ' + (err.message || 'unknown') }, 502, origin, allowed);
-        }
-      }
-
-      // Gemini → Cloudflare Workers AI fallback chain
-      const errors = [];
-
-      // 1. Try Gemini image generation
-      if (env.GEMINI_API_KEY) {
-        try {
-          const result = await callGeminiImage(env.GEMINI_API_KEY, prompt);
-          return json({ ok: true, ...result }, 200, origin, allowed);
-        } catch (err) {
-          errors.push('Gemini: ' + (err.message || 'failed'));
-        }
-      } else {
-        errors.push('Gemini: GEMINI_API_KEY not set');
-      }
-
-      // 2. Fall back to Cloudflare Workers AI (SDXL Lightning — fast, good quality)
-      if (env.AI) {
-        try {
-          const result = await callCFAIImage(env.AI, prompt);
-          return json({ ok: true, ...result }, 200, origin, allowed);
-        } catch (err) {
-          errors.push('CFAI: ' + (err.message || 'failed'));
-        }
-      } else {
-        errors.push('CFAI: AI binding not available');
-      }
-
-      return json({ error: 'Image generation failed. ' + errors.join(' | ') }, 502, origin, allowed);
     }
 
     // ── /preview ──────────────────────────────────────────────────────────────
@@ -243,15 +175,6 @@ export default {
         prompt = buildReportPrompt(body);
       } else if (kind === 'brand-kit') {
         prompt = buildBrandKitPrompt(body);
-      } else if (kind === 'image-prompt') {
-        prompt = buildImagePromptPrompt(body);
-        const { text: rawText, model } = await callGemini(env.GEMINI_API_KEY, prompt);
-        // Extract just the PROMPT: line, strip the CHOICE: line
-        const promptLine = rawText.split('\n').find(l => l.trim().toUpperCase().startsWith('PROMPT:'));
-        const imagePrompt = promptLine
-          ? promptLine.replace(/^PROMPT:\s*/i, '').trim()
-          : rawText.trim();
-        return json({ ok: true, text: imagePrompt, kind, model }, 200, origin, allowed);
       } else if (kind === 'email-sequence') {
         prompt = buildEmailSequencePrompt(body);
       } else if (kind === 'growth-experiments') {
@@ -1147,46 +1070,6 @@ ${HARD_RULES}
 Return ONLY the markdown. No preamble.`;
 }
 
-function buildImagePromptPrompt(body) {
-  const { caption = '', topic = '', articleTitle = '', niche = '' } = body;
-
-  const contextLines = [];
-  if (caption)      contextLines.push(`INSTAGRAM CAPTION:\n${caption.slice(0, 600)}`);
-  if (articleTitle) contextLines.push(`SOURCE TITLE: ${articleTitle}`);
-  if (topic)        contextLines.push(`TOPIC: ${topic}`);
-  if (niche)        contextLines.push(`NICHE: ${niche}`);
-  const context = contextLines.join('\n\n');
-
-  return `Read this Instagram post and pick the SINGLE best visual concept from the menu below. Then write an image generation prompt using that concept.
-
-POST:
-${caption.slice(0, 500)}
-${articleTitle ? `\nSOURCE: ${articleTitle}` : ''}
-
-VISUAL CONCEPT MENU — pick exactly one letter:
-
-A) HUMAN + TECHNOLOGY: Hands typing on a glowing keyboard or touching a bright screen. Use for: AI tools, using tech, productivity, software.
-B) LEADERSHIP / DECISION: A single chess king piece in a dramatic spotlight on a dark marble surface. Use for: leadership, strategy, decisions, human advantage, not being replaced.
-C) AI / TECH PRODUCT: A dark laptop or monitor screen glowing with colorful data streams. Use for: AI models, new tech products, software launches, digital tools.
-D) GROWTH / MOMENTUM: A metallic upward-pointing arrow or ascending staircase steps under studio lighting. Use for: growth, revenue, followers, improvement.
-E) STARTUP / NEW IDEA: A small metallic rocket or lit compass on a dark desk with warm side light. Use for: launching, new ventures, startups, beginning something.
-F) CODE / DEVELOPER: Dark terminal screen close-up with syntax-highlighted code reflecting on a mechanical keyboard. Use for: coding, programming, developer tools.
-G) LATE NIGHT / HUSTLE: A dim laptop screen glowing in a dark room, empty coffee cup beside it, film grain. Use for: hard work, burnout, grinding, founder life.
-H) CONTENT / VOICE: A professional microphone or camera lens on a clean dark surface, studio rim light. Use for: social media, content creation, communication, speaking.
-I) KNOWLEDGE / LEARNING: An open book or notebook with warm lamp light, dark background, macro shot. Use for: advice, tips, lessons learned, sharing insights.
-J) MONEY / BUSINESS: Stacked coins or a clean calculator on a dark premium surface, dramatic top light. Use for: pricing, revenue, funding, business strategy.
-
-RULES FOR YOUR PROMPT:
-- Start with the chosen concept's core object
-- Add: lighting style, background, camera angle, mood
-- NO human faces, NO readable text, NO brand logos
-- 20–35 words maximum
-
-Output format — two lines only:
-CHOICE: [letter]
-PROMPT: [your image generation prompt]`;
-}
-
 function buildReportPrompt(body) {
   const { niche = 'your product', metrics = {} } = body;
   const {
@@ -1506,151 +1389,6 @@ ${HARD_RULES}
 - Do NOT add any text before Email 1 or after the final email`;
 }
 
-/* ─── Pollinations image proxy (server-to-server, binary stream) ──────────── */
-
-// Fetch the image from Pollinations server-side and return the raw Response for
-// streaming.  No base64 encoding = zero CPU overhead (avoids the Worker's CPU
-// time limit which kills base64 loops on large images).  The browser receives
-// raw image bytes via CORS-annotated headers; the client converts to a blob URL.
-async function callPollinationsProxy(prompt, model, seed) {
-  const s = seed || Math.floor(Math.random() * 1e9);
-  const imageUrl =
-    `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}` +
-    `?width=1080&height=1080&model=${encodeURIComponent(model)}&nologo=true&seed=${s}`;
-
-  const controller = new AbortController();
-  // Abort after 25s — leaves 5s headroom before the Worker's 30s wall-clock limit.
-  const timer = setTimeout(() => controller.abort(), 25000);
-
-  let resp;
-  try {
-    resp = await fetch(imageUrl, {
-      signal: controller.signal,
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; XGrowthBot/1.0; +https://xgrowth.uno)',
-        'Referer':    'https://xgrowth.uno/',
-      },
-    });
-  } catch (e) {
-    clearTimeout(timer);
-    if (e.name === 'AbortError') throw new Error('Pollinations timed out after 25 s');
-    throw e;
-  }
-  clearTimeout(timer);
-
-  if (!resp.ok) throw new Error(`Pollinations returned ${resp.status}`);
-  return resp; // caller streams resp.body directly to the browser
-}
-
-/* ─── Hugging Face image client ───────────────────────────────────────────── */
-
-// HF Inference API model IDs — all free with a HF token (FLUX.1-dev needs gated approval)
-const HF_IMAGE_MODELS = {
-  'hf-flux':      'black-forest-labs/FLUX.1-schnell',   // fastest, free
-  'hf-flux-dev':  'black-forest-labs/FLUX.1-dev',        // best quality (accept terms on HF first)
-  'hf-sdxl':      'stabilityai/stable-diffusion-xl-base-1.0', // classic SDXL
-  'hf-sd3':       'stabilityai/stable-diffusion-3-medium-diffusers', // SD3 Medium
-};
-
-async function callHuggingFaceImage(token, prompt, modelKey = 'hf-flux') {
-  const modelId = HF_IMAGE_MODELS[modelKey] || HF_IMAGE_MODELS['hf-flux'];
-
-  // Use the HF router inference endpoint — more reliable than the raw model endpoint
-  const resp = await fetch(`https://router.huggingface.co/hf-inference/models/${modelId}/v1/images/generations`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      prompt,
-      n: 1,
-      size: '1024x1024',
-      response_format: 'b64_json',
-    }),
-  });
-
-  if (!resp.ok) {
-    const t = await resp.text();
-    if (resp.status === 503) throw new Error('Model loading — wait 20s then retry');
-    if (resp.status === 422) throw new Error('Invalid request — try a different model');
-    if (resp.status === 429) throw new Error('Rate limited — wait a moment then retry');
-    if (resp.status === 403) throw new Error('Access denied — accept model terms on huggingface.co first');
-    throw new Error(`HF ${resp.status}: ${t.slice(0, 150)}`);
-  }
-
-  const data = await resp.json();
-  const imageData = data.data?.[0]?.b64_json;
-  if (!imageData) throw new Error('No image returned from HF — try again');
-  return { imageData, mimeType: 'image/jpeg' };
-}
-
-/* ─── Gemini image client ─────────────────────────────────────────────────── */
-
-// Gemini image generation models — dedicated image-output models only.
-// Tried in order; first success wins. Free-tier models listed first.
-const GEMINI_IMAGE_MODELS = [
-  'gemini-3.1-flash-lite-image-preview',      // free tier, good quality
-  'gemini-3.1-flash-image-preview',           // Nano Banana 2 — best quality
-  'gemini-3-pro-image-preview',               // Nano Banana Pro — pro quality
-  'gemini-2.5-flash-image',                   // Nano Banana — high-volume
-  'gemini-2.0-flash-exp-image-generation',    // older experimental fallback
-  'gemini-2.0-flash-preview-image-generation',// older regional fallback
-];
-
-async function callGeminiImage(apiKey, prompt) {
-  // NOTE: image gen models don't accept temperature / topP / thinkingConfig.
-  // responseModalities must be ['TEXT', 'IMAGE'] — TEXT first is required.
-  const body = JSON.stringify({
-    contents: [{ role: 'user', parts: [{ text: prompt }] }],
-    generationConfig: {
-      responseModalities: ['TEXT', 'IMAGE'],
-    },
-    safetySettings: [
-      { category: 'HARM_CATEGORY_HARASSMENT',       threshold: 'BLOCK_ONLY_HIGH' },
-      { category: 'HARM_CATEGORY_HATE_SPEECH',       threshold: 'BLOCK_ONLY_HIGH' },
-      { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_ONLY_HIGH' },
-      { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_ONLY_HIGH' },
-    ],
-  });
-
-  const errors = [];
-  for (const model of GEMINI_IMAGE_MODELS) {
-    try {
-      const url = `${GEMINI_BASE}${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
-      const resp = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body,
-      });
-
-      if (!resp.ok) {
-        const t = await resp.text();
-        errors.push(`${model}: ${resp.status} ${t.slice(0, 120)}`);
-        continue;
-      }
-
-      const data = await resp.json();
-      const parts = data.candidates?.[0]?.content?.parts || [];
-
-      // Find the image part
-      const imgPart = parts.find(p => p.inlineData?.mimeType?.startsWith('image/'));
-      if (!imgPart) {
-        const blockReason = data.promptFeedback?.blockReason;
-        if (blockReason) throw new Error(`Blocked by safety: ${blockReason}`);
-        errors.push(`${model}: no image in response`);
-        continue;
-      }
-
-      return { imageData: imgPart.inlineData.data, mimeType: imgPart.inlineData.mimeType };
-    } catch (e) {
-      errors.push(`${model}: ${e.message || e}`);
-    }
-  }
-
-  throw new Error(`Gemini image gen failed. ${errors.join(' | ')}`);
-}
-
 /* ─── Gemini client ────────────────────────────────────────────────────────── */
 
 async function callGemini(apiKey, prompt) {
@@ -1707,38 +1445,3 @@ async function callGemini(apiKey, prompt) {
   throw new Error(`All models failed. ${errors.join(' | ')}`);
 }
 
-/* ─── Cloudflare Workers AI image client ──────────────────────────────────── */
-// Falls back to this when Gemini image gen is unavailable.
-// Uses SDXL-Lightning (fast, good quality, 1024×1024).
-// Requires [ai] binding in wrangler.toml — no extra API key needed.
-
-async function callCFAIImage(ai, prompt) {
-  // Try fastest model first, fall back to base SDXL
-  const models = [
-    '@cf/bytedance/stable-diffusion-xl-lightning',  // fastest (~3s), good quality
-    '@cf/stabilityai/stable-diffusion-xl-base-1.0', // slower (~10s), best quality
-  ];
-
-  const errs = [];
-  for (const model of models) {
-    try {
-      const result = await ai.run(model, {
-        prompt,
-        num_steps: model.includes('lightning') ? 4 : 20,
-        width: 1024,
-        height: 1024,
-      });
-      // result is a ReadableStream of PNG bytes — convert to base64
-      const bytes = new Uint8Array(await new Response(result).arrayBuffer());
-      let binary = '';
-      const chunk = 8192;
-      for (let i = 0; i < bytes.length; i += chunk) {
-        binary += String.fromCharCode(...bytes.subarray(i, Math.min(i + chunk, bytes.length)));
-      }
-      return { imageData: btoa(binary), mimeType: 'image/png' };
-    } catch (e) {
-      errs.push(`${model}: ${e.message || e}`);
-    }
-  }
-  throw new Error(`CFAI image gen failed: ${errs.join(' | ')}`);
-}
