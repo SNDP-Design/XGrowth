@@ -293,19 +293,22 @@ function ceEsc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;
 const CE_API = 'https://xgrowth-api.xgrowth.workers.dev';
 
 // Image generation state
-const _imgGen = { selectedUrl: '', selectedIdx: -1, seeds: [], _failCount: 0, _failTimer: null };
+const _imgGen = { selectedUrl: '', selectedIdx: -1 };
 
-// 6 Pollinations models for the parallel grid.
-// Loaded browser-direct (free, no API key). Cloudflare Worker IPs get 402 from Pollinations
-// (CDN IP blocking) so these must be fetched by the browser, not proxied.
+// 4 Gemini style variants — generated server-side through the worker (no ad-blocker issues)
 const IMGGEN_GRID_MODELS = [
-  { id: 'flux-pro',     label: 'FLUX Pro',     tag: 'Best overall'   },
-  { id: 'flux-realism', label: 'Realism',      tag: 'Photorealistic' },
-  { id: 'flux',         label: 'FLUX Schnell', tag: 'Fast & clean'   },
-  { id: 'flux-anime',   label: 'Anime',        tag: 'Illustrated'    },
-  { id: 'flux-3d',      label: 'FLUX 3D',      tag: '3D / Product'   },
-  { id: 'any-dark',     label: 'Any Dark',     tag: 'Dark aesthetic' },
+  { label: 'Editorial',  tag: 'Clean & professional', styleHint: '' },
+  { label: 'Vibrant',    tag: 'Bold & colorful',      styleHint: 'vibrant colors, bold palette, lifestyle photography, colorful background' },
+  { label: 'Minimalist', tag: 'Clean & simple',       styleHint: 'minimalist, white or light background, clean composition, simple' },
+  { label: 'Dark Mood',  tag: 'Cinematic & moody',    styleHint: 'dark moody aesthetic, dramatic lighting, deep shadows, cinematic' },
 ];
+
+/* base64 string → Blob */
+function b64toBlob(b64, mime){
+  const bytes = atob(b64), arr = new Uint8Array(bytes.length);
+  for(let i=0;i<bytes.length;i++) arr[i] = bytes.charCodeAt(i);
+  return new Blob([arr], { type: mime || 'image/jpeg' });
+}
 
 // Authed POST to the Worker. Attaches the user's Firebase ID token.
 async function xgFetch(path, payload){
@@ -1039,105 +1042,58 @@ function ceImgRenderGrid(phase){
     </div>`).join('');
 }
 
-/* Load all 6 SEQUENTIALLY — Pollinations allows only 1 concurrent request per IP.
-   Parallel requests beyond the first all return 402. Each cell reveals as it finishes. */
+/* Generate all 4 style variants in parallel via the worker (Gemini image gen).
+   Worker returns base64 which we convert to a blob URL — no ad-blocker issues. */
 async function ceImgGenerate(){
   const prompt = ($('ceImgPromptInput')?.value || '').trim();
   if(!prompt){ toast('Enter a prompt first'); return; }
 
-  _imgGen.seeds       = IMGGEN_GRID_MODELS.map(() => Math.floor(Math.random() * 1e9));
   _imgGen.selectedUrl = '';
   _imgGen.selectedIdx = -1;
-  _imgGen._failCount  = 0;
-  clearTimeout(_imgGen._failTimer);
   $('ceImgDownloadBtn').disabled = true;
   $('ceImgGenBtn').disabled = true;
   ceImgRenderGrid('loading');
 
-  for(let i = 0; i < IMGGEN_GRID_MODELS.length; i++){
-    // Mark the active cell so the user can see which one is generating
-    const cell = $(`imgCell${i}`);
-    if(cell){
-      const lbl = cell.querySelector('.imggen-status-lbl');
-      if(lbl) lbl.textContent = IMGGEN_GRID_MODELS[i].label + '…';
-    }
-    await ceImgLoadOne(prompt, IMGGEN_GRID_MODELS[i], i).catch(() => {});
-  }
+  // All 4 cells fire at once — each worker call is independent
+  await Promise.allSettled(
+    IMGGEN_GRID_MODELS.map((model, i) => ceImgLoadOne(prompt, model, i))
+  );
   $('ceImgGenBtn').disabled = false;
 }
 
-/* Load one Pollinations image (browser-direct) and update its cell.
-   Pollinations is free and returns 200 from real browsers.
-   Their servers 402 Cloudflare Worker IPs (CDN blocking), so we load directly.
-   If an ad-blocker or privacy extension is intercepting requests we detect it
-   by counting fast failures and show a one-time whitelist suggestion. */
-function ceImgLoadOne(prompt, model, idx){
-  return new Promise((resolve, reject) => {
-    const seed = _imgGen.seeds[idx] || Math.floor(Math.random() * 1e9);
-    const url  = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}` +
-                 `?width=1080&height=1080&model=${model.id}&nologo=true&seed=${seed}`;
-    const img  = new Image();
-    // ⚠️ Do NOT set crossOrigin — Pollinations CDN omits CORS headers on cached
-    // responses, which causes the browser to fire onerror even when the image
-    // is perfectly valid. Download uses a separate fetch() with CORS handling.
-    const startedAt = Date.now();
-
-    const timer = setTimeout(() => {
-      img.src = '';
-      const cell = $(`imgCell${idx}`);
-      if(cell && cell.classList.contains('loading')){
-        cell.className = 'imggen-cell error';
-        cell.innerHTML = `
-          <div class="imggen-status">
-            <span style="font-size:24px;opacity:.3">⏱</span>
-            <span class="imggen-status-lbl">${model.label} timed out</span>
-            <button class="btn ghost" style="height:26px;padding:0 10px;font-size:11px;margin-top:6px"
-              onclick="event.stopPropagation();ceImgRetryOne(${idx})">Retry</button>
-          </div>`;
-      }
-      reject(new Error('timeout'));
-    }, 45000);
-
-    img.onload = () => {
-      clearTimeout(timer);
-      const cell = $(`imgCell${idx}`);
-      if(!cell) return resolve(url);
-      cell.className   = 'imggen-cell done';
-      cell.dataset.url = url;
-      cell.innerHTML   = `
-        <img src="${url}" alt="${model.label}">
-        <div class="imggen-label"><strong>${model.label}</strong><span>${model.tag}</span></div>`;
-      resolve(url);
-    };
-
-    img.onerror = () => {
-      clearTimeout(timer);
-      const cell = $(`imgCell${idx}`);
-      if(!cell) return reject();
-      cell.className = 'imggen-cell error';
-      cell.innerHTML = `
-        <div class="imggen-status">
-          <span style="font-size:24px;opacity:.3">✕</span>
-          <span class="imggen-status-lbl">${model.label}</span>
-          <button class="btn ghost" style="height:26px;padding:0 10px;font-size:11px;margin-top:6px"
-            onclick="event.stopPropagation();ceImgRetryOne(${idx})">Retry</button>
-        </div>`;
-
-      // Ad-blocker detection: if onerror fires within 3 s it wasn't a real image failure.
-      if(Date.now() - startedAt < 3000){
-        _imgGen._failCount++;
-        if(_imgGen._failCount === 3){
-          toast('Images blocked — your ad-blocker is intercepting requests. Whitelist xgrowth.uno to fix this.');
-        }
-      }
-      reject();
-    };
-
-    img.src = url;
-  });
+/* Call /generate-image on the worker with provider:'gemini'.
+   Worker returns { ok, imageData (base64), mimeType }.
+   Convert to a local blob URL so download is a direct <a> click. */
+async function ceImgLoadOne(prompt, model, idx){
+  const fullPrompt = model.styleHint
+    ? `${prompt}. Style: ${model.styleHint}. Square format, Instagram-ready, high quality.`
+    : `${prompt}. Square format, Instagram-ready, high quality, editorial.`;
+  try {
+    const data = await xgFetch('/generate-image', { prompt: fullPrompt, provider: 'gemini' });
+    const blobUrl = URL.createObjectURL(b64toBlob(data.imageData, data.mimeType));
+    const cell = $(`imgCell${idx}`);
+    if(!cell) return;
+    cell.className   = 'imggen-cell done';
+    cell.dataset.url = blobUrl;
+    cell.innerHTML   = `
+      <img src="${blobUrl}" alt="${model.label}">
+      <div class="imggen-label"><strong>${model.label}</strong><span>${model.tag}</span></div>`;
+  } catch(e){
+    const cell = $(`imgCell${idx}`);
+    if(!cell) return;
+    cell.className = 'imggen-cell error';
+    cell.innerHTML = `
+      <div class="imggen-status">
+        <span style="font-size:24px;opacity:.3">✕</span>
+        <span class="imggen-status-lbl">${model.label}</span>
+        <button class="btn ghost" style="height:26px;padding:0 10px;font-size:11px;margin-top:6px"
+          onclick="event.stopPropagation();ceImgRetryOne(${idx})">Retry</button>
+      </div>`;
+    console.warn('Image gen failed:', model.label, e.message);
+  }
 }
 
-/* Retry a single failed or timed-out cell with a fresh seed */
+/* Retry a single failed cell */
 function ceImgRetryOne(idx){
   const model  = IMGGEN_GRID_MODELS[idx];
   const prompt = ($('ceImgPromptInput')?.value || '').trim();
@@ -1153,9 +1109,6 @@ function ceImgRetryOne(idx){
       <span class="imggen-status-lbl">${model.label}</span>
     </div>`;
 
-  // Ensure seeds array exists even if page was freshly loaded
-  if(!_imgGen.seeds.length) _imgGen.seeds = IMGGEN_GRID_MODELS.map(() => Math.floor(Math.random() * 1e9));
-  _imgGen.seeds[idx] = Math.floor(Math.random() * 1e9);
   ceImgLoadOne(prompt, model, idx);
 }
 
@@ -1171,29 +1124,15 @@ function ceImgSelectCell(idx){
 }
 
 /* Download the selected image.
-   The URL is a Pollinations https:// URL, not a data: URL, so we must fetch it as a blob.
-   If the fetch fails (CORS, ad-blocker, etc.) fall back to opening the URL in a new tab. */
-async function ceImgDownload(){
+   selectedUrl is a local blob: URL so no CORS or ad-blocker issues — direct download. */
+function ceImgDownload(){
   if(!_imgGen.selectedUrl){ toast('Tap an image to select it first'); return; }
-  const url = _imgGen.selectedUrl;
-
-  // Try fetch-as-blob first so the browser saves the file rather than navigating
-  try {
-    const resp = await fetch(url, { mode: 'cors' });
-    if(!resp.ok) throw new Error('fetch failed');
-    const blob = await resp.blob();
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `xgrowth-insta-${Date.now()}.jpg`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(a.href);
-  } catch {
-    // CORS or ad-blocker blocked the fetch — open in new tab so user can save manually
-    window.open(url, '_blank', 'noopener,noreferrer');
-    toast('Opening in new tab — right-click to Save As');
-  }
+  const a = document.createElement('a');
+  a.href = _imgGen.selectedUrl;
+  a.download = `xgrowth-insta-${Date.now()}.jpg`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
 
 function ceImgClose(){

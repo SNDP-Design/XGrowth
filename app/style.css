@@ -386,7 +386,7 @@
   .ce-imggen-generate-btn:disabled{opacity:.45;cursor:default}
 
   /* ── 6-model image grid ─────────────────────────────────────────────────── */
-  .imggen-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:2px 0}
+  .imggen-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:2px 0}
   .imggen-cell{position:relative;aspect-ratio:1/1;border-radius:10px;overflow:hidden;cursor:pointer;border:2px solid transparent;background:#0a0a0a;transition:border-color .18s,transform .15s,box-shadow .18s}
   .imggen-cell:hover{transform:scale(1.025);box-shadow:0 6px 24px rgba(0,0,0,.5)}
   .imggen-cell img{width:100%;height:100%;object-fit:cover;display:block}
@@ -402,7 +402,7 @@
   .imggen-label{position:absolute;bottom:0;left:0;right:0;padding:18px 10px 8px;background:linear-gradient(transparent,rgba(0,0,0,.75));display:flex;justify-content:space-between;align-items:flex-end}
   .imggen-label strong{font-size:11px;color:#fff;font-weight:700;letter-spacing:.2px;line-height:1}
   .imggen-label span{font-size:10px;color:rgba(255,255,255,.55);letter-spacing:.2px}
-  @media(max-width:600px){.ce-imggen-modal{padding:16px;gap:12px}.ce-imggen-modal h3{font-size:16px}.imggen-grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:600px){.ce-imggen-modal{padding:16px;gap:12px}.ce-imggen-modal h3{font-size:16px}.imggen-grid{grid-template-columns:1fr}}
 
   /* ── Saved Library ───────────────────────────────────────────────────────── */
   #libItems{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;margin-top:4px}
