@@ -1065,9 +1065,10 @@ async function ceImgGenerate(){
    Worker returns { ok, imageData (base64), mimeType }.
    Convert to a local blob URL so download is a direct <a> click. */
 async function ceImgLoadOne(prompt, model, idx){
+  // styleHint refines the look of the subject — it never replaces it
   const fullPrompt = model.styleHint
-    ? `${prompt}. Style: ${model.styleHint}. Square format, Instagram-ready, high quality.`
-    : `${prompt}. Square format, Instagram-ready, high quality, editorial.`;
+    ? `${prompt}, ${model.styleHint}, square 1:1 format, Instagram-ready, high quality`
+    : `${prompt}, square 1:1 format, Instagram-ready, high quality`;
   try {
     const data = await xgFetch('/generate-image', { prompt: fullPrompt, provider: 'gemini' });
     const blobUrl = URL.createObjectURL(b64toBlob(data.imageData, data.mimeType));

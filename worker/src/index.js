@@ -1143,39 +1143,48 @@ Return ONLY the markdown. No preamble.`;
 function buildImagePromptPrompt(body) {
   const { caption = '', topic = '', articleTitle = '', niche = '' } = body;
 
-  // Build layered context — caption is primary, topic + article give extra signal
   const contextLines = [];
-  if (caption)       contextLines.push(`INSTAGRAM CAPTION (primary context):\n${caption.slice(0, 600)}`);
-  if (articleTitle)  contextLines.push(`ARTICLE / SOURCE TITLE: ${articleTitle}`);
-  if (topic)         contextLines.push(`TOPIC: ${topic}`);
-  if (niche)         contextLines.push(`PRODUCT / NICHE: ${niche}`);
+  if (caption)      contextLines.push(`INSTAGRAM CAPTION:\n${caption.slice(0, 600)}`);
+  if (articleTitle) contextLines.push(`SOURCE TITLE: ${articleTitle}`);
+  if (topic)        contextLines.push(`TOPIC: ${topic}`);
+  if (niche)        contextLines.push(`NICHE: ${niche}`);
   const context = contextLines.join('\n\n');
 
-  return `You are a visual creative director. Your job is to turn an Instagram caption into a vivid, specific image generation prompt.
+  return `You are a visual creative director writing prompts for an AI image generator.
 
 ${context}
 
-Read the caption carefully. Identify the CORE IDEA or KEY VISUAL METAPHOR the post is communicating. Then write ONE image prompt that directly illustrates that idea for a 1080×1080 Instagram post.
+Your job: read the content above, identify the SPECIFIC SUBJECT the post is about, and write one image generation prompt that depicts THAT SUBJECT directly.
+
+STEP 1 — Identify the subject:
+Extract the specific product, technology, company, person, or concept the post is actually about.
+- "Google Gemini" → subject is Gemini AI
+- "TypeScript 5.0" → subject is TypeScript / code
+- "founder burnout" → subject is exhausted founder
+- "SaaS pricing strategy" → subject is pricing / money / SaaS dashboard
+- "GPT-4o" → subject is OpenAI / AI model
+
+STEP 2 — Write a prompt that shows THAT subject:
+- If it's a named AI product (Gemini, GPT, Claude, Copilot): show abstract AI visualization in that product's brand colors — glowing neural network, floating geometric shapes, data streams
+- If it's a named company (Google, Apple, OpenAI): show brand-associated colors, aesthetic, abstract representation
+- If it's a developer tool / code: show dark code editor aesthetic, syntax highlighting glow, terminal feel
+- If it's a business concept: show the most concrete visual metaphor (NOT the abstract word — show the THING)
+- If it's a founder / human story: show atmospheric scene — dim office, warm desk lamp, notebook, coffee
 
 RULES:
-1. The image MUST directly match the post's specific message — not just the general niche
-   - Post about "saving 9 hours/week with AI ops" → show a calm, organised desk with a glowing dashboard, NOT just a generic tech scene
-   - Post about "founder burnout" → show a dim laptop at midnight, scattered coffee cups, warm bedside glow
-   - Post about "product launch day" → show a clean product reveal shot, spotlight, dramatic shadows
-2. Describe the scene concretely: subject, composition, lighting, background, color palette
-3. Lead with photographic style: "dark minimal product photography", "editorial flatlay", "cinematic close-up", etc.
-4. Include: lighting quality, background mood, camera angle, depth of field
-5. NO text overlays, NO logos, NO human faces, NO UI screenshots in frame
-6. Skip abstract nouns: "success", "innovation", "growth" — describe the VISUAL, not the concept
-7. 15–40 words total. Dense, specific, vivid.
+- The image must be about the SPECIFIC thing in the post, not a generic tech/startup scene
+- Describe subject + art style + lighting + colors + mood
+- Art styles allowed: digital art, 3D render, abstract visualization, cinematic photography, editorial product shot, dark studio photography
+- NO human faces, NO text or letters in frame, NO real app UI screenshots
+- 20–45 words total. Dense and specific.
 
-Good examples (notice how each matches a specific concept):
-- "dark minimal flatlay, MacBook on matte black surface, soft rim lighting, deep shadows, glowing dashboard reflection, professional product photography, 4K"
-- "cinematic close-up of a timer stopping at zero, blue-purple gradient background, shallow depth of field, editorial feel, dramatic side lighting"
-- "clean white desk with colour-coded sticky notes and open planner, natural window light, flat-lay, high contrast, commercial photography"
-- "lone founder at a glass-wall office, city lights at dusk below, warm interior glow vs cool exterior, editorial, wide-angle, moody"
+Examples of SUBJECT-FIRST prompts:
+- Post about Gemini AI → "Abstract Gemini AI visualization, glowing neural network in Google's blue red yellow green palette, geometric diamond shapes, dark background, digital art, 4K, dramatic lighting"
+- Post about TypeScript → "Dark code editor with TypeScript syntax highlighting, blue-white glow on black screen, shallow depth of field, developer aesthetic, cinematic close-up"
+- Post about SaaS pricing → "Minimalist product pricing cards floating in dark space, subtle glow, clean typography shadows, deep navy background, 3D render, editorial"
+- Post about founder burnout → "Lone laptop screen glowing at 2am on a cluttered dark desk, empty coffee cup, dim warm light, cinematic, moody, shallow focus"
 
-Return ONLY the image prompt. No quotes, no explanation, no preamble.`;
+Return ONLY the image prompt. No quotes, no labels, no explanation.`;
 }
 
 function buildReportPrompt(body) {
