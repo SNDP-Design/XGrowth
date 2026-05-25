@@ -968,10 +968,10 @@ function cePostToInstagram(){
   const { caption, hashtags } = ceParseInstagram(raw);
   const full = hashtags ? `${caption}\n\n${hashtags}` : caption;
   navigator.clipboard.writeText(full).then(() => {
-    toast('Caption copied — paste it in Instagram');
-    window.open('https://www.instagram.com/create/select/', '_blank', 'noopener,noreferrer');
+    toast('Caption copied — click + in Instagram to post');
+    window.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer');
   }).catch(() => {
-    window.open('https://www.instagram.com/create/select/', '_blank', 'noopener,noreferrer');
+    window.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer');
   });
 }
 
