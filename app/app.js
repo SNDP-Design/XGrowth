@@ -732,9 +732,11 @@ function cePlatformSectionHTML(platform){
     const platUrls = {
       linkedin:`https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(p.text.slice(0,1300))}`,
       x:`https://twitter.com/intent/tweet?text=${encodeURIComponent(p.text.slice(0,280))}`,
-      instagram:`https://www.instagram.com/`,
       reddit:(()=>{ const m=p.text.match(/SUBREDDIT:\s*(.+)/i); const sub=(m?.[1]||'startups').replace(/^r\//i,'').trim(); const tm=p.text.match(/TITLE:\s*(.+)/i); const t=(tm?.[1]||'').trim(); const bm=p.text.match(/BODY:\s*([\s\S]+?)$/i); return `https://www.reddit.com/r/${encodeURIComponent(sub)}/submit?title=${encodeURIComponent(t)}&text=${encodeURIComponent((bm?.[1]||'').trim())}`; })(),
     };
+    const postBtn = platform === 'instagram'
+      ? `<button class="btn publish" onclick="cePostToInstagram()">Post ↗</button>`
+      : `<a class="btn publish" href="${platUrls[platform]||'#'}" target="_blank" rel="noopener noreferrer">Post ↗</a>`;
     footer = `<div class="ce-section-foot">
       <span class="ce-count${limit&&len>limit?' over':''}">${len}${limit?'/'+limit:''} chars</span>
       <div class="ce-section-actions">
@@ -743,7 +745,7 @@ function cePlatformSectionHTML(platform){
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
           Regenerate
         </button>
-        <a class="btn publish" href="${platUrls[platform]||'#'}" target="_blank" rel="noopener noreferrer">Post ↗</a>
+        ${postBtn}
       </div>
     </div>`;
   }
@@ -786,7 +788,7 @@ function cePostCard(platform, loading, text){
       <div><div class="ce-style-label" style="margin-bottom:6px">Caption</div><p class="ce-insta-caption">${ceEsc(caption)}</p><button class="btn ghost" style="height:30px;padding:0 12px;font-size:12px;margin-top:8px" data-ce-copy="${ceEsc(caption)}" onclick="ceCopyAttr(this)">Copy caption</button></div>
       ${hashtags?`<div><div class="ce-style-label" style="margin-bottom:6px">Hashtags</div><p class="ce-insta-hashtags">${ceEsc(hashtags)}</p><button class="btn ghost" style="height:30px;padding:0 12px;font-size:12px;margin-top:8px" data-ce-copy="${ceEsc(hashtags)}" onclick="ceCopyAttr(this)">Copy hashtags</button></div>`:''}
     </div>
-    <div class="ce-post-foot"><span class="ce-count">${text.length} chars</span><div class="ce-post-actions"><button class="btn ghost" data-ce-copy="${ceEsc(text)}" onclick="ceCopyAttr(this)">Copy all</button><a class="btn publish" href="https://www.instagram.com/" target="_blank" rel="noopener noreferrer">Post ↗</a></div></div>
+    <div class="ce-post-foot"><span class="ce-count">${text.length} chars</span><div class="ce-post-actions"><button class="btn ghost" data-ce-copy="${ceEsc(text)}" onclick="ceCopyAttr(this)">Copy all</button><button class="btn publish" onclick="cePostToInstagram()">Post ↗</button></div></div>
     ${ceRefineBar()}</div>`;
   }
 
@@ -958,6 +960,20 @@ function ceRenderHistoryList(){
 }
 
 function ceInit(){ ceLoadHistory(); }
+
+/* ── Instagram post helper ────────────────────────────────────────────── */
+// Instagram has no web compose URL — copy caption+hashtags then open the app.
+function cePostToInstagram(){
+  const raw = _ce.posts['instagram']?.text || '';
+  const { caption, hashtags } = ceParseInstagram(raw);
+  const full = hashtags ? `${caption}\n\n${hashtags}` : caption;
+  navigator.clipboard.writeText(full).then(() => {
+    toast('Caption copied — paste it in Instagram');
+    window.open('https://www.instagram.com/create/select/', '_blank', 'noopener,noreferrer');
+  }).catch(() => {
+    window.open('https://www.instagram.com/create/select/', '_blank', 'noopener,noreferrer');
+  });
+}
 
 /* ── Copy util ────────────────────────────────────────────────────────── */
 
