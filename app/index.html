@@ -130,12 +130,12 @@
           <div id="ceModeUrl" role="tabpanel" aria-labelledby="tab-url" class="ce-mode-panel active">
             <div class="row" style="gap:10px;align-items:stretch;flex-wrap:wrap">
               <!-- Visible label hidden visually; placeholder alone fails 3.3.2 -->
-              <label for="ceUrlInput" class="sr-only">Article or page URL</label>
+              <label for="ceUrlInput" class="sr-only">Article or YouTube URL</label>
               <input id="ceUrlInput" type="url"
-                     placeholder="https://techcrunch.com/2025/..."
+                     placeholder="Article URL or YouTube link…"
                      style="flex:1;min-width:180px"
                      aria-describedby="ceUrlHint"/>
-              <span id="ceUrlHint" class="sr-only">Paste a URL and press Generate to create posts for all five platforms at once</span>
+              <span id="ceUrlHint" class="sr-only">Paste an article URL or a YouTube video link and press Generate to create posts for all platforms at once</span>
               <button class="btn" id="ceUrlBtn" onclick="ceGenerateFromUrl()">Generate →</button>
             </div>
           </div>

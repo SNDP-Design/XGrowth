@@ -447,6 +447,44 @@ async function handlePreview(body, origin, allowed) {
     return json({ error: 'Missing url' }, 400, origin, allowed);
   }
   try {
+    // ── YouTube: use oEmbed for reliable metadata ──────────────────────────
+    const ytId = (() => {
+      try {
+        const u = new URL(articleUrl);
+        if (u.hostname === 'youtu.be') return u.pathname.slice(1).split('?')[0];
+        if (/youtube\.com$/.test(u.hostname)) return u.searchParams.get('v');
+      } catch(e) {}
+      return null;
+    })();
+
+    if (ytId) {
+      const oembedResp = await fetch(
+        `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${encodeURIComponent(ytId)}&format=json`
+      );
+      if (!oembedResp.ok) return json({ error: 'Could not fetch YouTube metadata' }, 502, origin, allowed);
+      const oembed = await oembedResp.json();
+      let description = `YouTube video by ${oembed.author_name}`;
+      // Try to get the og:description (video description snippet) from the page
+      try {
+        const pageResp = await fetch(`https://www.youtube.com/watch?v=${ytId}`, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Accept': 'text/html',
+          },
+        });
+        if (pageResp.ok) {
+          const html = await pageResp.text();
+          const slice = html.slice(0, 80000);
+          const ogDesc = slice.match(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']{10,})["']/i)
+                      || slice.match(/<meta[^>]+content=["']([^"']{10,})["'][^>]+property=["']og:description["']/i);
+          if (ogDesc?.[1]) description = ogDesc[1].trim();
+        }
+      } catch(e) { /* use author fallback */ }
+      return json({ ok: true, title: oembed.title, description, isVideo: true }, 200, origin, allowed);
+    }
+
+    // ── Regular URL: fetch HTML and extract OG tags ────────────────────────
     const resp = await fetch(articleUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (compatible; XGrowthBot/1.0; +https://xgrowth.uno)',
@@ -845,13 +883,16 @@ BODY:
   const tone   = typeGuides[mode] || typeGuides['hot-take'];
   const voice  = voiceTail({ voiceNiche, voiceStyle });
 
-  const isXPost = inputMode === 'xpost';
+  const isXPost   = inputMode === 'xpost';
+  const isYouTube = inputMode === 'youtube';
 
   const content = isXPost
     ? `ORIGINAL TWEET:\n"${articleTitle}"\n\nYour task: repurpose the core idea for ${platform}. Do NOT copy the tweet verbatim. Rewrite in the founder's own voice — expand the idea, add context or a contrarian angle, and make it feel native to ${platform}. If the tweet is short, build on it significantly.`
     : isWrite
       ? `FOUNDER'S ROUGH NOTES / THOUGHTS:\n${articleTitle}`
-      : `ARTICLE TITLE: ${articleTitle}\n${articleAngle ? `ARTICLE CONTEXT: ${articleAngle}` : ''}`;
+      : isYouTube
+        ? `VIDEO TITLE: ${articleTitle}\n${articleAngle ? `VIDEO DESCRIPTION: ${articleAngle}` : ''}\n\nBase your post on the content of this YouTube video. Write as if you watched it and are sharing the key insight with your audience.`
+        : `ARTICLE TITLE: ${articleTitle}\n${articleAngle ? `ARTICLE CONTEXT: ${articleAngle}` : ''}`;
 
   return `You are writing a social media post for a startup founder. The audience is global — many readers are non-native English speakers. Write in plain, simple, everyday English that anyone can understand.${voice}
 

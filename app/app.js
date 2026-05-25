@@ -404,12 +404,20 @@ function ceRelDate(iso){
 
 /* ── URL mode ─────────────────────────────────────────────────────────── */
 
+function ceIsYouTubeUrl(url){
+  try {
+    const u = new URL(url);
+    return u.hostname === 'youtu.be' || /youtube\.com$/.test(u.hostname);
+  } catch(e){ return false; }
+}
+
 async function ceGenerateFromUrl(){
   const url = $('ceUrlInput')?.value?.trim();
   if(!url || !url.startsWith('http')){ toast('Paste a valid URL first'); $('ceUrlInput')?.focus(); return; }
   const btn = $('ceUrlBtn');
   if(btn){ btn.disabled=true; btn.innerHTML='<span class="ce-spinner"></span>Generating…'; }
 
+  const isYT = ceIsYouTubeUrl(url);
   let title = url, angle = '';
   try {
     const data = await xgFetch('/preview', { url });
@@ -418,10 +426,11 @@ async function ceGenerateFromUrl(){
   } catch(e){ /* fall back to URL as title */ }
 
   _ce.topic = title;
-  _ce.article = { title, angle, url };
+  _ce.article = { title, angle, url, inputMode: isYT ? 'youtube' : 'url' };
   const pickedAt = Date.now(); _ce._pickedAt = pickedAt;
   ['linkedin','x','instagram','reddit'].forEach(p => { _ce.posts[p] = {text:'',loading:true,generated:false}; });
-  $('ceTrendContext').innerHTML = `<h4>${ceEsc(title)}</h4>${angle?`<p>${ceEsc(angle)}</p>`:''}`;
+  const badge = isYT ? `<span class="ce-yt-badge">▶ YouTube</span>` : '';
+  $('ceTrendContext').innerHTML = `${badge}<h4>${ceEsc(title)}</h4>${angle?`<p>${ceEsc(angle)}</p>`:''}`;
   $('ceTrendContext').style.display = '';
   ceShowControls();
   ceRenderAllPosts();
