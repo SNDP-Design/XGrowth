@@ -1150,36 +1150,30 @@ function buildImagePromptPrompt(body) {
   if (niche)        contextLines.push(`NICHE: ${niche}`);
   const context = contextLines.join('\n\n');
 
-  return `You are a visual creative director creating Instagram images. Read the post content and extract its CORE MESSAGE — the single most powerful idea or feeling the post communicates. Then write a photorealistic or cinematic image prompt that SHOWS that idea.
+  return `You are a visual creative director. Your job is to read an Instagram post and write one image generation prompt that visually communicates WHAT THE POST IS ARGUING OR SAYING — not what random words appear in the text.
 
 ${context}
 
-HOW TO THINK ABOUT THIS:
-Do NOT try to show a brand logo or product UI — AI image models cannot render those accurately.
-Instead, ask: "What does this post make the reader FEEL or IMAGINE?"
-Then describe a real, tangible scene or object that captures that feeling.
+STEP 1 — What is the post's central argument or message? (One sentence)
+STEP 2 — What single image would make a viewer instantly FEEL that message?
+STEP 3 — Write that image as a cinematic prompt.
 
-MAPPING CORE IDEAS TO IMAGES:
-- AI seeing/hearing the world, real-time perception → close-up of a human eye with circuit iris overlay, soft glow, cinematic, shallow depth of field
-- AI speed, instant processing → light-speed tunnel of data, photographic motion blur, neon blue, dark background
-- Multimodal AI (audio + video + text together) → three glowing orbs connected by light beams in a triangle, studio photography
-- AI changing everything, paradigm shift → old clock mechanism with gears transforming into glowing digital nodes, macro photography
-- Coding / developer tool → dark terminal with syntax-highlighted code reflecting on mechanical keyboard, cinematic, shallow DOF
-- SaaS / software product → floating translucent UI cards on dark background, soft rim light, 3D product render
-- Startup growth / revenue → tiny metallic rocket launching from a glass desk, warm office glow, macro, cinematic
-- Founder burnout / stress → dim laptop at 2am, cold screen glow, messy desk, empty coffee cup, film grain
-- Business strategy → chess king piece in spotlight, dark marble surface, dramatic chiaroscuro
-- Social media / content → smartphone face-down with notification glow on wooden desk, warm ambient light
-- Fundraising / investment → two hands with a glowing ember passing between them, warm light, dark background, cinematic
+CRITICAL: Read the MEANING, not the words.
+- A post saying "AI won't replace you, you still need to lead" → the message is HUMAN LEADERSHIP OVER AI → image: a human hand confidently steering a glowing dial or chess king piece in spotlight — NOT a pen, NOT a robot
+- A post saying "Gemini can see and hear in real time" → the message is AI PERCEPTION → image: a glowing eye with circuit patterns, or a camera lens with data streams
+- A post saying "most founders fail at pricing" → the message is PRICING MISTAKES → image: price tag with dramatic shadow, or stacked coins tipping over
+- A post saying "we launched our product" → message is PRODUCT LAUNCH MOMENT → image: small rocket lifting off from a desk in warm light
+- A post saying "use AI as a tool" → message is TOOL EMPOWERMENT → image: human hand gripping a glowing futuristic tool, close-up, confident angle
 
-RULES:
-- Describe a real scene or object — no abstract swirling particles, no random geometric solids
-- Photographic or cinematic style preferred: "macro photography", "cinematic close-up", "studio product shot", "film still"
-- Include: main subject, lighting quality, background, color palette, camera style
-- NO human faces visible, NO readable text in frame, NO brand logos
-- 25–45 words. Specific. Vivid. Cinematic.
+VISUAL RULES:
+- NO abstract swirling particles or random geometric shapes
+- NO human faces, NO readable text, NO brand logos
+- Use REAL objects: hands, tools, chess pieces, books, keyboards, clocks, doors, keys, compasses, maps, dashboards
+- Style: cinematic photography, macro close-up, editorial product shot, dramatic studio lighting
+- Dominant mood over busy composition — one clear subject, strong lighting
+- 25–45 words. Concrete. Cinematic.
 
-Return ONLY the image prompt. No quotes, no labels, no explanation.`;
+Return ONLY the image prompt. No explanation, no preamble, no quotes.`;
 }
 
 function buildReportPrompt(body) {
