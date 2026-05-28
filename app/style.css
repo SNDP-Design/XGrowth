@@ -502,6 +502,51 @@
   .roast-fixes-list{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:8px}
   .roast-fixes-list li{font-size:14px;color:var(--ink);line-height:1.55}
 
+  /* ── 90-Day Marketing Plan ───────────────────────────────────────────────── */
+
+  /* Channel chips — reuse .portal-chip, just need a flex container */
+  .plan-channel-chips{display:flex;gap:7px;flex-wrap:wrap}
+
+  /* Month cards */
+  .plan-months{display:flex;flex-direction:column;gap:12px;margin-bottom:12px}
+  .plan-month{background:#080808;border:1px solid var(--line);border-radius:14px;padding:20px 22px}
+  .plan-month-head{display:flex;align-items:center;gap:14px;margin-bottom:12px}
+  .plan-month-num{width:34px;height:34px;border-radius:9px;background:linear-gradient(180deg,#fafafa,#d4d4d4);color:#0a0a0a;font-size:13px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;letter-spacing:-1px}
+  .plan-month-theme{font-size:17px;font-weight:700;color:var(--ink);letter-spacing:-.2px}
+  .plan-focus{font-size:14px;line-height:1.65;color:var(--muted);margin:0 0 16px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+
+  /* Weekly action rows */
+  .plan-weeks{display:flex;flex-direction:column;gap:9px;margin-bottom:16px}
+  .plan-week{display:flex;gap:12px;align-items:flex-start}
+  .plan-week-lbl{font-size:11px;font-weight:700;letter-spacing:.3px;color:var(--muted);white-space:nowrap;flex-shrink:0;padding-top:5px;min-width:50px}
+  .plan-week-actions{display:flex;flex-wrap:wrap;gap:6px}
+  .plan-action{font-size:13px;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:4px 11px;line-height:1.5}
+
+  /* Experiment cards */
+  .plan-exp-lbl{font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+  .plan-experiments{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  @media(max-width:800px){.plan-experiments{grid-template-columns:1fr}}
+  .plan-exp{background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:5px}
+  .plan-exp-name{font-size:12px;font-weight:700;color:var(--ink)}
+  .plan-exp-hyp{font-size:12px;color:var(--muted);line-height:1.5}
+  .plan-exp-win{font-size:11px;font-weight:700;color:#4ade80;margin-top:2px}
+
+  /* Stop Doing card — orange accent */
+  .plan-stop{background:linear-gradient(160deg,#130b06,#0d0905);border:1px solid rgba(251,146,60,.2);border-radius:14px;padding:18px 20px;margin-bottom:12px}
+  .plan-stop-lbl{color:#fb923c}
+  .plan-stop-list{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
+  .plan-stop-item{font-size:14px;line-height:1.55;color:var(--ink);padding-left:20px;position:relative}
+  .plan-stop-item::before{content:'×';position:absolute;left:0;color:#fb923c;font-weight:800;font-size:15px;line-height:1.45}
+
+  /* North star metrics */
+  .plan-metrics{background:linear-gradient(160deg,#111,#090909);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:4px}
+  .plan-metrics-list{display:flex;flex-direction:column;gap:8px}
+  .plan-metric{display:flex;align-items:center;gap:10px;padding:8px 14px;background:#080808;border:1px solid var(--line);border-radius:9px;flex-wrap:wrap}
+  .plan-metric-label{font-size:13px;font-weight:600;color:var(--ink);flex:1;min-width:100px}
+  .plan-metric-baseline{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .plan-metric-arrow{font-size:13px;color:var(--muted);flex-shrink:0}
+  .plan-metric-target{font-size:13px;font-weight:700;color:#4ade80;font-variant-numeric:tabular-nums}
+
   /* ── Competitor Positioning Map ─────────────────────────────────────────── */
 
   /* URL input row — flex so remove × button sits flush right */

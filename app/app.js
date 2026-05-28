@@ -1162,6 +1162,231 @@ function ceParseRoastSections(text) {
 }
 
 /* =========================================================
+   90-DAY MARKETING PLAN
+   Niche + stage + goal + channels + budget →
+   3-month week-by-week plan, experiments, stop-doing, metrics
+   ========================================================= */
+
+const _plan = {
+  loading: false,
+  rawText: '',
+  result: null,
+};
+
+function planGetChannels() {
+  return [...document.querySelectorAll('#planChannelChips .portal-chip.active')]
+    .map(b => b.dataset.ch);
+}
+
+async function planGenerate() {
+  if (_plan.loading) return;
+  const niche = ($('planNiche')?.value || '').trim();
+  if (!niche || niche.length < 5) { toast('Describe your product first'); $('planNiche')?.focus(); return; }
+
+  const goal    = ($('planGoal')?.value || '').trim();
+  const stage   = $('planStage')?.value   || 'early-traction';
+  const budget  = $('planBudget')?.value  || '0';
+  const channels = planGetChannels();
+
+  _plan.loading = true;
+  const btn = $('planGenBtn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="ce-spinner"></span>Building your plan…'; }
+  $('planEmpty').style.display = 'none';
+  $('planResult').innerHTML = `
+    <div class="roast-loading" role="status" aria-live="polite">
+      <div class="ce-spinner" aria-hidden="true"></div>
+      <span>Crafting a 90-day roadmap for your product…</span>
+    </div>`;
+
+  try {
+    const data = await xgFetch('/generate', { kind: 'plan-90', niche, goal, stage, budget, channels });
+    _plan.rawText = data.text || '';
+    const parsed = planParse(_plan.rawText);
+    _plan.result = parsed;
+    planRender(parsed);
+  } catch (err) {
+    $('planResult').innerHTML =
+      `<div class="ce-skeleton" style="color:#f87171;min-height:80px;border-color:rgba(248,113,113,.3)">${ceEsc(err.message || 'Generation failed — try again')}</div>`;
+  } finally {
+    _plan.loading = false;
+    if (btn) { btn.disabled = false; btn.innerHTML = 'Build my plan →'; }
+  }
+}
+
+function planParse(text) {
+  const months = [];
+
+  for (let i = 1; i <= 3; i++) {
+    // Capture from ## MONTH N: to the next ## heading or end
+    const re = new RegExp(
+      `## MONTH ${i}:\\s*(.+)\\n([\\s\\S]*?)(?=## MONTH ${i + 1}:|## STOP|## NORTH|$)`, 'i'
+    );
+    const m = re.exec(text);
+    if (!m) continue;
+
+    const theme = m[1].trim();
+    const block = m[2];
+
+    // FOCUS
+    const focusM = /FOCUS:\s*(.+)/i.exec(block);
+    const focus = focusM ? focusM[1].trim() : '';
+
+    // WEEKS — "WEEK N: action · action · action"
+    const weeks = [];
+    for (let w = 1; w <= 4; w++) {
+      const wM = new RegExp(`WEEK ${w}:\\s*(.+)`, 'i').exec(block);
+      if (wM) {
+        // Try · separator first, fall back to | or comma
+        const raw = wM[1];
+        const actions = raw.includes('·')
+          ? raw.split('·').map(a => a.trim()).filter(Boolean)
+          : raw.includes('|')
+            ? raw.split('|').map(a => a.trim()).filter(Boolean)
+            : [raw.trim()];
+        weeks.push(actions);
+      } else {
+        weeks.push([]);
+      }
+    }
+
+    // EXPERIMENTS — "EXPERIMENT N: Name | hypothesis | WIN: threshold"
+    const experiments = [];
+    const expRe = /EXPERIMENT \d+:\s*(.+?)\s*\|\s*(.+?)\s*\|\s*WIN:\s*(.+)/gi;
+    let expM;
+    while ((expM = expRe.exec(block)) !== null) {
+      experiments.push({
+        name:       expM[1].trim(),
+        hypothesis: expM[2].trim(),
+        win:        expM[3].trim(),
+      });
+    }
+
+    months.push({ theme, focus, weeks, experiments });
+  }
+
+  // STOP DOING
+  const stopM = /## STOP DOING\s*\n([\s\S]*?)(?=## NORTH|$)/i.exec(text);
+  const stops = stopM
+    ? stopM[1].split('\n')
+        .map(l => l.replace(/^[-•*\d.]+\s*/, '').trim())
+        .filter(l => l.length > 8)
+    : [];
+
+  // NORTH STAR METRICS — "- Label: baseline → target"
+  const metricsM = /## NORTH STAR METRICS\s*\n([\s\S]*?)$/i.exec(text);
+  const metrics = metricsM
+    ? metricsM[1].split('\n')
+        .map(l => {
+          const m2 = /[-•]?\s*(.+?):\s*(.+?)\s*→\s*(.+)/.exec(l.trim());
+          return m2 ? { label: m2[1].trim(), baseline: m2[2].trim(), target: m2[3].trim() } : null;
+        })
+        .filter(Boolean)
+    : [];
+
+  return { months, stops, metrics };
+}
+
+function planRender({ months, stops, metrics }) {
+  let html = '';
+
+  // ── Month cards ────────────────────────────────────────────────────────────
+  html += `<div class="plan-months">`;
+  months.forEach((month, i) => {
+    const num = String(i + 1).padStart(2, '0');
+    const weeksHtml = month.weeks
+      .map((actions, wi) => {
+        if (!actions.length) return '';
+        return `<div class="plan-week">
+          <span class="plan-week-lbl">Week ${wi + 1}</span>
+          <div class="plan-week-actions">
+            ${actions.map(a => `<span class="plan-action">${ceEsc(a)}</span>`).join('')}
+          </div>
+        </div>`;
+      }).join('');
+
+    const expsHtml = month.experiments.length ? `
+      <div class="plan-exp-lbl">Experiments this month</div>
+      <div class="plan-experiments">
+        ${month.experiments.map(e => `
+          <div class="plan-exp">
+            <span class="plan-exp-name">${ceEsc(e.name)}</span>
+            <span class="plan-exp-hyp">${ceEsc(e.hypothesis)}</span>
+            <span class="plan-exp-win">Win if: ${ceEsc(e.win)}</span>
+          </div>`).join('')}
+      </div>` : '';
+
+    html += `
+      <div class="plan-month">
+        <div class="plan-month-head">
+          <span class="plan-month-num">${num}</span>
+          <span class="plan-month-theme">${ceEsc(month.theme)}</span>
+        </div>
+        ${month.focus ? `<p class="plan-focus">${ceEsc(month.focus)}</p>` : ''}
+        <div class="plan-weeks">${weeksHtml}</div>
+        ${expsHtml}
+      </div>`;
+  });
+  html += `</div>`;
+
+  // ── Stop Doing ─────────────────────────────────────────────────────────────
+  if (stops.length) {
+    html += `
+      <div class="plan-stop">
+        <div class="pos-section-lbl plan-stop-lbl">Stop doing these now</div>
+        <ul class="plan-stop-list">
+          ${stops.map(s => `<li class="plan-stop-item">${ceEsc(s)}</li>`).join('')}
+        </ul>
+      </div>`;
+  }
+
+  // ── North Star Metrics ─────────────────────────────────────────────────────
+  if (metrics.length) {
+    html += `
+      <div class="plan-metrics">
+        <div class="pos-section-lbl" style="margin-bottom:12px">North star metrics</div>
+        <div class="plan-metrics-list">
+          ${metrics.map(m => `
+            <div class="plan-metric">
+              <span class="plan-metric-label">${ceEsc(m.label)}</span>
+              <span class="plan-metric-baseline">${ceEsc(m.baseline)}</span>
+              <span class="plan-metric-arrow">→</span>
+              <span class="plan-metric-target">${ceEsc(m.target)}</span>
+            </div>`).join('')}
+        </div>
+      </div>`;
+  }
+
+  // ── Actions ────────────────────────────────────────────────────────────────
+  html += `
+    <div style="margin-top:18px;display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap">
+      <button class="btn ghost" style="height:38px;padding:0 16px;font-size:13px" onclick="planDownload()">Download .md</button>
+      <button class="btn secondary" style="height:38px;padding:0 16px;font-size:13px" onclick="planReset()">Generate new plan</button>
+    </div>`;
+
+  $('planResult').innerHTML = html;
+}
+
+function planDownload() {
+  if (!_plan.rawText) return;
+  const blob = new Blob([_plan.rawText], { type: 'text/markdown' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '90-day-marketing-plan.md';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('Downloading plan');
+}
+
+function planReset() {
+  _plan.rawText = '';
+  _plan.result = null;
+  _plan.loading = false;
+  $('planResult').innerHTML = '';
+  $('planEmpty').style.display = '';
+  $('planNiche')?.focus();
+}
+
+/* =========================================================
    COMPETITOR POSITIONING MAP
    2–4 competitor URLs → per-competitor breakdown, overlap,
    the gap they all miss, positioning statement, vs one-liners

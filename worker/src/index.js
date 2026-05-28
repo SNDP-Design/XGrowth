@@ -191,6 +191,11 @@ export default {
           return json({ error: 'topic required (min 5 chars)' }, 400, origin, allowed);
         }
         prompt = buildHooksPrompt(body);
+      } else if (kind === 'plan-90') {
+        if (!body.niche || typeof body.niche !== 'string' || body.niche.trim().length < 5) {
+          return json({ error: 'niche is required' }, 400, origin, allowed);
+        }
+        prompt = buildMarketingPlanPrompt(body);
       } else if (kind === 'positioning') {
         const rawUrls = (body.competitors || [])
           .filter(u => typeof u === 'string' && u.trim().startsWith('http'))
@@ -259,6 +264,90 @@ function extractVisibleText(html) {
     .replace(/<[^>]+>/g, ' ')
     .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&nbsp;/g, ' ')
     .replace(/\s{3,}/g, '\n\n').trim();
+}
+
+function buildMarketingPlanPrompt({ niche, stage, goal, channels, budget }) {
+  const stageDesc = {
+    'pre-launch':      'pre-launch — no live product yet, building audience and waitlist',
+    'launched':        'just launched — public product, fewer than 10 paying customers',
+    'early-traction':  'early traction — some paying customers, no clear repeatable growth loop yet',
+    'post-pmf':        'post-PMF — strong signal, $10k+ MRR, ready to scale a working channel',
+  }[stage] || stage;
+
+  const budgetDesc = {
+    '0':    '$0 — fully bootstrapped, time is the only resource',
+    'low':  'under $500/month — very limited paid spend',
+    'mid':  '$500–$2,000/month — some room for paid experiments',
+    'high': '$2,000+/month — meaningful paid budget',
+  }[budget] || (budget || '$0');
+
+  const chList = Array.isArray(channels) && channels.length
+    ? channels.join(', ')
+    : 'none established yet';
+
+  return `You are a growth advisor who has helped 100+ early-stage SaaS founders get their first real traction. You think in 90-day sprints, not vague strategies. Every action you recommend is executable by a solo founder with no marketing team today.
+
+PRODUCT CONTEXT:
+- Product / niche: ${niche.trim()}
+- Current stage: ${stageDesc}
+- 90-day goal: ${(goal || 'grow the user base').trim()}
+- Active channels: ${chList}
+- Monthly budget: ${budgetDesc}
+
+Build a specific, executable 90-day marketing plan. Three months, three themes that build on each other. All advice must be specific to THIS product and stage — no generic SaaS growth advice.
+
+Format in EXACTLY this structure. No deviations, no extra text.
+
+## MONTH 1: [Theme — 3–5 words naming this month's focus]
+FOCUS: [2 sentences: what this month is about and why it comes before month 2]
+WEEK 1: [action] · [action] · [action]
+WEEK 2: [action] · [action] · [action]
+WEEK 3: [action] · [action] · [action]
+WEEK 4: [action] · [action] · [action]
+EXPERIMENT 1: [Short name] | If [specific action], then [expected outcome] | WIN: [specific measurable threshold, e.g. "≥8 replies" or "≥3 trial signups"]
+EXPERIMENT 2: [Short name] | If [specific action], then [expected outcome] | WIN: [threshold]
+EXPERIMENT 3: [Short name] | If [specific action], then [expected outcome] | WIN: [threshold]
+
+## MONTH 2: [Theme]
+FOCUS: [2 sentences]
+WEEK 1: [action] · [action] · [action]
+WEEK 2: [action] · [action] · [action]
+WEEK 3: [action] · [action] · [action]
+WEEK 4: [action] · [action] · [action]
+EXPERIMENT 1: [name] | [hypothesis] | WIN: [threshold]
+EXPERIMENT 2: [name] | [hypothesis] | WIN: [threshold]
+EXPERIMENT 3: [name] | [hypothesis] | WIN: [threshold]
+
+## MONTH 3: [Theme]
+FOCUS: [2 sentences]
+WEEK 1: [action] · [action] · [action]
+WEEK 2: [action] · [action] · [action]
+WEEK 3: [action] · [action] · [action]
+WEEK 4: [action] · [action] · [action]
+EXPERIMENT 1: [name] | [hypothesis] | WIN: [threshold]
+EXPERIMENT 2: [name] | [hypothesis] | WIN: [threshold]
+EXPERIMENT 3: [name] | [hypothesis] | WIN: [threshold]
+
+## STOP DOING
+- [Specific thing to stop — one sentence on why it wastes time at this stage]
+- [Same]
+- [Same]
+- [Same]
+- [Same]
+
+## NORTH STAR METRICS
+- [Metric name]: [realistic baseline based on stage] → [ambitious but achievable 90-day target]
+- [Metric name]: [baseline] → [target]
+- [Metric name]: [baseline] → [target]
+- [Metric name]: [baseline] → [target]
+- [Metric name]: [baseline] → [target]
+
+${HARD_RULES}
+- Use · (middle dot U+00B7) as the ONLY separator between actions within a week line.
+- Exactly 3 actions per week, on a single line.
+- EXPERIMENT format: Name | If X then Y | WIN: Z — use exactly two pipe characters.
+- STOP DOING items must name specific behaviors, not categories.
+- No text before ## MONTH 1 or after the last metric line.`;
 }
 
 function buildPositioningPrompt({ competitors, product }) {
