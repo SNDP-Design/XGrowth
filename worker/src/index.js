@@ -185,6 +185,12 @@ export default {
         prompt = buildIcpPrompt(body);
       } else if (kind === 'ph-launch') {
         prompt = buildPhLaunchPrompt(body);
+      } else if (kind === 'hooks') {
+        const hookTopic = (body.topic || '').trim();
+        if (!hookTopic || hookTopic.length < 5) {
+          return json({ error: 'topic required (min 5 chars)' }, 400, origin, allowed);
+        }
+        prompt = buildHooksPrompt(body);
       } else if (kind === 'roast') {
         let roastCopy = (body.copy || '').trim();
         const roastUrl  = (body.url  || '').trim();
@@ -237,6 +243,46 @@ function extractVisibleText(html) {
     .replace(/<[^>]+>/g, ' ')
     .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&nbsp;/g, ' ')
     .replace(/\s{3,}/g, '\n\n').trim();
+}
+
+function buildHooksPrompt({ topic, platform = 'linkedin', voiceNiche = '' }) {
+  const isX = platform === 'x';
+  const charLimit = isX ? 75 : 130;
+
+  return `You are a social media hook writer. Your sole job: write opening lines that stop the scroll. The best hooks are specific, unexpected, or directly challenge a belief the reader holds.
+
+PLATFORM: ${isX ? 'X (Twitter) — punchy, aim for under 75 characters each' : 'LinkedIn — first line of a post, aim for under 130 characters each'}
+TOPIC: ${topic.trim().slice(0, 1000)}
+${voiceNiche ? `FOUNDER NICHE: ${voiceNiche}` : ''}
+
+Generate exactly 10 hooks for this topic. Each hook is a SINGLE opening line — NOT a full post.
+
+Return in EXACTLY this format — label in ALL CAPS, colon, space, hook text, one per line:
+
+CURIOSITY: [hook]
+STAT: [hook]
+CONTRARIAN: [hook]
+STORY: [hook]
+QUESTION: [hook]
+PAIN: [hook]
+BOLD CLAIM: [hook]
+OBSERVATION: [hook]
+BEFORE/AFTER: [hook]
+COUNTER-INTUITIVE: [hook]
+
+HARD RULES — break any of these and the output is unusable:
+- Each hook is ONE line only. Under ${charLimit} characters. COUNT before returning.
+- Specific to this actual topic — no generic opener that could apply to anything else.
+- NO emojis. NO "In today's world". NO "Let me tell you". NO "Here's the thing". NO "This is why".
+- NO hashtags. NO URLs. NO bold or italics markdown.
+- STAT must include a real or plausible number or percentage.
+- STORY must start with "I " or put the reader directly in a scene.
+- QUESTION must end with a question mark.
+- PAIN must name a specific frustration, not a vague concept.
+- BEFORE/AFTER must contrast a before state with an after state.
+- Sound like a sharp human, not a content marketer.
+
+Return ONLY the 10 labeled hooks. No preamble, no explanation, no blank lines between them.`;
 }
 
 function buildRoastPrompt({ copy, url }) {

@@ -990,6 +990,7 @@ document.addEventListener('keydown',(e)=>{
   if(id==='ceUrlInput'){ e.preventDefault(); ceGenerateFromUrl(); }
   else if(id==='ceXProfileInput'){ e.preventDefault(); ceFetchXProfile(); }
   else if(id==='roastUrlInput'){ e.preventDefault(); ceRoastAnalyze(); }
+  else if(id==='hookTopicInput' && (e.metaKey||e.ctrlKey)){ e.preventDefault(); hookGenerate(); }
 });
 
 /* =========================================================
@@ -1158,6 +1159,129 @@ function ceParseRoastSections(text) {
     });
   }
   return sections;
+}
+
+/* =========================================================
+   HOOK GENERATOR
+   Topic / idea → 10 labeled scroll-stopping openers
+   ========================================================= */
+
+const _hook = {
+  platform: 'linkedin',
+  loading: false,
+  hooks: [],
+};
+
+function hookSetPlatform(platform) {
+  _hook.platform = platform;
+  ['linkedin', 'x'].forEach(p => {
+    const btn = $('hplat-' + p);
+    if (!btn) return;
+    btn.classList.toggle('active', p === platform);
+    btn.setAttribute('aria-selected', p === platform ? 'true' : 'false');
+  });
+}
+
+async function hookGenerate() {
+  if (_hook.loading) return;
+  const topic = ($('hookTopicInput')?.value || '').trim();
+  if (!topic || topic.length < 5) { toast('Enter a topic first'); $('hookTopicInput')?.focus(); return; }
+
+  _hook.loading = true;
+  const btn = $('hookGenBtn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="ce-spinner"></span>Generating…'; }
+  $('hookEmpty').style.display = 'none';
+  $('hookResult').innerHTML = `
+    <div class="roast-loading" role="status" aria-live="polite">
+      <div class="ce-spinner" aria-hidden="true"></div>
+      <span>Writing 10 hooks…</span>
+    </div>`;
+
+  try {
+    const data = await xgFetch('/generate', {
+      kind: 'hooks',
+      topic,
+      platform: _hook.platform,
+      voiceNiche: state.profile?.niche || '',
+    });
+    const hooks = hookParseHooks(data.text || '');
+    _hook.hooks = hooks;
+    hookRenderResults(hooks);
+  } catch (err) {
+    $('hookResult').innerHTML =
+      `<div class="ce-skeleton" style="color:#f87171;min-height:80px;border-color:rgba(248,113,113,.3)">${ceEsc(err.message || 'Generation failed — try again')}</div>`;
+  } finally {
+    _hook.loading = false;
+    if (btn) { btn.disabled = false; btn.innerHTML = 'Generate hooks →'; }
+  }
+}
+
+const HOOK_TYPES = [
+  'CURIOSITY','STAT','CONTRARIAN','STORY','QUESTION',
+  'PAIN','BOLD CLAIM','OBSERVATION','BEFORE/AFTER','COUNTER-INTUITIVE',
+];
+
+function hookParseHooks(text) {
+  const hooks = [];
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  for (const line of lines) {
+    for (const type of HOOK_TYPES) {
+      if (line.toUpperCase().startsWith(type + ':')) {
+        const hookText = line.slice(type.length + 1).trim();
+        if (hookText) hooks.push({ type, text: hookText });
+        break;
+      }
+    }
+  }
+  return hooks;
+}
+
+function hookRenderResults(hooks) {
+  if (!hooks.length) {
+    $('hookResult').innerHTML = `<p style="color:var(--muted);font-size:14px">Couldn't parse the hooks — try again.</p>`;
+    return;
+  }
+  const cardsHtml = hooks.map((h, i) => `
+    <div class="hook-card">
+      <div class="hook-card-head">
+        <span class="hook-type-badge">${ceEsc(h.type)}</span>
+        <span class="hook-char">${h.text.length} chars</span>
+      </div>
+      <p class="hook-text">${ceEsc(h.text)}</p>
+      <div class="hook-foot">
+        <button class="hook-use-btn" onclick="hookUseInCE(${i})">Use in CE →</button>
+        <button class="btn ghost" style="height:30px;padding:0 12px;font-size:12px" data-ce-copy="${ceEsc(h.text)}" onclick="ceCopyAttr(this)">Copy</button>
+      </div>
+    </div>`).join('');
+
+  $('hookResult').innerHTML = `
+    <div class="hook-grid">${cardsHtml}</div>
+    <div style="display:flex;justify-content:flex-end;margin-top:4px">
+      <button class="btn secondary" style="height:38px;padding:0 16px;font-size:13px" onclick="hookReset()">Generate more</button>
+    </div>`;
+}
+
+function hookUseInCE(idx) {
+  const h = _hook.hooks[idx];
+  if (!h) return;
+  // Switch nav to Content Engine
+  const ceBtn = document.querySelector('#nav button[data-view="content"]');
+  if (ceBtn) ceBtn.click();
+  // Switch CE to Write mode and prefill
+  ceSwitchInputMode('write');
+  const writeInput = $('ceWriteInput');
+  if (writeInput) { writeInput.value = h.text; writeInput.focus(); }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  toast('Hook loaded — add context or hit Generate');
+}
+
+function hookReset() {
+  _hook.hooks = [];
+  _hook.loading = false;
+  $('hookResult').innerHTML = '';
+  $('hookEmpty').style.display = '';
+  const input = $('hookTopicInput');
+  if (input) { input.value = ''; input.focus(); }
 }
 
 function ceRoastReset() {
