@@ -1162,6 +1162,229 @@ function ceParseRoastSections(text) {
 }
 
 /* =========================================================
+   COMPETITOR POSITIONING MAP
+   2–4 competitor URLs → per-competitor breakdown, overlap,
+   the gap they all miss, positioning statement, vs one-liners
+   ========================================================= */
+
+const _pos = {
+  loading: false,
+  count: 2,      // visible competitor slots (2–4)
+  result: null,
+};
+
+function posAddCompetitor() {
+  if (_pos.count >= 4) return;
+  _pos.count++;
+  const slot = $(`posComp${_pos.count}`);
+  if (slot) slot.style.display = '';
+  if (_pos.count >= 4) { const b = $('posAddBtn'); if (b) b.style.display = 'none'; }
+}
+
+function posRemoveCompetitor(n) {
+  const slot = $(`posComp${n}`);
+  if (slot) slot.style.display = 'none';
+  const inp = $(`posUrl${n}`); if (inp) inp.value = '';
+  if (_pos.count === n) _pos.count--;
+  const b = $('posAddBtn'); if (b) b.style.display = '';
+}
+
+function posGetUrls() {
+  const urls = [];
+  for (let i = 1; i <= 4; i++) {
+    const slot = $(`posComp${i}`);
+    if (!slot || slot.style.display === 'none') continue;
+    const val = ($(`posUrl${i}`)?.value || '').trim();
+    if (val) urls.push(val);
+  }
+  return urls;
+}
+
+async function posAnalyze() {
+  if (_pos.loading) return;
+  const urls = posGetUrls();
+  if (urls.length < 2) { toast('Enter at least 2 competitor URLs'); return; }
+  const badUrl = urls.find(u => !u.startsWith('http'));
+  if (badUrl) { toast('URLs must start with https://'); return; }
+
+  const product = {
+    name: ($('posProductName')?.value || '').trim(),
+    what: ($('posProductWhat')?.value || '').trim(),
+  };
+
+  _pos.loading = true;
+  const btn = $('posAnalyzeBtn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="ce-spinner"></span>Fetching & analyzing…'; }
+  $('posEmpty').style.display = 'none';
+  $('posResult').innerHTML = `
+    <div class="roast-loading" role="status" aria-live="polite">
+      <div class="ce-spinner" aria-hidden="true"></div>
+      <span>Fetching ${urls.length} competitor pages and mapping their positions…</span>
+    </div>`;
+
+  try {
+    const data = await xgFetch('/generate', {
+      kind: 'positioning',
+      competitors: urls,
+      product: (product.name || product.what) ? product : null,
+    });
+    const parsed = posParseResult(data.text || '', urls.length);
+    _pos.result = parsed;
+    posRenderResult(parsed, urls);
+  } catch (err) {
+    $('posResult').innerHTML =
+      `<div class="ce-skeleton" style="color:#f87171;min-height:80px;border-color:rgba(248,113,113,.3)">${ceEsc(err.message || 'Analysis failed — make sure the URLs are public landing pages')}</div>`;
+  } finally {
+    _pos.loading = false;
+    if (btn) { btn.disabled = false; btn.innerHTML = 'Analyze →'; }
+  }
+}
+
+function posParseResult(text, n) {
+  const get = (block, field) => {
+    const m = new RegExp(`^${field}:\\s*(.+)`, 'mi').exec(block);
+    return m ? m[1].trim() : '';
+  };
+  const section = (label, nextLabel) => {
+    const re = new RegExp(`## ${label}\\s*\\n([\\s\\S]*?)(?=## |$)`, 'i');
+    const m = re.exec(text.replace(/## VS EACH COMPETITOR/, '## VS_EACH_COMPETITOR'));
+    return m ? m[1].trim() : '';
+  };
+
+  const competitors = [];
+  for (let i = 1; i <= n; i++) {
+    // Grab block from ## COMPETITOR N up to the next ## heading
+    const re = new RegExp(`## COMPETITOR ${i}\\s*\\n([\\s\\S]*?)(?=## COMPETITOR ${i+1}|## OVERLAP|## THE GAP|## POSITIONING|## VS|$)`, 'i');
+    const m = re.exec(text);
+    const block = m ? m[1] : '';
+    competitors.push({
+      name:     get(block, 'NAME'),
+      domain:   get(block, 'DOMAIN'),
+      claim:    get(block, 'CLAIM'),
+      target:   get(block, 'TARGET'),
+      strongest:get(block, 'STRONGEST'),
+      weakness: get(block, 'WEAKNESS'),
+    });
+  }
+
+  const overlap = (() => {
+    const m = /## OVERLAP\s*\n([\s\S]*?)(?=## THE GAP|## POSITIONING|## VS|$)/i.exec(text);
+    return m ? m[1].trim() : '';
+  })();
+  const gap = (() => {
+    const m = /## THE GAP\s*\n([\s\S]*?)(?=## POSITIONING|## VS|$)/i.exec(text);
+    return m ? m[1].trim() : '';
+  })();
+  const positioning = (() => {
+    const m = /## POSITIONING STATEMENT\s*\n([\s\S]*?)(?=## VS|$)/i.exec(text);
+    return m ? m[1].trim() : '';
+  })();
+  const vsBlock = (() => {
+    const m = /## VS EACH COMPETITOR\s*\n([\s\S]*?)$/i.exec(text);
+    return m ? m[1] : '';
+  })();
+  const vsLines = [];
+  for (let i = 1; i <= n; i++) {
+    const m = new RegExp(`COMPETITOR ${i}:\\s*(.+)`, 'i').exec(vsBlock);
+    vsLines.push(m ? m[1].trim() : '');
+  }
+
+  return { competitors, overlap, gap, positioning, vsLines };
+}
+
+function posRenderResult(parsed, urls) {
+  const { competitors, overlap, gap, positioning, vsLines } = parsed;
+  let html = '';
+
+  // ── Competitor cards ───────────────────────────────────────────────────────
+  html += `<div class="pos-comp-grid">`;
+  competitors.forEach((c, i) => {
+    const displayName = c.name || c.domain || `Competitor ${i+1}`;
+    html += `
+    <div class="pos-comp-card">
+      <div class="pos-comp-head">
+        <span class="pos-comp-name">${ceEsc(displayName)}</span>
+        ${c.domain && c.name && c.domain !== c.name ? `<a href="${ceEsc(urls[i]||'#')}" target="_blank" rel="noopener" class="pos-comp-domain">${ceEsc(c.domain)} ↗</a>` : ''}
+      </div>
+      <p class="pos-comp-claim">${ceEsc(c.claim)}</p>
+      ${c.target    ? `<div class="pos-field"><span class="pos-field-lbl">Targets</span><span class="pos-field-val">${ceEsc(c.target)}</span></div>` : ''}
+      ${c.strongest ? `<div class="pos-field"><span class="pos-field-lbl">Strongest angle</span><span class="pos-field-val">${ceEsc(c.strongest)}</span></div>` : ''}
+      ${c.weakness  ? `<div class="pos-field"><span class="pos-field-lbl">Weakness</span><span class="pos-field-val pos-weakness-val">${ceEsc(c.weakness)}</span></div>` : ''}
+    </div>`;
+  });
+  html += `</div>`;
+
+  // ── Overlap ────────────────────────────────────────────────────────────────
+  if (overlap) {
+    html += `
+    <div class="pos-overlap-card">
+      <div class="pos-section-lbl">Where they all fight</div>
+      <p class="pos-body-text">${ceEsc(overlap)}</p>
+    </div>`;
+  }
+
+  // ── The Gap ────────────────────────────────────────────────────────────────
+  if (gap) {
+    html += `
+    <div class="pos-gap-card">
+      <div class="pos-section-lbl pos-gap-lbl">The gap you own</div>
+      <p class="pos-gap-text">${ceEsc(gap)}</p>
+    </div>`;
+  }
+
+  // ── Positioning statement ──────────────────────────────────────────────────
+  if (positioning) {
+    html += `
+    <div class="pos-statement-card">
+      <div class="pos-section-lbl" style="margin-bottom:10px">Your positioning statement</div>
+      <p class="pos-statement-text">${ceEsc(positioning)}</p>
+      <button class="btn ghost" style="height:30px;font-size:12px;padding:0 12px;margin-top:12px;align-self:flex-start" data-ce-copy="${ceEsc(positioning)}" onclick="ceCopyAttr(this)">Copy</button>
+    </div>`;
+  }
+
+  // ── VS each competitor ─────────────────────────────────────────────────────
+  const validVs = vsLines.filter(v => v);
+  if (validVs.length) {
+    html += `
+    <div class="pos-vs-section">
+      <div class="pos-section-lbl" style="margin-bottom:10px">How you win against each</div>
+      <div class="pos-vs-list">`;
+    vsLines.forEach((line, i) => {
+      if (!line) return;
+      const c = competitors[i];
+      const name = c?.name || c?.domain || `Competitor ${i+1}`;
+      html += `
+        <div class="pos-vs-item">
+          <span class="pos-vs-name">${ceEsc(name)}</span>
+          <span class="pos-vs-text">${ceEsc(line)}</span>
+        </div>`;
+    });
+    html += `</div></div>`;
+  }
+
+  // ── Reset ──────────────────────────────────────────────────────────────────
+  html += `
+    <div style="margin-top:20px;display:flex;justify-content:flex-end">
+      <button class="btn secondary" style="height:38px;padding:0 16px;font-size:13px" onclick="posReset()">Analyze different competitors</button>
+    </div>`;
+
+  $('posResult').innerHTML = html;
+}
+
+function posReset() {
+  _pos.result = null;
+  _pos.loading = false;
+  $('posResult').innerHTML = '';
+  $('posEmpty').style.display = '';
+  for (let i = 1; i <= 4; i++) {
+    const inp = $(`posUrl${i}`); if (inp) inp.value = '';
+  }
+  $('posProductName') && ($('posProductName').value = '');
+  $('posProductWhat') && ($('posProductWhat').value = '');
+  $('posUrl1')?.focus();
+}
+
+/* =========================================================
    HOOK GENERATOR
    Topic / idea → 10 labeled scroll-stopping openers
    ========================================================= */

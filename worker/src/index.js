@@ -191,6 +191,22 @@ export default {
           return json({ error: 'topic required (min 5 chars)' }, 400, origin, allowed);
         }
         prompt = buildHooksPrompt(body);
+      } else if (kind === 'positioning') {
+        const rawUrls = (body.competitors || [])
+          .filter(u => typeof u === 'string' && u.trim().startsWith('http'))
+          .slice(0, 4);
+        if (rawUrls.length < 2) {
+          return json({ error: 'At least 2 competitor URLs required' }, 400, origin, allowed);
+        }
+        // Fetch all pages in parallel — skip any that fail or are too short
+        const fetched = await Promise.allSettled(rawUrls.map(url => fetchLandingPageText(url)));
+        const competitors = fetched
+          .map((r, i) => ({ url: rawUrls[i], copy: r.status === 'fulfilled' ? r.value : null }))
+          .filter(c => c.copy && c.copy.length >= 80);
+        if (competitors.length < 2) {
+          return json({ error: "Couldn't fetch enough pages — make sure the URLs are public landing pages and try again" }, 502, origin, allowed);
+        }
+        prompt = buildPositioningPrompt({ competitors, product: body.product || null });
       } else if (kind === 'roast') {
         let roastCopy = (body.copy || '').trim();
         const roastUrl  = (body.url  || '').trim();
@@ -243,6 +259,56 @@ function extractVisibleText(html) {
     .replace(/<[^>]+>/g, ' ')
     .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&nbsp;/g, ' ')
     .replace(/\s{3,}/g, '\n\n').trim();
+}
+
+function buildPositioningPrompt({ competitors, product }) {
+  const n = competitors.length;
+
+  const domainOf = url => { try { return new URL(url).hostname.replace(/^www\./, ''); } catch(e) { return url; } };
+
+  const compPages = competitors.map((c, i) =>
+    `=== COMPETITOR ${i + 1} (${domainOf(c.url)}) ===\n${c.copy.slice(0, 3500)}`
+  ).join('\n\n');
+
+  const compBlocks = competitors.map((c, i) =>
+    `## COMPETITOR ${i + 1}\nNAME: [product name — extract from the copy]\nDOMAIN: ${domainOf(c.url)}\nCLAIM: [their core value proposition in ONE sentence — exactly what they say they do]\nTARGET: [who they target — specific job title, company stage, or pain, not "businesses" or "teams"]\nSTRONGEST: [their single best differentiator — the claim that is hardest to attack]\nWEAKNESS: [the gap in their positioning — what they understate, overclaim, or leave completely unaddressed]`
+  ).join('\n\n');
+
+  const vsLines = competitors.map((c, i) =>
+    `COMPETITOR ${i + 1}: [one-liner why a founder with this product beats them — lead with the advantage, not the attack, max 18 words]`
+  ).join('\n');
+
+  const productCtx = product && (product.name || product.what)
+    ? `\nTHE FOUNDER'S PRODUCT:\nName: ${product.name || '(not given)'}\nWhat it does: ${product.what || '(not given)'}\nTarget audience: ${product.audience || '(not given)'}\n`
+    : '\n(No product provided — identify the gap and write the positioning statement for a new entrant into this space.)\n';
+
+  return `You are a B2B positioning strategist. Your job: decode each competitor's positioning from their landing page copy, find where they all fight over the same ground, and identify the specific territory that none of them own.
+${productCtx}
+COMPETITOR LANDING PAGES:
+${compPages}
+
+Respond in EXACTLY this format. Use these exact ## headings. No preamble before the first ## heading.
+
+${compBlocks}
+
+## OVERLAP
+[2–3 sentences: the messaging ground all these competitors fight over — the claims that are so common they've become invisible to buyers. What would feel identical to someone who read every homepage in a row?]
+
+## THE GAP
+[2–3 sentences: the specific positioning territory none of them own. Name a concrete audience segment, use case, or angle that is left completely unaddressed. Should make the reader think "that's obvious — why is nobody saying it?"]
+
+## POSITIONING STATEMENT
+[One sentence in exactly this structure: "For [specific audience] who [specific pain or desire], [product] is the [category] that [unique outcome] — unlike [competitor type] that [limitation]."]
+
+## VS EACH COMPETITOR
+${vsLines}
+
+${HARD_RULES}
+- Competitor analysis must reference ACTUAL copy from their pages — no generic SaaS observations.
+- THE GAP must be a specific, defensible positioning claim — not just "be simpler" or "focus on SMBs".
+- POSITIONING STATEMENT must be usable as-is — no brackets, no placeholder text.
+- WEAKNESS must be a real gap in their positioning strategy, not a missing product feature.
+- Return ONLY this structure. No text before ## COMPETITOR 1 or after the last VS line.`;
 }
 
 function buildHooksPrompt({ topic, platform = 'linkedin', voiceNiche = '' }) {

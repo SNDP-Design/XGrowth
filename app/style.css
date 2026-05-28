@@ -502,6 +502,50 @@
   .roast-fixes-list{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:8px}
   .roast-fixes-list li{font-size:14px;color:var(--ink);line-height:1.55}
 
+  /* ── Competitor Positioning Map ─────────────────────────────────────────── */
+
+  /* URL input row — flex so remove × button sits flush right */
+  .pos-url-row{display:flex;gap:8px;align-items:center}
+  .pos-url-row input{flex:1;height:44px}
+  .pos-remove-btn{flex-shrink:0;width:36px;height:36px;border-radius:8px;background:transparent;border:1px solid var(--line);color:var(--muted);font-size:18px;line-height:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:.15s}
+  .pos-remove-btn:hover{color:#f87171;border-color:rgba(248,113,113,.4)}
+
+  /* Competitor cards grid */
+  .pos-comp-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:12px}
+  @media(max-width:700px){.pos-comp-grid{grid-template-columns:1fr}}
+  .pos-comp-card{background:#080808;border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:10px}
+  .pos-comp-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .pos-comp-name{font-size:14px;font-weight:700;color:var(--ink)}
+  .pos-comp-domain{font-size:11px;color:var(--muted);text-decoration:underline;text-underline-offset:2px}
+  .pos-comp-claim{font-size:14px;line-height:1.55;color:#cfcfcf;margin:0;padding-bottom:10px;border-bottom:1px solid var(--line)}
+  .pos-field{display:flex;flex-direction:column;gap:3px}
+  .pos-field-lbl{font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)}
+  .pos-field-val{font-size:13px;line-height:1.5;color:var(--ink)}
+  .pos-weakness-val{color:#fb923c}
+
+  /* Shared section label */
+  .pos-section-lbl{font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+
+  /* Where they overlap */
+  .pos-overlap-card{background:linear-gradient(160deg,#111,#090909);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:12px}
+  .pos-body-text{font-size:14px;line-height:1.65;color:var(--ink);margin:0}
+
+  /* The gap — green-tinted to signal opportunity */
+  .pos-gap-card{background:linear-gradient(160deg,#0a130a,#070d07);border:1px solid rgba(74,222,128,.22);border-radius:14px;padding:18px 20px;margin-bottom:12px}
+  .pos-gap-lbl{color:#4ade80}
+  .pos-gap-text{font-size:15px;line-height:1.65;color:var(--ink);margin:0}
+
+  /* Positioning statement — left-border blockquote style */
+  .pos-statement-card{background:linear-gradient(160deg,#111,#090909);border:1px solid var(--line);border-left:3px solid #d4d4d4;border-radius:0 14px 14px 0;padding:20px 22px;margin-bottom:12px;display:flex;flex-direction:column}
+  .pos-statement-text{font-size:17px;line-height:1.55;color:var(--ink);font-style:italic;margin:0}
+
+  /* VS each competitor */
+  .pos-vs-section{margin-bottom:4px}
+  .pos-vs-list{display:flex;flex-direction:column;gap:8px}
+  .pos-vs-item{background:#080808;border:1px solid var(--line);border-radius:10px;padding:12px 16px;display:flex;align-items:flex-start;gap:14px}
+  .pos-vs-name{font-size:11px;font-weight:700;color:var(--muted);white-space:nowrap;flex-shrink:0;padding-top:2px;min-width:80px;max-width:140px;overflow:hidden;text-overflow:ellipsis}
+  .pos-vs-text{font-size:14px;color:var(--ink);line-height:1.5}
+
   /* ── Hook Generator ──────────────────────────────────────────────────────── */
   .hook-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:16px}
   @media(max-width:700px){.hook-grid{grid-template-columns:1fr}}
