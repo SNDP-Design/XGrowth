@@ -212,6 +212,15 @@ export default {
           return json({ error: "Couldn't fetch enough pages — make sure the URLs are public landing pages and try again" }, 502, origin, allowed);
         }
         prompt = buildPositioningPrompt({ competitors, product: body.product || null });
+      } else if (kind === 'calendar') {
+        if (!body.niche || typeof body.niche !== 'string' || body.niche.trim().length < 5) {
+          return json({ error: 'niche is required' }, 400, origin, allowed);
+        }
+        const calChannels = Array.isArray(body.channels) && body.channels.length ? body.channels : null;
+        if (!calChannels) {
+          return json({ error: 'At least one channel is required' }, 400, origin, allowed);
+        }
+        prompt = buildCalendarPrompt(body);
       } else if (kind === 'roast') {
         let roastCopy = (body.copy || '').trim();
         const roastUrl  = (body.url  || '').trim();
@@ -438,6 +447,39 @@ HARD RULES — break any of these and the output is unusable:
 - Sound like a sharp human, not a content marketer.
 
 Return ONLY the 10 labeled hooks. No preamble, no explanation, no blank lines between them.`;
+}
+
+function buildCalendarPrompt({ niche, goal, days = 30, channels, voiceNiche = '' }) {
+  const dayCount = [7, 14, 30].includes(Number(days)) ? Number(days) : 30;
+  const chList = Array.isArray(channels) && channels.length
+    ? channels.join(', ')
+    : 'LinkedIn, X / Twitter';
+
+  return `You are a content strategist who builds content calendars for early-stage SaaS founders. Every post idea must be specific to the actual product and niche — no generic marketing advice.
+
+PRODUCT / NICHE: ${niche.trim()}
+GOAL: ${(goal || 'grow audience and drive trial signups').trim()}
+ACTIVE CHANNELS: ${chList}
+${voiceNiche ? `FOUNDER CONTEXT: ${voiceNiche}` : ''}
+
+Generate a ${dayCount}-day content calendar. Distribute posts evenly and smartly across the active channels. Vary content types within each platform.
+
+Format EXACTLY like this for EVERY day — no missing fields, no extra fields:
+
+## DAY [N]
+PLATFORM: [must be one of the active channels listed above]
+TYPE: [content type — e.g. Thread / Single Post / Thought Leadership / Story / List Post / Hot Take / Poll / Case Study / Newsletter / Behind-the-Scenes / Question Post]
+HOOK: [the literal first line of the post — specific to this niche, scroll-stopping, under 140 characters, copy-paste ready]
+ANGLE: [1 sentence: what this post is about — the core insight, story, or data point]
+CTA: [what the reader should do — specific, 1 sentence, no "engage with us" or "share your thoughts"]
+
+${HARD_RULES}
+- HOOK is the actual first line someone would write — not a description of what the hook is about.
+- HOOK must be under 140 characters. No exceptions.
+- Every DAY entry must have all 5 fields (PLATFORM, TYPE, HOOK, ANGLE, CTA).
+- Distribute platforms: do not repeat the same platform more than 2 days in a row.
+- Vary content types: no two identical types in a row for the same platform.
+- No text before ## DAY 1 or after ## DAY ${dayCount}. No blank lines between the 5 fields of each day.`;
 }
 
 function buildRoastPrompt({ copy, url }) {

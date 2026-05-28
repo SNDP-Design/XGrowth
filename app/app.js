@@ -993,6 +993,17 @@ document.addEventListener('keydown',(e)=>{
   else if(id==='hookTopicInput' && (e.metaKey||e.ctrlKey)){ e.preventDefault(); hookGenerate(); }
 });
 
+// Delegated click handler — toggles .portal-chip.active for channel pickers in plan + calendar
+['planChannelChips','calChannelChips'].forEach(id=>{
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.addEventListener('click', e=>{
+    const chip = e.target.closest('.portal-chip[data-ch]');
+    if(!chip) return;
+    chip.classList.toggle('active');
+  });
+});
+
 /* =========================================================
    LANDING PAGE ROAST
    URL or pasted copy → scored section-by-section analysis
@@ -1739,6 +1750,206 @@ function ceRoastReset() {
   $('roastEmpty').style.display = '';
   const urlInput  = $('roastUrlInput');  if (urlInput)  urlInput.value  = '';
   const copyInput = $('roastCopyInput'); if (copyInput) copyInput.value = '';
+}
+
+/* =========================================================
+   CONTENT CALENDAR BUILDER
+   Niche + goal + channels → N days of post ideas with
+   hook, angle, CTA — grouped by week, downloadable as MD
+   ========================================================= */
+
+const _cal = {
+  loading: false,
+  days: [],
+};
+
+function calGetChannels() {
+  return Array.from(document.querySelectorAll('#calChannelChips .portal-chip.active'))
+    .map(b => b.dataset.ch).filter(Boolean);
+}
+
+async function calGenerate() {
+  if (_cal.loading) return;
+  const niche = ($('calNiche')?.value || '').trim();
+  if (!niche || niche.length < 5) { toast('Add your product & niche first'); $('calNiche')?.focus(); return; }
+  const channels = calGetChannels();
+  if (!channels.length) { toast('Select at least one channel'); return; }
+  const dayCount = parseInt($('calDays')?.value || '30', 10);
+
+  _cal.loading = true;
+  const btn = $('calGenBtn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="ce-spinner"></span>Building calendar…'; }
+  $('calEmpty').style.display = 'none';
+  $('calResult').innerHTML = `
+    <div class="roast-loading" role="status" aria-live="polite">
+      <div class="ce-spinner" aria-hidden="true"></div>
+      <span>Planning ${dayCount} days of content…</span>
+    </div>`;
+
+  try {
+    const data = await xgFetch('/generate', {
+      kind: 'calendar',
+      niche,
+      goal: ($('calGoal')?.value || '').trim(),
+      days: dayCount,
+      channels,
+      voiceNiche: state.profile?.niche || '',
+    });
+    const days = calParse(data.text || '');
+    _cal.days = days;
+    calRender(days, dayCount);
+  } catch (err) {
+    $('calResult').innerHTML =
+      `<div class="ce-skeleton" style="color:#f87171;min-height:80px;border-color:rgba(248,113,113,.3)">${ceEsc(err.message || 'Generation failed — try again')}</div>`;
+  } finally {
+    _cal.loading = false;
+    if (btn) { btn.disabled = false; btn.innerHTML = 'Build my calendar →'; }
+  }
+}
+
+function calParse(text) {
+  const days = [];
+  // Split on ## DAY N headings, keep each block with its header
+  const blocks = text.split(/(?=## DAY \d+)/i);
+  for (const block of blocks) {
+    const dayMatch = /## DAY (\d+)/i.exec(block);
+    if (!dayMatch) continue;
+    const n = parseInt(dayMatch[1], 10);
+    const get = field => {
+      const m = new RegExp(`^${field}:\\s*(.+)`, 'mi').exec(block);
+      return m ? m[1].trim() : '';
+    };
+    const entry = {
+      n,
+      platform: get('PLATFORM'),
+      type:     get('TYPE'),
+      hook:     get('HOOK'),
+      angle:    get('ANGLE'),
+      cta:      get('CTA'),
+    };
+    if (entry.hook || entry.angle) days.push(entry);
+  }
+  // Sort by day number in case AI reordered
+  days.sort((a, b) => a.n - b.n);
+  return days;
+}
+
+const CAL_PLATFORM_COLORS = {
+  'linkedin':   { bg: 'rgba(10,102,194,.18)',  color: '#60a5fa' },
+  'x':          { bg: 'rgba(255,255,255,.08)', color: '#e2e8f0' },
+  'twitter':    { bg: 'rgba(255,255,255,.08)', color: '#e2e8f0' },
+  'email':      { bg: 'rgba(251,146,60,.15)',  color: '#fb923c' },
+  'content':    { bg: 'rgba(74,222,128,.12)',  color: '#4ade80' },
+  'seo':        { bg: 'rgba(74,222,128,.12)',  color: '#4ade80' },
+  'reddit':     { bg: 'rgba(255,86,0,.15)',    color: '#f97316' },
+  'instagram':  { bg: 'rgba(214,57,163,.15)',  color: '#e879f9' },
+  'communities':{ bg: 'rgba(255,86,0,.15)',    color: '#f97316' },
+};
+
+function calPlatformStyle(platform) {
+  if (!platform) return { bg: 'rgba(255,255,255,.06)', color: 'var(--muted)' };
+  const key = platform.toLowerCase().split(/[\s/,–-]/)[0].trim();
+  return CAL_PLATFORM_COLORS[key] || { bg: 'rgba(255,255,255,.06)', color: 'var(--muted)' };
+}
+
+function calRender(days, totalDays) {
+  if (!days.length) {
+    $('calResult').innerHTML = `<p style="color:var(--muted);font-size:14px">Couldn't parse the calendar — try again.</p>`;
+    return;
+  }
+
+  // Group into weeks
+  const weeks = [];
+  let week = [];
+  days.forEach((d, i) => {
+    week.push(d);
+    if (week.length === 7 || i === days.length - 1) {
+      weeks.push([...week]);
+      week = [];
+    }
+  });
+
+  let html = `<div class="cal-calendar">`;
+
+  weeks.forEach((wk, wi) => {
+    html += `
+    <div class="cal-week">
+      <div class="cal-week-label">Week ${wi + 1}</div>
+      <div class="cal-grid">`;
+    wk.forEach(d => {
+      const ps = calPlatformStyle(d.platform);
+      const idx = days.indexOf(d);
+      html += `
+      <div class="cal-card">
+        <div class="cal-card-top">
+          <span class="cal-day-num">Day ${d.n}</span>
+          <span class="cal-platform-badge" style="background:${ps.bg};color:${ps.color}">${ceEsc(d.platform || '—')}</span>
+        </div>
+        ${d.type ? `<span class="cal-type-chip">${ceEsc(d.type)}</span>` : ''}
+        <p class="cal-hook">${ceEsc(d.hook)}</p>
+        ${d.angle ? `<p class="cal-angle">${ceEsc(d.angle)}</p>` : ''}
+        ${d.cta ? `<div class="cal-cta"><span class="cal-cta-lbl">CTA</span>${ceEsc(d.cta)}</div>` : ''}
+        <div class="cal-card-foot">
+          <button class="hook-use-btn" onclick="calUseHook(${idx})" style="font-size:11px;height:26px;padding:0 10px">Use in CE →</button>
+          <button class="btn ghost" style="height:26px;padding:0 10px;font-size:11px" data-ce-copy="${ceEsc(d.hook)}" onclick="ceCopyAttr(this)">Copy hook</button>
+        </div>
+      </div>`;
+    });
+    html += `</div></div>`;
+  });
+
+  html += `</div>`;
+
+  // Download + reset row
+  html += `
+  <div style="display:flex;gap:10px;margin-top:20px;flex-wrap:wrap">
+    <button class="btn secondary" style="height:38px;padding:0 16px;font-size:13px" onclick="calDownload()">↓ Download Markdown</button>
+    <button class="btn secondary" style="height:38px;padding:0 16px;font-size:13px" onclick="calReset()">Build another</button>
+  </div>`;
+
+  $('calResult').innerHTML = html;
+}
+
+function calUseHook(idx) {
+  const d = _cal.days[idx];
+  if (!d || !d.hook) return;
+  const ceBtn = document.querySelector('#nav button[data-view="content"]');
+  if (ceBtn) ceBtn.click();
+  ceSwitchInputMode('write');
+  const writeInput = $('ceWriteInput');
+  if (writeInput) { writeInput.value = d.hook; writeInput.focus(); }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  toast('Hook loaded in Content Engine');
+}
+
+function calDownload() {
+  if (!_cal.days.length) return;
+  const niche = ($('calNiche')?.value || 'content').trim().toLowerCase().replace(/\s+/g, '-').slice(0, 30);
+  let md = `# Content Calendar\n\nGenerated by XGrowth — https://www.xgrowth.uno\n`;
+  let curWeek = 0;
+  _cal.days.forEach((d, i) => {
+    const wk = Math.floor(i / 7) + 1;
+    if (wk > curWeek) { curWeek = wk; md += `\n## Week ${wk}\n\n`; }
+    md += `### Day ${d.n} — ${d.platform}\n`;
+    if (d.type)  md += `**Type:** ${d.type}\n\n`;
+    if (d.hook)  md += `**Hook:** ${d.hook}\n\n`;
+    if (d.angle) md += `**Angle:** ${d.angle}\n\n`;
+    if (d.cta)   md += `**CTA:** ${d.cta}\n\n`;
+    md += `---\n\n`;
+  });
+  const blob = new Blob([md], { type: 'text/markdown' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `content-calendar-${niche}.md`;
+  a.click();
+}
+
+function calReset() {
+  _cal.days = [];
+  _cal.loading = false;
+  $('calResult').innerHTML = '';
+  $('calEmpty').style.display = '';
+  $('calNiche')?.focus();
 }
 
 /* ========= Mobile drawer ========= */
