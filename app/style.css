@@ -429,7 +429,8 @@
   .nav button:focus-visible,.ce-mode-tab:focus-visible,.ce-type-chip:focus-visible,
   .ce-regen-btn:focus-visible,.ce-xmode-btn:focus-visible,
   .ce-history-toggle:focus-visible,.signout:focus-visible,
-  .gbtn-card:focus-visible,.portal-chip:focus-visible,.range button:focus-visible{outline:2px solid #d4d4d4;outline-offset:3px}
+  .gbtn-card:focus-visible,.portal-chip:focus-visible,.range button:focus-visible,
+  #roastUrlBtn:focus-visible,#roastCopyBtn:focus-visible{outline:2px solid #d4d4d4;outline-offset:3px}
 
   /* 4 · Input border contrast — #606060 on #0a0a0a ≈ 3.1:1  (1.4.11 Non-text Contrast) */
   input[type=text],input[type=number],input[type=url],select,textarea{border-color:#606060}
@@ -450,3 +451,53 @@
   @media(prefers-reduced-motion:reduce){
     *{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
   }
+
+  /* ── Landing Page Roast ──────────────────────────────────────────────────── */
+
+  /* Loading row */
+  .roast-loading{display:flex;align-items:center;gap:12px;padding:20px 0;color:var(--muted);font-size:14px}
+
+  /* Overall banner */
+  .roast-overall{background:linear-gradient(160deg,#111,#090909);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-bottom:14px}
+  .roast-overall-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+  .roast-overall-label{font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+  .roast-verdict{margin:0 0 10px;font-size:15px;color:var(--ink);line-height:1.5}
+  .roast-priority{font-size:13px;color:var(--muted);line-height:1.5}
+  .roast-priority-lbl{font-weight:700;color:var(--ink)}
+  .roast-big-score{font-size:52px;font-weight:900;letter-spacing:-3px;line-height:1;flex-shrink:0;font-variant-numeric:tabular-nums}
+  .roast-denom{font-size:20px;font-weight:600;letter-spacing:-1px;opacity:.55}
+
+  /* Score colours */
+  .roast-color-red{color:#f87171}
+  .roast-color-orange{color:#fb923c}
+  .roast-color-yellow{color:#fbbf24}
+  .roast-color-green{color:#4ade80}
+
+  /* Section cards grid */
+  .roast-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:14px}
+  @media(max-width:700px){.roast-cards{grid-template-columns:1fr}}
+  .roast-card{background:#080808;border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:10px}
+  .roast-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .roast-card-title{font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted)}
+  .roast-chip{font-size:13px;font-weight:800;letter-spacing:-.3px}
+
+  /* Score bar */
+  .roast-bar-track{height:5px;background:#111;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+  .roast-bar-fill{height:100%;border-radius:999px;transition:width .6s cubic-bezier(.34,1.2,.64,1)}
+  .roast-fill-red{background:#f87171}
+  .roast-fill-orange{background:#fb923c}
+  .roast-fill-yellow{background:#fbbf24}
+  .roast-fill-green{background:#4ade80}
+
+  /* Issue / field rows */
+  .roast-issue{margin:0;font-size:13px;color:var(--muted);line-height:1.55}
+  .roast-field{display:flex;flex-direction:column;gap:4px}
+  .roast-field-lbl{font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)}
+  .roast-current{margin:0;font-size:13px;line-height:1.5;color:var(--muted);font-style:italic;word-break:break-word}
+  .roast-rewrite{margin:0;font-size:14px;line-height:1.55;color:var(--ink);font-weight:500;word-break:break-word}
+
+  /* Top 3 Fixes */
+  .roast-fixes{background:linear-gradient(160deg,#111,#090909);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:14px}
+  .roast-fixes-title{font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+  .roast-fixes-list{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:8px}
+  .roast-fixes-list li{font-size:14px;color:var(--ink);line-height:1.55}

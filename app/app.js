@@ -989,7 +989,185 @@ document.addEventListener('keydown',(e)=>{
   const id=document.activeElement?.id;
   if(id==='ceUrlInput'){ e.preventDefault(); ceGenerateFromUrl(); }
   else if(id==='ceXProfileInput'){ e.preventDefault(); ceFetchXProfile(); }
+  else if(id==='roastUrlInput'){ e.preventDefault(); ceRoastAnalyze(); }
 });
+
+/* =========================================================
+   LANDING PAGE ROAST
+   URL or pasted copy → scored section-by-section analysis
+   with exact rewrites — hero, value prop, social proof, CTA
+   ========================================================= */
+
+const _roast = {
+  tab: 'url',
+  loading: false,
+  result: null,
+};
+
+function roastSwitchTab(tab) {
+  _roast.tab = tab;
+  ['url', 'copy'].forEach(t => {
+    const btn = $('rtab-' + t);
+    if (btn) {
+      btn.classList.toggle('active', t === tab);
+      btn.setAttribute('aria-selected', t === tab ? 'true' : 'false');
+    }
+  });
+  ['roastModeUrl', 'roastModeCopy'].forEach(id => $(id)?.classList.remove('active'));
+  const panelMap = { url: 'roastModeUrl', copy: 'roastModeCopy' };
+  $(panelMap[tab])?.classList.add('active');
+}
+
+async function ceRoastAnalyze() {
+  if (_roast.loading) return;
+  const tab = _roast.tab;
+  let url = '', copy = '';
+  if (tab === 'url') {
+    url = ($('roastUrlInput')?.value || '').trim();
+    if (!url) { toast('Paste a URL first'); return; }
+    if (!/^https?:\/\//i.test(url)) { toast('URL must start with https://'); return; }
+  } else {
+    copy = ($('roastCopyInput')?.value || '').trim();
+    if (copy.length < 80) { toast('Paste more copy — at least a few sentences'); return; }
+  }
+
+  _roast.loading = true;
+  const urlBtn  = $('roastUrlBtn');
+  const copyBtn = $('roastCopyBtn');
+  [urlBtn, copyBtn].forEach(b => { if (b) { b.disabled = true; b.textContent = 'Roasting…'; } });
+
+  $('roastEmpty').style.display = 'none';
+  $('roastResult').innerHTML = `
+    <div class="roast-loading" role="status" aria-live="polite">
+      <div class="ce-spinner" aria-hidden="true"></div>
+      <span>${tab === 'url' ? 'Fetching your page and running the roast…' : 'Running the roast…'}</span>
+    </div>`;
+
+  try {
+    const data = await xgFetch('/generate', { kind: 'roast', url, copy });
+    _roast.result = data.text;
+    ceRoastRenderResult(data.text);
+  } catch (err) {
+    $('roastResult').innerHTML =
+      `<div class="ce-skeleton" style="color:#f87171;min-height:80px;border-color:rgba(248,113,113,.3)">${ceEsc(err.message || 'Roast failed — try again')}</div>`;
+  } finally {
+    _roast.loading = false;
+    if (urlBtn)  { urlBtn.disabled  = false; urlBtn.textContent  = 'Roast it →'; }
+    if (copyBtn) { copyBtn.disabled = false; copyBtn.textContent = 'Roast it →'; }
+  }
+}
+
+function ceRoastRenderResult(text) {
+  const sections = ceParseRoastSections(text);
+  const overall  = sections.find(s => s.key === 'OVERALL');
+  const scored   = ['HERO', 'VALUE PROPOSITION', 'SOCIAL PROOF', 'CALL TO ACTION']
+    .map(k => sections.find(s => s.key === k)).filter(Boolean);
+  const fixes    = sections.find(s => s.key === 'TOP 3 FIXES');
+
+  let html = '';
+
+  // ── Overall banner ─────────────────────────────────────────────────────
+  if (overall) {
+    const sc  = overall.score ?? 0;
+    const cls = sc <= 4 ? 'red' : sc <= 6 ? 'orange' : sc <= 8 ? 'yellow' : 'green';
+    html += `<div class="roast-overall">
+      <div class="roast-overall-top">
+        <div>
+          <div class="roast-overall-label">Overall Score</div>
+          ${overall.verdict  ? `<p class="roast-verdict">${ceEsc(overall.verdict)}</p>` : ''}
+          ${overall.priority ? `<div class="roast-priority"><span class="roast-priority-lbl">Priority fix →</span> ${ceEsc(overall.priority)}</div>` : ''}
+        </div>
+        <div class="roast-big-score roast-color-${cls}">${sc}<span class="roast-denom">/10</span></div>
+      </div>
+    </div>`;
+  }
+
+  // ── Section cards ───────────────────────────────────────────────────────
+  if (scored.length) {
+    html += `<div class="roast-cards">`;
+    for (const sec of scored) html += ceRoastCard(sec);
+    html += `</div>`;
+  }
+
+  // ── Top 3 Fixes ─────────────────────────────────────────────────────────
+  if (fixes?.fixes?.length) {
+    html += `<div class="roast-fixes">
+      <div class="roast-fixes-title">Top 3 Fixes</div>
+      <ol class="roast-fixes-list">
+        ${fixes.fixes.map(f => `<li>${ceEsc(f)}</li>`).join('')}
+      </ol>
+    </div>`;
+  }
+
+  // ── Reset ────────────────────────────────────────────────────────────────
+  html += `<div style="margin-top:18px;display:flex;justify-content:flex-end">
+    <button class="btn secondary" style="height:38px;padding:0 16px;font-size:13px" onclick="ceRoastReset()">Roast another page</button>
+  </div>`;
+
+  $('roastResult').innerHTML = html;
+}
+
+function ceRoastCard(sec) {
+  const sc  = sec.score ?? 0;
+  const cls = sc <= 4 ? 'red' : sc <= 6 ? 'orange' : sc <= 8 ? 'yellow' : 'green';
+  return `<div class="roast-card">
+    <div class="roast-card-head">
+      <span class="roast-card-title">${ceEsc(sec.key)}</span>
+      <span class="roast-chip roast-color-${cls}">${sc}/10</span>
+    </div>
+    <div class="roast-bar-track"><div class="roast-bar-fill roast-fill-${cls}" style="width:${sc * 10}%"></div></div>
+    ${sec.issue   ? `<p class="roast-issue">${ceEsc(sec.issue)}</p>` : ''}
+    ${sec.current ? `<div class="roast-field"><span class="roast-field-lbl">Current</span><p class="roast-current">"${ceEsc(sec.current)}"</p></div>` : ''}
+    ${sec.rewrite ? `<div class="roast-field"><span class="roast-field-lbl">Rewrite</span><p class="roast-rewrite">${ceEsc(sec.rewrite)}</p></div>` : ''}
+    ${sec.rewrite ? `<button class="btn ghost" style="height:28px;padding:0 10px;font-size:12px;margin-top:4px;align-self:flex-start" data-ce-copy="${ceEsc(sec.rewrite)}" onclick="ceCopyAttr(this)">Copy rewrite</button>` : ''}
+  </div>`;
+}
+
+function ceParseRoastSections(text) {
+  const sections = [];
+  // Split on ## headings (handles both with and without leading newline)
+  const parts = text.split(/^## /m).filter(s => s.trim());
+  for (const part of parts) {
+    const lines = part.trim().split('\n');
+    const key   = (lines[0] || '').trim().toUpperCase();
+    const body  = lines.slice(1).join('\n');
+
+    if (key === 'TOP 3 FIXES') {
+      const fixes = body.split('\n')
+        .map(l => l.replace(/^\d+\.\s*/, '').trim())
+        .filter(Boolean);
+      sections.push({ key, fixes });
+      continue;
+    }
+
+    const get = field => {
+      const m = new RegExp(`^${field}:\\s*(.+)`, 'mi').exec(body);
+      return m ? m[1].trim() : '';
+    };
+    const scoreRaw = get('SCORE');
+    const scoreNum = scoreRaw.match(/(\d+)/);
+
+    sections.push({
+      key,
+      score:    scoreNum ? parseInt(scoreNum[1], 10) : null,
+      verdict:  get('VERDICT'),
+      priority: get('PRIORITY'),
+      issue:    get('ISSUE'),
+      current:  get('CURRENT'),
+      rewrite:  get('REWRITE'),
+    });
+  }
+  return sections;
+}
+
+function ceRoastReset() {
+  _roast.result  = null;
+  _roast.loading = false;
+  $('roastResult').innerHTML  = '';
+  $('roastEmpty').style.display = '';
+  const urlInput  = $('roastUrlInput');  if (urlInput)  urlInput.value  = '';
+  const copyInput = $('roastCopyInput'); if (copyInput) copyInput.value = '';
+}
 
 /* ========= Mobile drawer ========= */
 function toggleSide(force){

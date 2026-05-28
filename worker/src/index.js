@@ -185,6 +185,17 @@ export default {
         prompt = buildIcpPrompt(body);
       } else if (kind === 'ph-launch') {
         prompt = buildPhLaunchPrompt(body);
+      } else if (kind === 'roast') {
+        let roastCopy = (body.copy || '').trim();
+        const roastUrl  = (body.url  || '').trim();
+        if (!roastCopy && roastUrl) {
+          try { roastCopy = await fetchLandingPageText(roastUrl); }
+          catch (e) { return json({ error: 'Could not fetch that URL — try pasting the copy directly' }, 502, origin, allowed); }
+        }
+        if (!roastCopy || roastCopy.length < 80) {
+          return json({ error: 'Not enough content to analyze — paste at least a few sentences of copy' }, 400, origin, allowed);
+        }
+        prompt = buildRoastPrompt({ copy: roastCopy, url: roastUrl });
       } else {
         return json({ error: 'Unknown kind: ' + kind }, 400, origin, allowed);
       }
@@ -196,6 +207,82 @@ export default {
     }
   },
 };
+
+/* ─── Landing Page Roast helpers ─────────────────────────────────────────── */
+
+async function fetchLandingPageText(url) {
+  const ctrl = new AbortController();
+  const tid = setTimeout(() => ctrl.abort(), 10000);
+  try {
+    const resp = await fetch(url, {
+      signal: ctrl.signal,
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; XGrowthBot/1.0)' },
+      redirect: 'follow',
+    });
+    clearTimeout(tid);
+    if (!resp.ok) throw new Error(`URL returned ${resp.status}`);
+    const html = await resp.text();
+    return extractVisibleText(html).slice(0, 8000);
+  } finally {
+    clearTimeout(tid);
+  }
+}
+
+function extractVisibleText(html) {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<nav[\s\S]*?<\/nav>/gi, '')
+    .replace(/<footer[\s\S]*?<\/footer>/gi, '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&nbsp;/g, ' ')
+    .replace(/\s{3,}/g, '\n\n').trim();
+}
+
+function buildRoastPrompt({ copy, url }) {
+  return `You are a blunt conversion copywriter roasting a SaaS landing page. Be direct — no hedging. Founders need brutal honesty, not comfort.${url ? `\n\nURL: ${url}` : ''}
+
+LANDING PAGE COPY:
+"""
+${copy.slice(0, 7000)}
+"""
+
+Respond in EXACTLY this format. Use the exact ## headings. No preamble before ## OVERALL.
+
+## OVERALL
+SCORE: [X/10]
+VERDICT: [One sharp sentence — what is this page's biggest sin?]
+PRIORITY: [The single most impactful fix, in one sentence]
+
+## HERO
+SCORE: [X/10]
+ISSUE: [One sentence: what's broken]
+CURRENT: [Quote the actual headline verbatim, or "not found" if absent]
+REWRITE: [A ready-to-paste replacement headline]
+
+## VALUE PROPOSITION
+SCORE: [X/10]
+ISSUE: [One sentence]
+CURRENT: [Quote a key sentence from the copy]
+REWRITE: [Sharper, more specific version]
+
+## SOCIAL PROOF
+SCORE: [X/10]
+ISSUE: [One sentence]
+CURRENT: [Quote what's there, or "none found"]
+REWRITE: [What they should add or how to rewrite it]
+
+## CALL TO ACTION
+SCORE: [X/10]
+ISSUE: [One sentence]
+CURRENT: [Quote the CTA button/text, or "not found"]
+REWRITE: [Better CTA text — specific and action-oriented]
+
+## TOP 3 FIXES
+1. [Specific, actionable fix — start with a verb]
+2. [Specific, actionable fix — start with a verb]
+3. [Specific, actionable fix — start with a verb]`;
+}
 
 /* ─── /news — multi-source RSS aggregator ────────────────────────────────── */
 
