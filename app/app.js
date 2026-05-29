@@ -959,7 +959,7 @@ function ceRenderHistoryList(){
     </div>`).join('');
 }
 
-function ceInit(){ ceLoadHistory(); }
+function ceInit(){ ceLoadHistory(); queueRender(); }
 
 /* ── Instagram post helper ────────────────────────────────────────────── */
 // Instagram has no web compose URL — copy caption+hashtags then open the app.
@@ -1856,6 +1856,8 @@ function ceRoastReset() {
 const _cal = {
   loading: false,
   days: [],
+  weeks: [],          // days grouped into weeks of 7
+  generating: {},     // weekIndex → bool (batch generation in flight)
 };
 
 function calGetChannels() {
@@ -1963,13 +1965,19 @@ function calRender(days, totalDays) {
       week = [];
     }
   });
+  _cal.weeks = weeks;
 
   let html = `<div class="cal-calendar">`;
 
   weeks.forEach((wk, wi) => {
+    // Count how many of this week's ideas map to a writable social platform
+    const writable = wk.filter(d => calMapPlatform(d.platform)).length;
     html += `
     <div class="cal-week">
-      <div class="cal-week-label">Week ${wi + 1}</div>
+      <div class="cal-week-bar">
+        <div class="cal-week-label">Week ${wi + 1}</div>
+        ${writable ? `<button class="cal-week-gen" id="calWeekGen-${wi}" onclick="calGenerateWeekPosts(${wi})">⚡ Write all ${writable} posts →</button>` : ''}
+      </div>
       <div class="cal-grid">`;
     wk.forEach(d => {
       const ps = calPlatformStyle(d.platform);
@@ -1990,7 +1998,9 @@ function calRender(days, totalDays) {
         </div>
       </div>`;
     });
-    html += `</div></div>`;
+    html += `</div>
+      <div class="cal-week-posts" id="calWeekPosts-${wi}"></div>
+    </div>`;
   });
 
   html += `</div>`;
@@ -2041,10 +2051,248 @@ function calDownload() {
 
 function calReset() {
   _cal.days = [];
+  _cal.weeks = [];
   _cal.loading = false;
   $('calResult').innerHTML = '';
   $('calEmpty').style.display = '';
   $('calNiche')?.focus();
+}
+
+/* =========================================================
+   BATCH "GENERATE THE WEEK"
+   Turn a week of calendar ideas into finished, platform-ready
+   posts in one run → drops them into a persistent queue.
+   ========================================================= */
+
+// Map a calendar platform display string → Content Engine post platform enum.
+// Returns null for non-social channels (Email, SEO/blog) which aren't quick social posts.
+function calMapPlatform(display) {
+  const s = (display || '').toLowerCase();
+  if (s.includes('linkedin')) return 'linkedin';
+  if (s.includes('twitter') || /\bx\b/.test(s) || s.startsWith('x ')) return 'x';
+  if (s.includes('reddit') || s.includes('communit')) return 'reddit';
+  if (s.includes('instagram') || s.includes('insta')) return 'instagram';
+  return null; // email, content/seo, etc.
+}
+
+// Build the freewrite brief + payload for one calendar idea, then generate a finished post.
+async function batchPostFromIdea(idea) {
+  const platform = calMapPlatform(idea.platform);
+  if (!platform) return null;
+  const isThread = platform === 'x' && /thread/i.test(idea.type || '');
+
+  const notes = [
+    `Write a ${idea.type || 'social post'} for ${idea.platform}.`,
+    idea.hook  ? `Open with this hook (or a very close variant): "${idea.hook}"` : '',
+    idea.angle ? `What the post is about: ${idea.angle}` : '',
+    idea.cta   ? `End with this call to action: ${idea.cta}` : '',
+  ].filter(Boolean).join('\n');
+
+  const data = await xgFetch('/generate', {
+    kind: 'post',
+    inputMode: 'freewrite',
+    articleTitle: notes,
+    topic: idea.angle || idea.hook || '',
+    platform,
+    mode: isThread ? 'thread' : 'hot-take',
+    voiceNiche: state.profile?.niche || '',
+    voiceStyle: 'casual',
+  });
+
+  return {
+    id: `${Date.now()}-${idea.n}-${platform}`,
+    day: idea.n,
+    platformLabel: idea.platform,
+    platform,
+    type: idea.type || '',
+    hook: idea.hook || '',
+    isThread,
+    text: (data.text || '').trim(),
+    createdAt: Date.now(),
+    posted: false,
+  };
+}
+
+async function calGenerateWeekPosts(wi) {
+  if (_cal.generating[wi]) return;
+  const wk = _cal.weeks[wi] || [];
+  const ideas = wk.filter(d => calMapPlatform(d.platform));
+  if (!ideas.length) { toast('No social posts in this week to write'); return; }
+
+  _cal.generating[wi] = true;
+  const btn = $(`calWeekGen-${wi}`);
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="ce-spinner"></span>Writing…'; }
+  const panel = $(`calWeekPosts-${wi}`);
+  if (panel) {
+    panel.innerHTML = `
+      <div class="roast-loading" role="status" aria-live="polite" style="margin-top:12px">
+        <div class="ce-spinner" aria-hidden="true"></div>
+        <span>Writing ${ideas.length} posts for Week ${wi + 1}…</span>
+      </div>`;
+  }
+
+  // Generate all in parallel; tolerate individual failures.
+  const settled = await Promise.allSettled(ideas.map(batchPostFromIdea));
+  const results = settled
+    .filter(r => r.status === 'fulfilled' && r.value && r.value.text)
+    .map(r => r.value);
+  const failed = ideas.length - results.length;
+
+  // Persist to the queue (newest week additions first within their day order)
+  queueAdd(results);
+
+  // Render the finished posts inline under the week
+  if (panel) {
+    if (!results.length) {
+      panel.innerHTML = `<div class="ce-skeleton" style="color:#f87171;margin-top:12px;min-height:60px;border-color:rgba(248,113,113,.3)">Couldn't generate posts — try again.</div>`;
+    } else {
+      panel.innerHTML = `
+        <div class="cal-week-posts-head">${results.length} post${results.length > 1 ? 's' : ''} written${failed ? ` · ${failed} failed` : ''} — saved to your queue below</div>
+        <div class="batch-posts">${results.map(batchPostCardHTML).join('')}</div>`;
+    }
+  }
+
+  _cal.generating[wi] = false;
+  if (btn) { btn.disabled = false; btn.innerHTML = '⚡ Re-write this week →'; }
+  if (results.length) toast(`${results.length} posts added to your queue`);
+}
+
+// Renders one finished post (handles thread / reddit / instagram / plain text).
+function batchPostCardHTML(post) {
+  const ps = calPlatformStyle(post.platformLabel);
+  const badge = `<span class="cal-platform-badge" style="background:${ps.bg};color:${ps.color}">${ceEsc(post.platformLabel)}</span>`;
+  const head = `
+    <div class="batch-post-head">
+      <span class="batch-post-day">Day ${post.day}</span>
+      ${badge}
+      ${post.type ? `<span class="cal-type-chip">${ceEsc(post.type)}</span>` : ''}
+    </div>`;
+
+  let body = '';
+  let copyText = post.text;
+
+  if (post.isThread) {
+    const tweets = ceParseThread(post.text);
+    copyText = tweets.join('\n\n');
+    body = `<div class="batch-thread">` + tweets.map((t, i) => `
+      <div class="batch-tweet">
+        <span class="batch-tweet-num">${i + 1}/${tweets.length}</span>
+        <p class="batch-tweet-text">${ceEsc(t)}</p>
+      </div>`).join('') + `</div>`;
+  } else if (post.platform === 'reddit') {
+    const r = ceParseReddit(post.text);
+    copyText = `${r.title}\n\n${r.body}`;
+    body = `
+      ${r.subreddit ? `<div class="batch-reddit-sub">r/${ceEsc(r.subreddit)}</div>` : ''}
+      ${r.title ? `<p class="batch-reddit-title">${ceEsc(r.title)}</p>` : ''}
+      <p class="batch-post-text">${ceEsc(r.body)}</p>`;
+  } else if (post.platform === 'instagram') {
+    const ig = ceParseInstagram(post.text);
+    copyText = ig.hashtags ? `${ig.caption}\n\n${ig.hashtags}` : ig.caption;
+    body = `
+      <p class="batch-post-text">${ceEsc(ig.caption)}</p>
+      ${ig.hashtags ? `<p class="batch-ig-tags">${ceEsc(ig.hashtags)}</p>` : ''}`;
+  } else {
+    body = `<p class="batch-post-text">${ceEsc(post.text)}</p>`;
+  }
+
+  return `
+    <div class="batch-post">
+      ${head}
+      ${body}
+      <div class="batch-post-foot">
+        <button class="btn ghost" style="height:30px;padding:0 12px;font-size:12px" data-ce-copy="${ceEsc(copyText)}" onclick="ceCopyAttr(this)">Copy</button>
+      </div>
+    </div>`;
+}
+
+/* ── Post Queue — persisted in state, synced to Firestore ─────────────────── */
+
+function queueAdd(posts) {
+  if (!posts || !posts.length) return;
+  if (!Array.isArray(state.postQueue)) state.postQueue = [];
+  // De-dupe: replace any existing queue item for the same day+platform
+  posts.forEach(p => {
+    const i = state.postQueue.findIndex(q => q.day === p.day && q.platform === p.platform);
+    if (i > -1) state.postQueue[i] = p;
+    else state.postQueue.push(p);
+  });
+  // Keep the queue sane (cap at 60 most recent)
+  state.postQueue.sort((a, b) => a.day - b.day);
+  if (state.postQueue.length > 60) state.postQueue = state.postQueue.slice(-60);
+  save();
+  queueRender();
+}
+
+function queueRemove(id) {
+  if (!Array.isArray(state.postQueue)) return;
+  state.postQueue = state.postQueue.filter(q => q.id !== id);
+  save();
+  queueRender();
+}
+
+function queueTogglePosted(id) {
+  const q = (state.postQueue || []).find(x => x.id === id);
+  if (!q) return;
+  q.posted = !q.posted;
+  save();
+  queueRender();
+}
+
+function queueClearPosted() {
+  if (!Array.isArray(state.postQueue)) return;
+  state.postQueue = state.postQueue.filter(q => !q.posted);
+  save();
+  queueRender();
+  toast('Cleared posted items');
+}
+
+function queueRender() {
+  const el = $('calQueue');
+  if (!el) return;
+  const q = Array.isArray(state.postQueue) ? state.postQueue : [];
+  if (!q.length) { el.innerHTML = ''; return; }
+
+  const pending = q.filter(x => !x.posted).length;
+  const done = q.length - pending;
+
+  const items = q.map(post => {
+    const ps = calPlatformStyle(post.platformLabel);
+    // Build a copy-ready text per platform shape
+    let copyText = post.text;
+    if (post.isThread) copyText = ceParseThread(post.text).join('\n\n');
+    else if (post.platform === 'reddit') { const r = ceParseReddit(post.text); copyText = `${r.title}\n\n${r.body}`; }
+    else if (post.platform === 'instagram') { const ig = ceParseInstagram(post.text); copyText = ig.hashtags ? `${ig.caption}\n\n${ig.hashtags}` : ig.caption; }
+    const preview = (post.hook || post.text || '').slice(0, 120);
+    return `
+      <div class="queue-item${post.posted ? ' queue-item-done' : ''}">
+        <button class="queue-check" onclick="queueTogglePosted('${post.id}')" aria-label="${post.posted ? 'Mark as not posted' : 'Mark as posted'}" title="${post.posted ? 'Posted' : 'Mark as posted'}">${post.posted ? '✓' : ''}</button>
+        <div class="queue-item-main">
+          <div class="queue-item-meta">
+            <span class="cal-platform-badge" style="background:${ps.bg};color:${ps.color}">${ceEsc(post.platformLabel)}</span>
+            <span class="queue-item-day">Day ${post.day}</span>
+            ${post.type ? `<span class="queue-item-type">${ceEsc(post.type)}</span>` : ''}
+          </div>
+          <p class="queue-item-preview">${ceEsc(preview)}${preview.length >= 120 ? '…' : ''}</p>
+        </div>
+        <div class="queue-item-actions">
+          <button class="btn ghost" style="height:28px;padding:0 10px;font-size:11px" data-ce-copy="${ceEsc(copyText)}" onclick="ceCopyAttr(this)">Copy</button>
+          <button class="queue-del" onclick="queueRemove('${post.id}')" aria-label="Remove from queue" title="Remove">×</button>
+        </div>
+      </div>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div class="queue-panel">
+      <div class="queue-head">
+        <div>
+          <div class="queue-title">Post queue</div>
+          <div class="queue-sub">${pending} ready to post${done ? ` · ${done} posted` : ''}</div>
+        </div>
+        ${done ? `<button class="btn secondary" style="height:32px;padding:0 12px;font-size:12px" onclick="queueClearPosted()">Clear posted</button>` : ''}
+      </div>
+      <div class="queue-list">${items}</div>
+    </div>`;
 }
 
 /* ========= Mobile drawer ========= */

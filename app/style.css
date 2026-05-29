@@ -649,7 +649,12 @@
 
   /* ── Content Calendar Builder ──────────────────────────────────────────────── */
   .cal-calendar{display:flex;flex-direction:column;gap:28px}
-  .cal-week-label{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--line)}
+  .cal-week-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .cal-week-label{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+  .cal-week-gen{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 13px;font-size:12px;font-weight:600;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.28);color:#4ade80;border-radius:8px;cursor:pointer;transition:.15s;white-space:nowrap}
+  .cal-week-gen:hover:not(:disabled){background:rgba(74,222,128,.16);border-color:rgba(74,222,128,.45)}
+  .cal-week-gen:disabled{opacity:.6;cursor:default}
+  .cal-week-gen .ce-spinner{width:13px;height:13px}
   .cal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
   @media(max-width:700px){.cal-grid{grid-template-columns:1fr}}
   .cal-card{background:#080808;border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;transition:border-color .15s}
@@ -663,3 +668,42 @@
   .cal-cta{font-size:12px;color:var(--muted);display:flex;gap:7px;align-items:baseline;flex-wrap:wrap;line-height:1.4}
   .cal-cta-lbl{font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#4ade80;flex-shrink:0;padding-top:1px}
   .cal-card-foot{display:flex;gap:6px;margin-top:4px;align-items:center;padding-top:8px;border-top:1px solid var(--line);flex-wrap:wrap}
+
+  /* Batch "Generate the week" — finished posts rendered under each week */
+  .cal-week-posts:empty{display:none}
+  .cal-week-posts-head{font-size:12px;color:#4ade80;font-weight:600;margin:14px 0 10px}
+  .batch-posts{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
+  @media(max-width:700px){.batch-posts{grid-template-columns:1fr}}
+  .batch-post{background:#0a0a0a;border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+  .batch-post-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .batch-post-day{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.04em}
+  .batch-post-text{font-size:14px;line-height:1.6;color:#ededed;margin:0;white-space:pre-wrap;word-break:break-word}
+  .batch-post-foot{display:flex;justify-content:flex-end;gap:6px;padding-top:8px;border-top:1px solid var(--line)}
+  .batch-reddit-sub{font-size:12px;font-weight:700;color:#f97316}
+  .batch-reddit-title{font-size:14px;font-weight:700;color:var(--ink);margin:0;line-height:1.4}
+  .batch-ig-tags{font-size:12px;color:#60a5fa;margin:0;line-height:1.5;word-break:break-word}
+  .batch-thread{display:flex;flex-direction:column;gap:8px}
+  .batch-tweet{background:#080808;border:1px solid var(--line);border-radius:9px;padding:10px 12px}
+  .batch-tweet-num{font-size:10px;font-weight:700;color:var(--muted)}
+  .batch-tweet-text{font-size:14px;line-height:1.55;color:#ededed;margin:4px 0 0;white-space:pre-wrap;word-break:break-word}
+
+  /* Post Queue panel — persisted batch output */
+  .queue-panel{background:linear-gradient(160deg,#0e1116,#08090c);border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin-top:28px}
+  .queue-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}
+  .queue-title{font-size:15px;font-weight:700;color:var(--ink)}
+  .queue-sub{font-size:12px;color:var(--muted);margin-top:2px}
+  .queue-list{display:flex;flex-direction:column;gap:8px}
+  .queue-item{display:flex;align-items:center;gap:12px;background:#080808;border:1px solid var(--line);border-radius:10px;padding:10px 12px;transition:opacity .15s}
+  .queue-item-done{opacity:.5}
+  .queue-item-done .queue-item-preview{text-decoration:line-through}
+  .queue-check{flex-shrink:0;width:24px;height:24px;border-radius:6px;border:1.5px solid var(--line);background:transparent;color:#4ade80;font-size:14px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:.15s;line-height:1}
+  .queue-check:hover{border-color:#4ade80}
+  .queue-item-done .queue-check{background:rgba(74,222,128,.15);border-color:#4ade80}
+  .queue-item-main{flex:1;min-width:0}
+  .queue-item-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:4px}
+  .queue-item-day{font-size:11px;font-weight:700;color:var(--muted)}
+  .queue-item-type{font-size:10px;color:var(--muted);background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:4px;padding:1px 6px}
+  .queue-item-preview{font-size:13px;color:#cfcfcf;margin:0;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .queue-item-actions{display:flex;align-items:center;gap:6px;flex-shrink:0}
+  .queue-del{width:26px;height:26px;border-radius:7px;background:transparent;border:1px solid var(--line);color:var(--muted);font-size:16px;line-height:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0}
+  .queue-del:hover{color:#f87171;border-color:rgba(248,113,113,.4)}
