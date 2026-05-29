@@ -1194,10 +1194,14 @@ async function planGenerate() {
   const niche = ($('planNiche')?.value || '').trim();
   if (!niche || niche.length < 5) { toast('Describe your product first'); $('planNiche')?.focus(); return; }
 
-  const goal    = ($('planGoal')?.value || '').trim();
-  const stage   = $('planStage')?.value   || 'early-traction';
-  const budget  = $('planBudget')?.value  || '0';
+  const goal     = ($('planGoal')?.value   || '').trim();
+  const stage    = $('planStage')?.value   || 'early-traction';
+  const budget   = $('planBudget')?.value  || '0';
   const channels = planGetChannels();
+  const metrics  = {
+    mrr:         ($('planMrr')?.value    || '').trim(),
+    weeklyLeads: ($('planLeads')?.value  || '').trim(),
+  };
 
   _plan.loading = true;
   const btn = $('planGenBtn');
@@ -1206,11 +1210,11 @@ async function planGenerate() {
   $('planResult').innerHTML = `
     <div class="roast-loading" role="status" aria-live="polite">
       <div class="ce-spinner" aria-hidden="true"></div>
-      <span>Crafting a 90-day roadmap for your product…</span>
+      <span>Reverse-engineering your goal into a 90-day roadmap…</span>
     </div>`;
 
   try {
-    const data = await xgFetch('/generate', { kind: 'plan-90', niche, goal, stage, budget, channels });
+    const data = await xgFetch('/generate', { kind: 'plan-90', niche, goal, stage, budget, channels, metrics });
     _plan.rawText = data.text || '';
     const parsed = planParse(_plan.rawText);
     _plan.result = parsed;
@@ -1225,95 +1229,143 @@ async function planGenerate() {
 }
 
 function planParse(text) {
-  const months = [];
+  // ── PLAN SUMMARY ──────────────────────────────────────────────────────────
+  const summaryM = /## PLAN SUMMARY\s*\n([\s\S]*?)(?=## MONTH 1|$)/i.exec(text);
+  const summaryBlock = summaryM ? summaryM[1] : '';
+  const sGet = field => {
+    const m = new RegExp(`^${field}:\\s*(.+)`, 'mi').exec(summaryBlock);
+    return m ? m[1].trim() : '';
+  };
+  const summary = {
+    goal:          sGet('GOAL'),
+    focusChannel:  sGet('FOCUS CHANNEL'),
+    primaryMetric: sGet('PRIMARY METRIC'),
+    budgetSplit:   sGet('BUDGET SPLIT'),
+  };
 
+  // ── MONTHS ────────────────────────────────────────────────────────────────
+  const months = [];
   for (let i = 1; i <= 3; i++) {
-    // Capture from ## MONTH N: to the next ## heading or end
+    const nextPat = i < 3 ? `## MONTH ${i + 1}:` : '## STOP DOING';
     const re = new RegExp(
-      `## MONTH ${i}:\\s*(.+)\\n([\\s\\S]*?)(?=## MONTH ${i + 1}:|## STOP|## NORTH|$)`, 'i'
+      `## MONTH ${i}:\\s*(.+)\\n([\\s\\S]*?)(?=${nextPat}|## STOP|## NORTH|$)`, 'i'
     );
     const m = re.exec(text);
     if (!m) continue;
 
     const theme = m[1].trim();
     const block = m[2];
+    const bGet  = field => { const fm = new RegExp(`^${field}:\\s*(.+)`, 'mi').exec(block); return fm ? fm[1].trim() : ''; };
 
-    // FOCUS
-    const focusM = /FOCUS:\s*(.+)/i.exec(block);
-    const focus = focusM ? focusM[1].trim() : '';
+    const focus     = bGet('FOCUS');
+    const phaseGate = bGet('PHASE GATE');
+    const budgetLine= bGet('BUDGET');
 
-    // WEEKS — "WEEK N: action · action · action"
+    // WEEKS — WEEK 1 may be "WEEK 1 (QUICK WIN)"
     const weeks = [];
     for (let w = 1; w <= 4; w++) {
-      const wM = new RegExp(`WEEK ${w}:\\s*(.+)`, 'i').exec(block);
+      const wM = w === 1
+        ? (/WEEK 1 \(QUICK WIN\):\s*(.+)/i.exec(block) || /WEEK 1:\s*(.+)/i.exec(block))
+        : new RegExp(`WEEK ${w}:\\s*(.+)`, 'i').exec(block);
+      const isQW = w === 1 && /WEEK 1 \(QUICK WIN\)/i.test(block);
       if (wM) {
-        // Try · separator first, fall back to | or comma
         const raw = wM[1];
         const actions = raw.includes('·')
           ? raw.split('·').map(a => a.trim()).filter(Boolean)
           : raw.includes('|')
             ? raw.split('|').map(a => a.trim()).filter(Boolean)
             : [raw.trim()];
-        weeks.push(actions);
+        weeks.push({ actions, quickWin: isQW });
       } else {
-        weeks.push([]);
+        weeks.push({ actions: [], quickWin: false });
       }
     }
 
-    // EXPERIMENTS — "EXPERIMENT N: Name | hypothesis | WIN: threshold"
+    // EXPERIMENTS
     const experiments = [];
     const expRe = /EXPERIMENT \d+:\s*(.+?)\s*\|\s*(.+?)\s*\|\s*WIN:\s*(.+)/gi;
     let expM;
     while ((expM = expRe.exec(block)) !== null) {
-      experiments.push({
-        name:       expM[1].trim(),
-        hypothesis: expM[2].trim(),
-        win:        expM[3].trim(),
-      });
+      experiments.push({ name: expM[1].trim(), hypothesis: expM[2].trim(), win: expM[3].trim() });
     }
 
-    months.push({ theme, focus, weeks, experiments });
+    // MONTH CHECK questions (· separated)
+    const checkM = /MONTH CHECK:\s*(.+)/i.exec(block);
+    const monthCheck = checkM
+      ? checkM[1].split('·').map(q => q.trim()).filter(Boolean)
+      : [];
+
+    months.push({ theme, focus, phaseGate, budgetLine, weeks, experiments, monthCheck });
   }
 
-  // STOP DOING
-  const stopM = /## STOP DOING\s*\n([\s\S]*?)(?=## NORTH|$)/i.exec(text);
+  // ── STOP DOING ────────────────────────────────────────────────────────────
+  const stopM = /## STOP DOING\s*\n([\s\S]*?)(?=## NORTH|## DECISION|$)/i.exec(text);
   const stops = stopM
     ? stopM[1].split('\n')
         .map(l => l.replace(/^[-•*\d.]+\s*/, '').trim())
         .filter(l => l.length > 8)
     : [];
 
-  // NORTH STAR METRICS — "- Label: baseline → target"
-  const metricsM = /## NORTH STAR METRICS\s*\n([\s\S]*?)$/i.exec(text);
-  const metrics = metricsM
-    ? metricsM[1].split('\n')
+  // ── NORTH STAR METRICS ────────────────────────────────────────────────────
+  const metricsM = /## NORTH STAR METRICS\s*\n([\s\S]*?)(?=## DECISION|$)/i.exec(text);
+  const metricsBlock = metricsM ? metricsM[1] : '';
+  const reverseEngM  = /REVERSE ENGINEER:\s*(.+)/i.exec(metricsBlock);
+  const reverseEngineer = reverseEngM ? reverseEngM[1].trim() : '';
+  const metrics = metricsBlock
+    ? metricsBlock.split('\n')
         .map(l => {
-          const m2 = /[-•]?\s*(.+?):\s*(.+?)\s*→\s*(.+)/.exec(l.trim());
+          const m2 = /[-•]?\s*(?!REVERSE)(.+?):\s*(.+?)\s*→\s*(.+)/.exec(l.trim());
           return m2 ? { label: m2[1].trim(), baseline: m2[2].trim(), target: m2[3].trim() } : null;
         })
         .filter(Boolean)
     : [];
 
-  return { months, stops, metrics };
+  // ── DECISION RULES ────────────────────────────────────────────────────────
+  const rulesM = /## DECISION RULES\s*\n([\s\S]*?)$/i.exec(text);
+  const rules = rulesM
+    ? rulesM[1].split('\n')
+        .map(l => l.replace(/^[-•*]\s*/, '').trim())
+        .filter(l => l.length > 10)
+    : [];
+
+  return { summary, months, stops, reverseEngineer, metrics, rules };
 }
 
-function planRender({ months, stops, metrics }) {
+function planRender({ summary, months, stops, reverseEngineer, metrics, rules }) {
   let html = '';
+
+  // ── Plan Summary Card ──────────────────────────────────────────────────────
+  if (summary && (summary.goal || summary.focusChannel || summary.primaryMetric)) {
+    html += `
+    <div class="plan-summary">
+      <div class="plan-summary-head">90-Day Mission</div>
+      ${summary.goal ? `<p class="plan-summary-goal">${ceEsc(summary.goal)}</p>` : ''}
+      <div class="plan-summary-stats">
+        ${summary.focusChannel  ? `<div class="plan-stat"><span class="plan-stat-lbl">Focus channel</span><span class="plan-stat-val">${ceEsc(summary.focusChannel)}</span></div>` : ''}
+        ${summary.primaryMetric ? `<div class="plan-stat"><span class="plan-stat-lbl">Primary metric</span><span class="plan-stat-val">${ceEsc(summary.primaryMetric)}</span></div>` : ''}
+        ${summary.budgetSplit   ? `<div class="plan-stat plan-stat-wide"><span class="plan-stat-lbl">Monthly budget split</span><span class="plan-stat-val">${ceEsc(summary.budgetSplit)}</span></div>` : ''}
+      </div>
+    </div>`;
+  }
 
   // ── Month cards ────────────────────────────────────────────────────────────
   html += `<div class="plan-months">`;
   months.forEach((month, i) => {
     const num = String(i + 1).padStart(2, '0');
-    const weeksHtml = month.weeks
-      .map((actions, wi) => {
-        if (!actions.length) return '';
-        return `<div class="plan-week">
+
+    const weeksHtml = month.weeks.map((wk, wi) => {
+      if (!wk.actions.length) return '';
+      const isQW = wk.quickWin;
+      return `<div class="plan-week${isQW ? ' plan-week-qw' : ''}">
+        <div class="plan-week-lbl-wrap">
           <span class="plan-week-lbl">Week ${wi + 1}</span>
-          <div class="plan-week-actions">
-            ${actions.map(a => `<span class="plan-action">${ceEsc(a)}</span>`).join('')}
-          </div>
-        </div>`;
-      }).join('');
+          ${isQW ? `<span class="plan-qw-badge">Quick win</span>` : ''}
+        </div>
+        <div class="plan-week-actions">
+          ${wk.actions.map(a => `<span class="plan-action${isQW ? ' plan-action-qw' : ''}">${ceEsc(a)}</span>`).join('')}
+        </div>
+      </div>`;
+    }).join('');
 
     const expsHtml = month.experiments.length ? `
       <div class="plan-exp-lbl">Experiments this month</div>
@@ -1326,15 +1378,26 @@ function planRender({ months, stops, metrics }) {
           </div>`).join('')}
       </div>` : '';
 
+    const checkHtml = month.monthCheck?.length ? `
+      <div class="plan-month-check">
+        <div class="plan-check-lbl">End-of-month check</div>
+        <div class="plan-check-qs">
+          ${month.monthCheck.map(q => `<div class="plan-check-q">${ceEsc(q)}</div>`).join('')}
+        </div>
+      </div>` : '';
+
     html += `
       <div class="plan-month">
         <div class="plan-month-head">
           <span class="plan-month-num">${num}</span>
           <span class="plan-month-theme">${ceEsc(month.theme)}</span>
         </div>
-        ${month.focus ? `<p class="plan-focus">${ceEsc(month.focus)}</p>` : ''}
+        ${month.phaseGate ? `<div class="plan-phase-gate"><span class="plan-gate-lbl">Phase gate</span>${ceEsc(month.phaseGate)}</div>` : ''}
+        ${month.focus     ? `<p class="plan-focus">${ceEsc(month.focus)}</p>` : ''}
+        ${month.budgetLine? `<div class="plan-budget-line"><span class="plan-budget-lbl">Budget</span>${ceEsc(month.budgetLine)}</div>` : ''}
         <div class="plan-weeks">${weeksHtml}</div>
         ${expsHtml}
+        ${checkHtml}
       </div>`;
   });
   html += `</div>`;
@@ -1351,10 +1414,18 @@ function planRender({ months, stops, metrics }) {
   }
 
   // ── North Star Metrics ─────────────────────────────────────────────────────
-  if (metrics.length) {
-    html += `
-      <div class="plan-metrics">
-        <div class="pos-section-lbl" style="margin-bottom:12px">North star metrics</div>
+  if (reverseEngineer || metrics.length) {
+    html += `<div class="plan-metrics">`;
+    if (reverseEngineer) {
+      html += `
+        <div class="plan-reverse-eng">
+          <span class="plan-reverse-lbl">Reverse-engineered from your goal</span>
+          <p class="plan-reverse-text">${ceEsc(reverseEngineer)}</p>
+        </div>`;
+    }
+    if (metrics.length) {
+      html += `
+        <div class="pos-section-lbl" style="margin-bottom:12px;margin-top:${reverseEngineer ? '18px' : '0'}">North star metrics</div>
         <div class="plan-metrics-list">
           ${metrics.map(m => `
             <div class="plan-metric">
@@ -1363,14 +1434,37 @@ function planRender({ months, stops, metrics }) {
               <span class="plan-metric-arrow">→</span>
               <span class="plan-metric-target">${ceEsc(m.target)}</span>
             </div>`).join('')}
+        </div>`;
+    }
+    html += `</div>`;
+  }
+
+  // ── Decision Rules ─────────────────────────────────────────────────────────
+  if (rules.length) {
+    html += `
+      <div class="plan-decisions">
+        <div class="pos-section-lbl plan-decisions-lbl">Decision rules</div>
+        <div class="plan-rules-list">
+          ${rules.map(r => {
+            const arrowIdx = r.indexOf(' → ');
+            const condition = arrowIdx > -1
+              ? r.slice(0, arrowIdx).replace(/^IF\s+/i, '').trim()
+              : r.replace(/^IF\s+/i, '').trim();
+            const action = arrowIdx > -1 ? r.slice(arrowIdx + 3).trim() : '';
+            return `<div class="plan-rule">
+              <span class="plan-rule-if">IF</span>
+              <span class="plan-rule-cond">${ceEsc(condition)}</span>
+              ${action ? `<span class="plan-rule-arrow">→</span><span class="plan-rule-then">${ceEsc(action)}</span>` : ''}
+            </div>`;
+          }).join('')}
         </div>
       </div>`;
   }
 
   // ── Actions ────────────────────────────────────────────────────────────────
   html += `
-    <div style="margin-top:18px;display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap">
-      <button class="btn ghost" style="height:38px;padding:0 16px;font-size:13px" onclick="planDownload()">Download .md</button>
+    <div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap">
+      <button class="btn ghost" style="height:38px;padding:0 16px;font-size:13px" onclick="planDownload()">↓ Download .md</button>
       <button class="btn secondary" style="height:38px;padding:0 16px;font-size:13px" onclick="planReset()">Generate new plan</button>
     </div>`;
 
@@ -1394,6 +1488,7 @@ function planReset() {
   _plan.loading = false;
   $('planResult').innerHTML = '';
   $('planEmpty').style.display = '';
+  ['planNiche','planGoal','planMrr','planLeads'].forEach(id => { const el = $(id); if (el) el.value = ''; });
   $('planNiche')?.focus();
 }
 

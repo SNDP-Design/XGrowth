@@ -275,7 +275,7 @@ function extractVisibleText(html) {
     .replace(/\s{3,}/g, '\n\n').trim();
 }
 
-function buildMarketingPlanPrompt({ niche, stage, goal, channels, budget }) {
+function buildMarketingPlanPrompt({ niche, stage, goal, channels, budget, metrics = {} }) {
   const stageDesc = {
     'pre-launch':      'pre-launch — no live product yet, building audience and waitlist',
     'launched':        'just launched — public product, fewer than 10 paying customers',
@@ -294,7 +294,10 @@ function buildMarketingPlanPrompt({ niche, stage, goal, channels, budget }) {
     ? channels.join(', ')
     : 'none established yet';
 
-  return `You are a growth advisor who has helped 100+ early-stage SaaS founders get their first real traction. You think in 90-day sprints, not vague strategies. Every action you recommend is executable by a solo founder with no marketing team today.
+  const currentMrr    = (metrics.mrr         || '').trim();
+  const weeklyLeads   = (metrics.weeklyLeads  || '').trim();
+
+  return `You are a growth advisor who has helped 100+ early-stage SaaS founders get real traction. You think in 90-day sprints. Every action you recommend is executable by a solo founder with no marketing team today.
 
 PRODUCT CONTEXT:
 - Product / niche: ${niche.trim()}
@@ -302,61 +305,85 @@ PRODUCT CONTEXT:
 - 90-day goal: ${(goal || 'grow the user base').trim()}
 - Active channels: ${chList}
 - Monthly budget: ${budgetDesc}
+${currentMrr  ? `- Current MRR: ${currentMrr}`          : ''}
+${weeklyLeads ? `- Current weekly leads/signups: ${weeklyLeads}` : ''}
 
-Build a specific, executable 90-day marketing plan. Three months, three themes that build on each other. All advice must be specific to THIS product and stage — no generic SaaS growth advice.
+Build a specific, executable 90-day marketing plan. Three months that build on each other: Month 1 proves a channel, Month 2 doubles down on what worked, Month 3 scales it.
 
-Format in EXACTLY this structure. No deviations, no extra text.
+Format in EXACTLY this structure. No deviations, no extra text before ## PLAN SUMMARY.
 
-## MONTH 1: [Theme — 3–5 words naming this month's focus]
-FOCUS: [2 sentences: what this month is about and why it comes before month 2]
-WEEK 1: [action] · [action] · [action]
+## PLAN SUMMARY
+GOAL: [restate the 90-day goal precisely — what success looks like]
+FOCUS CHANNEL: [the single channel to win in Month 1 — one answer, not a list]
+PRIMARY METRIC: [the ONE number that tells you if the plan is working — be specific, e.g. "weekly trial signups" not "growth"]
+BUDGET SPLIT: [if budget > $0, show monthly allocation across channels/tools with exact $ amounts, e.g. "$700 → LinkedIn ads · $500 → SEO tools · $300 → cold outreach tools"; if $0 write "Time-only — no paid spend"]
+
+## MONTH 1: [Theme — 3–5 words]
+PHASE GATE: Move to Month 2 only when [specific measurable condition — e.g. "at least 8 qualified leads/week flowing from one repeatable source" or "waitlist hits 200 signups"]
+FOCUS: [2 sentences: what this month is about and exactly why it must come before Month 2]
+BUDGET: [How this month's budget is specifically allocated — exact amounts if >$0, or "Free tools only" if $0]
+WEEK 1 (QUICK WIN): [most executable action — do this tomorrow, name the exact post/DM/page, not "create content"] · [action] · [action]
 WEEK 2: [action] · [action] · [action]
 WEEK 3: [action] · [action] · [action]
 WEEK 4: [action] · [action] · [action]
-EXPERIMENT 1: [Short name] | If [specific action], then [expected outcome] | WIN: [specific measurable threshold, e.g. "≥8 replies" or "≥3 trial signups"]
-EXPERIMENT 2: [Short name] | If [specific action], then [expected outcome] | WIN: [threshold]
-EXPERIMENT 3: [Short name] | If [specific action], then [expected outcome] | WIN: [threshold]
+EXPERIMENT 1: [Short name] | If [specific action], then [expected outcome] because [one-sentence reason] | WIN: [specific measurable threshold]
+EXPERIMENT 2: [Short name] | If [specific action], then [expected outcome] because [one-sentence reason] | WIN: [threshold]
+EXPERIMENT 3: [Short name] | If [specific action], then [expected outcome] because [one-sentence reason] | WIN: [threshold]
+MONTH CHECK: [Question the founder must answer at day 30 — specific, not vague] · [Question 2] · [Question 3]
 
 ## MONTH 2: [Theme]
+PHASE GATE: Move to Month 3 only when [specific measurable condition]
 FOCUS: [2 sentences]
-WEEK 1: [action] · [action] · [action]
+BUDGET: [allocation]
+WEEK 1 (QUICK WIN): [action] · [action] · [action]
 WEEK 2: [action] · [action] · [action]
 WEEK 3: [action] · [action] · [action]
 WEEK 4: [action] · [action] · [action]
 EXPERIMENT 1: [name] | [hypothesis] | WIN: [threshold]
 EXPERIMENT 2: [name] | [hypothesis] | WIN: [threshold]
 EXPERIMENT 3: [name] | [hypothesis] | WIN: [threshold]
+MONTH CHECK: [Question 1] · [Question 2] · [Question 3]
 
 ## MONTH 3: [Theme]
+PHASE GATE: You've hit the goal when [specific condition that means the 90-day goal is achieved]
 FOCUS: [2 sentences]
-WEEK 1: [action] · [action] · [action]
+BUDGET: [allocation]
+WEEK 1 (QUICK WIN): [action] · [action] · [action]
 WEEK 2: [action] · [action] · [action]
 WEEK 3: [action] · [action] · [action]
 WEEK 4: [action] · [action] · [action]
 EXPERIMENT 1: [name] | [hypothesis] | WIN: [threshold]
 EXPERIMENT 2: [name] | [hypothesis] | WIN: [threshold]
 EXPERIMENT 3: [name] | [hypothesis] | WIN: [threshold]
+MONTH CHECK: [Question 1] · [Question 2] · [Question 3]
 
 ## STOP DOING
-- [Specific thing to stop — one sentence on why it wastes time at this stage]
-- [Same]
-- [Same]
-- [Same]
-- [Same]
+- [Specific thing to stop — one sentence why it wastes time at this stage]
+- [Same × 5 total]
 
 ## NORTH STAR METRICS
+REVERSE ENGINEER: [show the math backwards from the 90-day goal — e.g. "100 customers in 90 days = 34/month = ~8/week. At a 3% trial-to-paid rate, that means 270 trials in 90 days, or 21 trials/week from your primary channel."]
 - [Metric name]: [realistic baseline based on stage] → [ambitious but achievable 90-day target]
 - [Metric name]: [baseline] → [target]
 - [Metric name]: [baseline] → [target]
 - [Metric name]: [baseline] → [target]
 - [Metric name]: [baseline] → [target]
 
+## DECISION RULES
+- IF [specific metric below threshold] after [timeframe] → [exact pivot action — not "reassess" but what specifically to change]
+- IF [metric exceeds threshold] → [specific scale action]
+- IF [experiment shows this result] → [concrete next step]
+- IF [warning sign appears] → [course correction]
+
 ${HARD_RULES}
-- Use · (middle dot U+00B7) as the ONLY separator between actions within a week line.
-- Exactly 3 actions per week, on a single line.
-- EXPERIMENT format: Name | If X then Y | WIN: Z — use exactly two pipe characters.
-- STOP DOING items must name specific behaviors, not categories.
-- No text before ## MONTH 1 or after the last metric line.`;
+- Use · (middle dot U+00B7) as the ONLY separator between actions in week lines and MONTH CHECK questions.
+- Exactly 3 actions per WEEK line. WEEK 1 (QUICK WIN) also gets exactly 3 actions.
+- EXPERIMENT format: Name | If X then Y because Z | WIN: threshold — exactly two pipe characters.
+- MONTH CHECK: exactly 3 questions separated by · (middle dot).
+- STOP DOING: exactly 5 items.
+- NORTH STAR METRICS: REVERSE ENGINEER line, then exactly 5 metric lines with → separator.
+- DECISION RULES: exactly 4 rules, each with → separating condition from action.
+- No text before ## PLAN SUMMARY or after the last DECISION RULE.`;
 }
 
 function buildPositioningPrompt({ competitors, product }) {
