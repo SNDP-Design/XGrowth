@@ -191,13 +191,13 @@ export default {
           return json({ error: 'topic required (min 5 chars)' }, 400, origin, allowed);
         }
         prompt = buildHooksPrompt(body);
-      } else if (kind === 'plan-90') {
+      } else if (kind === 'plan-week') {
         if (!body.niche || typeof body.niche !== 'string' || body.niche.trim().length < 5) {
           return json({ error: 'niche is required' }, 400, origin, allowed);
         }
-        prompt = buildMarketingPlanPrompt(body);
-        // Long, structured output + lower temperature for sharper, grounded specifics
-        genOpts = { maxOutputTokens: 4096, temperature: 0.6 };
+        prompt = buildWeekPlanPrompt(body);
+        // Long, structured 7-day output + lower temperature for grounded, specific tasks
+        genOpts = { maxOutputTokens: 4096, temperature: 0.65 };
       } else if (kind === 'positioning') {
         const rawUrls = (body.competitors || [])
           .filter(u => typeof u === 'string' && u.trim().startsWith('http'))
@@ -277,162 +277,69 @@ function extractVisibleText(html) {
     .replace(/\s{3,}/g, '\n\n').trim();
 }
 
-function buildMarketingPlanPrompt({ niche, stage, goal, channels, budget, metrics = {} }) {
+function buildWeekPlanPrompt({ niche, stage, channels }) {
   const stageDesc = {
-    'pre-launch':      'pre-launch — no live product yet, building audience and waitlist',
+    'pre-launch':      'pre-launch — no live product yet, building audience and a waitlist',
     'launched':        'just launched — public product, fewer than 10 paying customers',
-    'early-traction':  'early traction — some paying customers, no clear repeatable growth loop yet',
+    'early-traction':  'early traction — some paying customers, no repeatable growth loop yet',
     'post-pmf':        'post-PMF — strong signal, $10k+ MRR, ready to scale a working channel',
   }[stage] || stage;
 
-  const budgetDesc = {
-    '0':    '$0 — fully bootstrapped, time is the only resource',
-    'low':  'under $500/month — very limited paid spend',
-    'mid':  '$500–$2,000/month — some room for paid experiments',
-    'high': '$2,000+/month — meaningful paid budget',
-  }[budget] || (budget || '$0');
+  const stageFocus = {
+    'pre-launch':      'building a waitlist and starting real conversations — NOT scaling. Center the week on audience-building, manual 1:1 outreach, and a landing page that converts cold traffic.',
+    'launched':        'getting the first 10–20 users by hand. Tasks should be direct and unscalable: outreach, niche communities, founder-led posts, and asking early users for feedback.',
+    'early-traction':  'turning one channel into a repeatable habit and stacking proof (testimonials, case studies). Deepen what already works instead of adding new channels.',
+    'post-pmf':        'systematizing the winning channel and widening distribution — directories, email, partnerships, and light paid tests. Some tasks can be delegated.',
+  }[stage] || 'making steady, visible marketing progress this week.';
 
-  const chList = Array.isArray(channels) && channels.length
-    ? channels.join(', ')
-    : 'none established yet';
+  const chList = Array.isArray(channels) && channels.length ? channels.join(', ') : 'LinkedIn, X / Twitter';
 
-  const currentMrr    = (metrics.mrr         || '').trim();
-  const weeklyLeads   = (metrics.weeklyLeads  || '').trim();
+  return `You are a pragmatic startup marketing coach. A founder has ONE week to make real marketing progress on their product. Give them a concrete, day-by-day "jobs to be done" checklist — the exact tasks to finish each day, Day 1 through Day 7. Every task must be doable by a solo founder in a single day.
 
-  // What "good" looks like at this stage — keeps advice from being one-size-fits-all.
-  const stagePlaybook = {
-    'pre-launch':     'At pre-launch the only two things that matter are (1) a waitlist of people who match the ideal customer, and (2) proof the message lands. Do NOT recommend paid ads or scaling anything. Win through building in public, manual 1:1 outreach, and a landing page that converts cold traffic. Unscalable is correct here.',
-    'launched':       'A just-launched founder must find ONE channel that produces repeatable signups before building any system. Month 1 is getting the first 10–20 customers by hand — direct outreach, niche communities, founder-led posts — not automation. Manual and scrappy is the right answer.',
-    'early-traction': 'With early traction, the job is to turn one scrappy channel into a repeatable, measured loop and kill everything that does not move the primary metric. Focus beats breadth — one channel mastered outperforms four dabbled in. Month 2–3 is about removing yourself from the loop.',
-    'post-pmf':       'Post-PMF, scale the one channel that already works and add a second only once the first is systematized. Paid acquisition, hiring, and outsourcing become reasonable. The main risk is pouring spend into a leaky funnel — fix conversion before scaling traffic.',
-  }[stage] || '';
+PRODUCT / NICHE: ${niche.trim()}
+STAGE: ${stageDesc}
+ACTIVE CHANNELS: ${chList}
 
-  // Concrete, channel-native tactics so actions name real moves, not "post content".
-  const CHANNEL_TACTICS = [
-    { k: ['linkedin'],            t: 'LinkedIn — founder-led posts 3–5×/week around ONE content pillar; comment on 5 ideal-customer posts/day; turn post-engagers into DM conversations.' },
-    { k: ['x', 'twitter'],        t: 'X/Twitter — build-in-public updates; thoughtful replies to 10 target accounts/day; one thread/week on a hard-won lesson with a specific number.' },
-    { k: ['email', 'newsletter'], t: 'Email — a lead magnet feeding a 3–5 email welcome sequence; one value email/week; segment by behavior; judge by reply rate, not opens.' },
-    { k: ['seo', 'content'],      t: 'Content/SEO — target bottom-funnel keywords that convert (comparison pages, "best X for [audience]", alternatives pages); 2 AI-assisted posts/week; one pillar page.' },
-    { k: ['paid', 'ads'],         t: 'Paid ads — start with retargeting + one high-intent search campaign; small test budget; kill any ad set above target CAC within 7 days.' },
-    { k: ['reddit', 'communit'],  t: 'Reddit/communities — name 3–5 EXACT subreddits or Slack/Discord groups; 80/20 help-to-promote ratio; answer questions where the product is the obvious fix.' },
-    { k: ['cold', 'outreach'],    t: 'Cold outreach — build a 50-name list from a named source; 3-touch sequence; personalized first line referencing their real situation; aim 10–15% reply rate.' },
-    { k: ['product hunt', 'ph'],  t: 'Product Hunt — warm up an email list + secure a hunter pre-launch; prep a launch-day asset pack; aim top-5 of the day; treat as a spike, not a channel.' },
-  ];
-  const selectedChannels = Array.isArray(channels) ? channels : [];
-  const tacticLines = CHANNEL_TACTICS
-    .filter(ct => selectedChannels.some(c => ct.k.some(k => String(c).toLowerCase().includes(k))))
-    .map(ct => `- ${ct.t}`)
-    .join('\n');
-  const channelTacticsBlock = tacticLines
-    ? `\nCHANNEL TACTICS — use these as the concrete vocabulary for actions on the selected channels. Adapt each to THIS product; never copy verbatim:\n${tacticLines}\n`
-    : '';
+THIS WEEK IS ABOUT: ${stageFocus}
 
-  return `You are a growth advisor who has helped 100+ early-stage SaaS founders get real traction. You think in 90-day sprints. Every action you recommend is executable by a solo founder with no marketing team today.
+Pull the daily tasks from this menu of real founder marketing jobs. Adapt each to THIS product and niche, and only pick what fits the stage and the active channels — do not use every item:
+- SOCIAL: post today on each active channel (say which) · optimize each profile (bio, link, banner) · follow and reply to 10 ideal-customer accounts
+- CONTENT: write one short blog post and publish it on Substack, Beehiiv, Medium, Dev.to or Hashnode · record a 60-second Loom demo · turn the blog into 3 social posts · write one thread that teaches a single lesson
+- COMMUNITY: answer 3 real questions on Reddit, Indie Hackers or Quora in your niche · join 2 Slack/Discord communities and introduce yourself · make one genuinely useful post in a NAMED subreddit
+- OUTREACH: send 10 personalized DMs or emails to ideal users · book 3 user feedback calls · DM 5 people who engaged with your posts
+- DISTRIBUTION: submit your product to directories (BetaList, There's An AI For That, SaaSHub, AlternativeTo, G2, Capterra, Indie Hackers) · set up a Product Hunt "upcoming" page
+- WEBSITE / SEO: set up Google Analytics and Search Console · publish a comparison or "[competitor] alternative" page · add testimonials and one clear call-to-action to your landing page · add an email signup with a simple lead magnet
+- EMAIL: set up a 3-email welcome sequence · write and send your first newsletter
+- PROOF: ask 2 happy users for a testimonial or review · screenshot positive feedback for social proof · write a one-paragraph case study
+- FOUNDATION: write your ideal customer in one sentence and your positioning statement · list your top 3 competitors · add UTM tracking to your links
 
-STAGE PLAYBOOK — internalize this before writing; it defines what "good" looks like right now:
-${stagePlaybook}
-${channelTacticsBlock}
-SPECIFICITY BAR — every action, experiment, and metric must clear this bar:
-- Name the exact thing: not "post on LinkedIn" but "post a teardown of [specific competitor/workflow] on LinkedIn". Not "engage in communities" but "answer pricing questions in r/[specific subreddit]".
-- Quantify everything: counts, $, %, time. "Send 30 cold DMs to [specific segment]", not "do outreach".
-- Tie to the primary metric: if an action doesn't plausibly move the one number that defines success, cut it.
-- BANNED vague phrases: "create valuable content", "engage your audience", "build brand awareness", "leverage", "optimize your funnel", "be consistent", "grow your presence", "reach out to influencers". If you write any of these, rewrite with the concrete move instead.
+Format EXACTLY like this. No text before ## WEEK FOCUS.
 
-PRODUCT CONTEXT:
-- Product / niche: ${niche.trim()}
-- Current stage: ${stageDesc}
-- 90-day goal: ${(goal || 'grow the user base').trim()}
-- Active channels: ${chList}
-- Monthly budget: ${budgetDesc}
-${currentMrr  ? `- Current MRR: ${currentMrr}`          : ''}
-${weeklyLeads ? `- Current weekly leads/signups: ${weeklyLeads}` : ''}
+## WEEK FOCUS
+[1–2 sentences in plain language: what this specific week will achieve for a ${stage} product]
 
-Build a specific, executable 90-day marketing plan. Three months that build on each other: Month 1 proves a channel, Month 2 doubles down on what worked, Month 3 scales it.
+## DAY 1: [Theme — 2–4 words]
+TASK: [specific imperative action that names the exact thing] | [how/where to do it — name the real tool, site, or template; one line]
+TASK: [action] | [detail]
+TASK: [action] | [detail]
 
-Format in EXACTLY this structure. No deviations, no extra text before ## PLAN SUMMARY.
+## DAY 2: [Theme]
+TASK: [action] | [detail]
+(continue this exact pattern through DAY 7)
 
-## PLAN SUMMARY
-GOAL: [restate the 90-day goal precisely — what success looks like]
-FOCUS CHANNEL: [the single channel to win in Month 1 — one answer, not a list]
-PRIMARY METRIC: [the ONE number that tells you if the plan is working — be specific, e.g. "weekly trial signups" not "growth"]
-BUDGET SPLIT: [if budget > $0, show monthly allocation across channels/tools with exact $ amounts, e.g. "$700 → LinkedIn ads · $500 → SEO tools · $300 → cold outreach tools"; if $0 write "Time-only — no paid spend"]
-
-## MONTH 1: [Theme — 3–5 words]
-PHASE GATE: Move to Month 2 only when [specific measurable condition — e.g. "at least 8 qualified leads/week flowing from one repeatable source" or "waitlist hits 200 signups"]
-FOCUS: [2 sentences: what this month is about and exactly why it must come before Month 2]
-BUDGET: [How this month's budget is specifically allocated — exact amounts if >$0, or "Free tools only" if $0]
-WEEK 1 (QUICK WIN): [most executable action — do this tomorrow, name the exact post/DM/page, not "create content"] · [action] · [action]
-WEEK 2: [action] · [action] · [action]
-WEEK 3: [action] · [action] · [action]
-WEEK 4: [action] · [action] · [action]
-EXPERIMENT 1: [Short name] | If [specific action], then [expected outcome] because [one-sentence reason] | WIN: [specific measurable threshold]
-EXPERIMENT 2: [Short name] | If [specific action], then [expected outcome] because [one-sentence reason] | WIN: [threshold]
-EXPERIMENT 3: [Short name] | If [specific action], then [expected outcome] because [one-sentence reason] | WIN: [threshold]
-MONTH CHECK: [Question the founder must answer at day 30 — specific, not vague] · [Question 2] · [Question 3]
-
-## MONTH 2: [Theme]
-PHASE GATE: Move to Month 3 only when [specific measurable condition]
-FOCUS: [2 sentences]
-BUDGET: [allocation]
-WEEK 1 (QUICK WIN): [action] · [action] · [action]
-WEEK 2: [action] · [action] · [action]
-WEEK 3: [action] · [action] · [action]
-WEEK 4: [action] · [action] · [action]
-EXPERIMENT 1: [name] | [hypothesis] | WIN: [threshold]
-EXPERIMENT 2: [name] | [hypothesis] | WIN: [threshold]
-EXPERIMENT 3: [name] | [hypothesis] | WIN: [threshold]
-MONTH CHECK: [Question 1] · [Question 2] · [Question 3]
-
-## MONTH 3: [Theme]
-PHASE GATE: You've hit the goal when [specific condition that means the 90-day goal is achieved]
-FOCUS: [2 sentences]
-BUDGET: [allocation]
-WEEK 1 (QUICK WIN): [action] · [action] · [action]
-WEEK 2: [action] · [action] · [action]
-WEEK 3: [action] · [action] · [action]
-WEEK 4: [action] · [action] · [action]
-EXPERIMENT 1: [name] | [hypothesis] | WIN: [threshold]
-EXPERIMENT 2: [name] | [hypothesis] | WIN: [threshold]
-EXPERIMENT 3: [name] | [hypothesis] | WIN: [threshold]
-MONTH CHECK: [Question 1] · [Question 2] · [Question 3]
-
-## STOP DOING
-- [Specific thing to stop — one sentence why it wastes time at this stage]
-- [Same × 5 total]
-
-## NORTH STAR METRICS
-REVERSE ENGINEER: [show the math backwards from the 90-day goal — e.g. "100 customers in 90 days = 34/month = ~8/week. At a 3% trial-to-paid rate, that means 270 trials in 90 days, or 21 trials/week from your primary channel."]
-- [Metric name]: [realistic baseline based on stage] → [ambitious but achievable 90-day target]
-- [Metric name]: [baseline] → [target]
-- [Metric name]: [baseline] → [target]
-- [Metric name]: [baseline] → [target]
-- [Metric name]: [baseline] → [target]
-
-## DECISION RULES
-- IF [specific metric below threshold] after [timeframe] → [exact pivot action — not "reassess" but what specifically to change]
-- IF [metric exceeds threshold] → [specific scale action]
-- IF [experiment shows this result] → [concrete next step]
-- IF [warning sign appears] → [course correction]
+## KEEP GOING
+[2–3 sentences: the simple weekly habit to keep after Day 7 so momentum compounds]
 
 ${HARD_RULES}
 
-SHARPNESS RULES — these are what separate a usable plan from generic advice:
-- Every WEEK action names a concrete, executable move (a specific post topic, the exact subreddit/segment, the precise page or email to write). If an action could appear in any other founder's plan unchanged, it is too generic — rewrite it.
-- Each WEEK's three actions must be genuinely different moves, not three rephrasings of the same task.
-- EXPERIMENT WIN thresholds must be measurable WITHIN that month and tied to the primary metric (e.g. "≥8 trial signups from this in 14 days"), never "more engagement" or "better results".
-- Budget must reconcile: every BUDGET line and the BUDGET SPLIT must add up to at most the stated monthly budget (${budgetDesc}). Use realistic unit costs (e.g. cold-email tool ~$30/mo, LinkedIn ad CPC ~$8–15). If budget is $0, every action must be free — no paid tools, ads, or sponsorships anywhere.
-${currentMrr || weeklyLeads ? `- Ground baselines in the founder's REAL numbers${currentMrr ? ` (MRR: ${currentMrr})` : ''}${weeklyLeads ? ` (weekly leads: ${weeklyLeads})` : ''}. The REVERSE ENGINEER math and every metric baseline must start from these, not invented numbers.` : '- Metric baselines must be realistic for this exact stage — do not assume traffic or revenue the founder almost certainly does not have yet.'}
-- The REVERSE ENGINEER line must show real arithmetic that ends at a weekly number the founder can act on.
-
 FORMATTING RULES:
-- Use · (middle dot U+00B7) as the ONLY separator between actions in week lines and MONTH CHECK questions.
-- Exactly 3 actions per WEEK line. WEEK 1 (QUICK WIN) also gets exactly 3 actions.
-- EXPERIMENT format: Name | If X then Y because Z | WIN: threshold — exactly two pipe characters.
-- MONTH CHECK: exactly 3 questions separated by · (middle dot).
-- STOP DOING: exactly 5 items.
-- NORTH STAR METRICS: REVERSE ENGINEER line, then exactly 5 metric lines with → separator.
-- DECISION RULES: exactly 4 rules, each with → separating condition from action.
-- No text before ## PLAN SUMMARY or after the last DECISION RULE.`;
+- Cover all 7 days: ## DAY 1 through ## DAY 7, each with a 2–4 word theme.
+- Each day has 3–5 TASK lines. Each TASK is ONE concrete job a founder can finish in a day — never vague ("market your product", "build awareness") and never a multi-week project.
+- Every TASK line uses exactly ONE pipe character |, separating the action from the how/where.
+- Only recommend posting on the active channels listed above; do not invent channels the founder didn't select. Universal jobs (analytics, directories, landing page, email, proof, foundation) are always fair game.
+- Make tasks specific to THIS product: name the kind of post, the relevant subreddit, the comparison-page topic, the lead magnet idea.
+- Sequence sensibly: foundation and visibility early in the week, content and outreach mid-week, distribution and proof later, a short review on Day 7.
+- No text before ## WEEK FOCUS or after the ## KEEP GOING paragraph.`;
 }
 
 function buildPositioningPrompt({ competitors, product }) {

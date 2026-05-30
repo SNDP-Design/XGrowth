@@ -959,7 +959,7 @@ function ceRenderHistoryList(){
     </div>`).join('');
 }
 
-function ceInit(){ ceLoadHistory(); queueRender(); }
+function ceInit(){ ceLoadHistory(); queueRender(); planRenderSaved(); }
 
 /* ── Instagram post helper ────────────────────────────────────────────── */
 // Instagram has no web compose URL — copy caption+hashtags then open the app.
@@ -1180,8 +1180,6 @@ function ceParseRoastSections(text) {
 
 const _plan = {
   loading: false,
-  rawText: '',
-  result: null,
 };
 
 function planGetChannels() {
@@ -1193,302 +1191,220 @@ async function planGenerate() {
   if (_plan.loading) return;
   const niche = ($('planNiche')?.value || '').trim();
   if (!niche || niche.length < 5) { toast('Describe your product first'); $('planNiche')?.focus(); return; }
-
-  const goal     = ($('planGoal')?.value   || '').trim();
-  const stage    = $('planStage')?.value   || 'early-traction';
-  const budget   = $('planBudget')?.value  || '0';
+  const stage    = $('planStage')?.value || 'early-traction';
   const channels = planGetChannels();
-  const metrics  = {
-    mrr:         ($('planMrr')?.value    || '').trim(),
-    weeklyLeads: ($('planLeads')?.value  || '').trim(),
-  };
+  if (!channels.length) { toast('Pick at least one channel'); return; }
 
   _plan.loading = true;
   const btn = $('planGenBtn');
-  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="ce-spinner"></span>Building your plan…'; }
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="ce-spinner"></span>Building your week…'; }
   $('planEmpty').style.display = 'none';
   $('planResult').innerHTML = `
     <div class="roast-loading" role="status" aria-live="polite">
       <div class="ce-spinner" aria-hidden="true"></div>
-      <span>Reverse-engineering your goal into a 90-day roadmap…</span>
+      <span>Mapping your 7-day marketing sprint…</span>
     </div>`;
 
   try {
-    const data = await xgFetch('/generate', { kind: 'plan-90', niche, goal, stage, budget, channels, metrics });
-    _plan.rawText = data.text || '';
-    const parsed = planParse(_plan.rawText);
-    _plan.result = parsed;
-    planRender(parsed);
+    const data = await xgFetch('/generate', { kind: 'plan-week', niche, stage, channels });
+    const parsed = planParse(data.text || '');
+    if (!parsed.days.length) throw new Error("Couldn't build the week — try again");
+    state.weekPlan = {
+      rawText:   data.text || '',
+      niche, stage,
+      focus:     parsed.focus,
+      days:      parsed.days,
+      keepGoing: parsed.keepGoing,
+      createdAt: Date.now(),
+    };
+    save();
+    planRender(state.weekPlan);
   } catch (err) {
     $('planResult').innerHTML =
       `<div class="ce-skeleton" style="color:#f87171;min-height:80px;border-color:rgba(248,113,113,.3)">${ceEsc(err.message || 'Generation failed — try again')}</div>`;
   } finally {
     _plan.loading = false;
-    if (btn) { btn.disabled = false; btn.innerHTML = 'Build my plan →'; }
+    if (btn) { btn.disabled = false; btn.innerHTML = 'Build my week →'; }
   }
 }
 
 function planParse(text) {
-  // ── PLAN SUMMARY ──────────────────────────────────────────────────────────
-  const summaryM = /## PLAN SUMMARY\s*\n([\s\S]*?)(?=## MONTH 1|$)/i.exec(text);
-  const summaryBlock = summaryM ? summaryM[1] : '';
-  const sGet = field => {
-    const m = new RegExp(`^${field}:\\s*(.+)`, 'mi').exec(summaryBlock);
-    return m ? m[1].trim() : '';
-  };
-  const summary = {
-    goal:          sGet('GOAL'),
-    focusChannel:  sGet('FOCUS CHANNEL'),
-    primaryMetric: sGet('PRIMARY METRIC'),
-    budgetSplit:   sGet('BUDGET SPLIT'),
-  };
+  const focusM = /## WEEK FOCUS\s*\n([\s\S]*?)(?=## DAY 1|$)/i.exec(text);
+  const focus = focusM ? focusM[1].trim() : '';
 
-  // ── MONTHS ────────────────────────────────────────────────────────────────
-  const months = [];
-  for (let i = 1; i <= 3; i++) {
-    const nextPat = i < 3 ? `## MONTH ${i + 1}:` : '## STOP DOING';
-    const re = new RegExp(
-      `## MONTH ${i}:\\s*(.+)\\n([\\s\\S]*?)(?=${nextPat}|## STOP|## NORTH|$)`, 'i'
-    );
+  const days = [];
+  for (let i = 1; i <= 7; i++) {
+    const re = new RegExp(`## DAY ${i}:\\s*(.+)\\n([\\s\\S]*?)(?=## DAY ${i + 1}:|## KEEP GOING|$)`, 'i');
     const m = re.exec(text);
     if (!m) continue;
-
     const theme = m[1].trim();
     const block = m[2];
-    const bGet  = field => { const fm = new RegExp(`^${field}:\\s*(.+)`, 'mi').exec(block); return fm ? fm[1].trim() : ''; };
-
-    const focus     = bGet('FOCUS');
-    const phaseGate = bGet('PHASE GATE');
-    const budgetLine= bGet('BUDGET');
-
-    // WEEKS — WEEK 1 may be "WEEK 1 (QUICK WIN)"
-    const weeks = [];
-    for (let w = 1; w <= 4; w++) {
-      const wM = w === 1
-        ? (/WEEK 1 \(QUICK WIN\):\s*(.+)/i.exec(block) || /WEEK 1:\s*(.+)/i.exec(block))
-        : new RegExp(`WEEK ${w}:\\s*(.+)`, 'i').exec(block);
-      const isQW = w === 1 && /WEEK 1 \(QUICK WIN\)/i.test(block);
-      if (wM) {
-        const raw = wM[1];
-        const actions = raw.includes('·')
-          ? raw.split('·').map(a => a.trim()).filter(Boolean)
-          : raw.includes('|')
-            ? raw.split('|').map(a => a.trim()).filter(Boolean)
-            : [raw.trim()];
-        weeks.push({ actions, quickWin: isQW });
-      } else {
-        weeks.push({ actions: [], quickWin: false });
-      }
+    const tasks = [];
+    // Accept "TASK: ..." lines or plain "- ..." bullets
+    const taskRe = /^\s*(?:TASK:|[-•*])\s*(.+)$/gim;
+    let tm;
+    while ((tm = taskRe.exec(block)) !== null) {
+      const raw = tm[1].trim();
+      if (!raw) continue;
+      const pipe = raw.indexOf('|');
+      const action = (pipe > -1 ? raw.slice(0, pipe) : raw).replace(/\*\*/g, '').trim();
+      const detail = pipe > -1 ? raw.slice(pipe + 1).trim() : '';
+      if (action) tasks.push({ action, detail, done: false });
     }
-
-    // EXPERIMENTS
-    const experiments = [];
-    const expRe = /EXPERIMENT \d+:\s*(.+?)\s*\|\s*(.+?)\s*\|\s*WIN:\s*(.+)/gi;
-    let expM;
-    while ((expM = expRe.exec(block)) !== null) {
-      experiments.push({ name: expM[1].trim(), hypothesis: expM[2].trim(), win: expM[3].trim() });
-    }
-
-    // MONTH CHECK questions (· separated)
-    const checkM = /MONTH CHECK:\s*(.+)/i.exec(block);
-    const monthCheck = checkM
-      ? checkM[1].split('·').map(q => q.trim()).filter(Boolean)
-      : [];
-
-    months.push({ theme, focus, phaseGate, budgetLine, weeks, experiments, monthCheck });
+    if (tasks.length) days.push({ theme, tasks });
   }
 
-  // ── STOP DOING ────────────────────────────────────────────────────────────
-  const stopM = /## STOP DOING\s*\n([\s\S]*?)(?=## NORTH|## DECISION|$)/i.exec(text);
-  const stops = stopM
-    ? stopM[1].split('\n')
-        .map(l => l.replace(/^[-•*\d.]+\s*/, '').trim())
-        .filter(l => l.length > 8)
-    : [];
+  const keepM = /## KEEP GOING\s*\n([\s\S]*?)$/i.exec(text);
+  const keepGoing = keepM ? keepM[1].trim() : '';
 
-  // ── NORTH STAR METRICS ────────────────────────────────────────────────────
-  const metricsM = /## NORTH STAR METRICS\s*\n([\s\S]*?)(?=## DECISION|$)/i.exec(text);
-  const metricsBlock = metricsM ? metricsM[1] : '';
-  const reverseEngM  = /REVERSE ENGINEER:\s*(.+)/i.exec(metricsBlock);
-  const reverseEngineer = reverseEngM ? reverseEngM[1].trim() : '';
-  const metrics = metricsBlock
-    ? metricsBlock.split('\n')
-        .map(l => {
-          const m2 = /[-•]?\s*(?!REVERSE)(.+?):\s*(.+?)\s*→\s*(.+)/.exec(l.trim());
-          return m2 ? { label: m2[1].trim(), baseline: m2[2].trim(), target: m2[3].trim() } : null;
-        })
-        .filter(Boolean)
-    : [];
-
-  // ── DECISION RULES ────────────────────────────────────────────────────────
-  const rulesM = /## DECISION RULES\s*\n([\s\S]*?)$/i.exec(text);
-  const rules = rulesM
-    ? rulesM[1].split('\n')
-        .map(l => l.replace(/^[-•*]\s*/, '').trim())
-        .filter(l => l.length > 10)
-    : [];
-
-  return { summary, months, stops, reverseEngineer, metrics, rules };
+  return { focus, days, keepGoing };
 }
 
-function planRender({ summary, months, stops, reverseEngineer, metrics, rules }) {
+function planRender(plan) {
+  if (!plan || !plan.days?.length) {
+    $('planResult').innerHTML = `<p style="color:var(--muted);font-size:14px">No plan yet — fill the form and build your week.</p>`;
+    return;
+  }
+  $('planEmpty').style.display = 'none';
+
+  let total = 0, done = 0;
+  plan.days.forEach(d => d.tasks.forEach(t => { total++; if (t.done) done++; }));
+  const pct = total ? Math.round(done / total * 100) : 0;
+
   let html = '';
 
-  // ── Plan Summary Card ──────────────────────────────────────────────────────
-  if (summary && (summary.goal || summary.focusChannel || summary.primaryMetric)) {
-    html += `
-    <div class="plan-summary">
-      <div class="plan-summary-head">90-Day Mission</div>
-      ${summary.goal ? `<p class="plan-summary-goal">${ceEsc(summary.goal)}</p>` : ''}
-      <div class="plan-summary-stats">
-        ${summary.focusChannel  ? `<div class="plan-stat"><span class="plan-stat-lbl">Focus channel</span><span class="plan-stat-val">${ceEsc(summary.focusChannel)}</span></div>` : ''}
-        ${summary.primaryMetric ? `<div class="plan-stat"><span class="plan-stat-lbl">Primary metric</span><span class="plan-stat-val">${ceEsc(summary.primaryMetric)}</span></div>` : ''}
-        ${summary.budgetSplit   ? `<div class="plan-stat plan-stat-wide"><span class="plan-stat-lbl">Monthly budget split</span><span class="plan-stat-val">${ceEsc(summary.budgetSplit)}</span></div>` : ''}
+  // Progress bar
+  html += `
+    <div class="week-progress">
+      <div class="week-prog-top">
+        <span class="week-prog-title">Your week</span>
+        <span class="week-prog-label" id="planProgLabel">${done} / ${total} done</span>
       </div>
+      <div class="week-prog-track"><div class="week-prog-bar" id="planProgBar" style="width:${pct}%"></div></div>
     </div>`;
+
+  // Week focus
+  if (plan.focus) {
+    html += `
+      <div class="week-focus-card">
+        <div class="week-focus-lbl">This week is about</div>
+        <p class="week-focus-text">${ceEsc(plan.focus)}</p>
+      </div>`;
   }
 
-  // ── Month cards ────────────────────────────────────────────────────────────
-  html += `<div class="plan-months">`;
-  months.forEach((month, i) => {
-    const num = String(i + 1).padStart(2, '0');
-
-    const weeksHtml = month.weeks.map((wk, wi) => {
-      if (!wk.actions.length) return '';
-      const isQW = wk.quickWin;
-      return `<div class="plan-week${isQW ? ' plan-week-qw' : ''}">
-        <div class="plan-week-lbl-wrap">
-          <span class="plan-week-lbl">Week ${wi + 1}</span>
-          ${isQW ? `<span class="plan-qw-badge">Quick win</span>` : ''}
-        </div>
-        <div class="plan-week-actions">
-          ${wk.actions.map(a => `<span class="plan-action${isQW ? ' plan-action-qw' : ''}">${ceEsc(a)}</span>`).join('')}
-        </div>
-      </div>`;
-    }).join('');
-
-    const expsHtml = month.experiments.length ? `
-      <div class="plan-exp-lbl">Experiments this month</div>
-      <div class="plan-experiments">
-        ${month.experiments.map(e => `
-          <div class="plan-exp">
-            <span class="plan-exp-name">${ceEsc(e.name)}</span>
-            <span class="plan-exp-hyp">${ceEsc(e.hypothesis)}</span>
-            <span class="plan-exp-win">Win if: ${ceEsc(e.win)}</span>
-          </div>`).join('')}
-      </div>` : '';
-
-    const checkHtml = month.monthCheck?.length ? `
-      <div class="plan-month-check">
-        <div class="plan-check-lbl">End-of-month check</div>
-        <div class="plan-check-qs">
-          ${month.monthCheck.map(q => `<div class="plan-check-q">${ceEsc(q)}</div>`).join('')}
-        </div>
-      </div>` : '';
-
+  // Day cards
+  html += `<div class="week-days">`;
+  plan.days.forEach((day, di) => {
+    const dDone = day.tasks.filter(t => t.done).length;
+    const allDone = day.tasks.length > 0 && dDone === day.tasks.length;
     html += `
-      <div class="plan-month">
-        <div class="plan-month-head">
-          <span class="plan-month-num">${num}</span>
-          <span class="plan-month-theme">${ceEsc(month.theme)}</span>
+      <div class="week-day${allDone ? ' week-day-complete' : ''}">
+        <div class="week-day-head">
+          <span class="week-day-num">Day ${di + 1}</span>
+          <span class="week-day-theme">${ceEsc(day.theme)}</span>
+          <span class="week-day-count">${dDone}/${day.tasks.length}</span>
         </div>
-        ${month.phaseGate ? `<div class="plan-phase-gate"><span class="plan-gate-lbl">Phase gate</span>${ceEsc(month.phaseGate)}</div>` : ''}
-        ${month.focus     ? `<p class="plan-focus">${ceEsc(month.focus)}</p>` : ''}
-        ${month.budgetLine? `<div class="plan-budget-line"><span class="plan-budget-lbl">Budget</span>${ceEsc(month.budgetLine)}</div>` : ''}
-        <div class="plan-weeks">${weeksHtml}</div>
-        ${expsHtml}
-        ${checkHtml}
+        <div class="week-tasks">
+          ${day.tasks.map((t, ti) => `
+            <div class="week-task${t.done ? ' done' : ''}" id="wtask-${di}-${ti}">
+              <button class="week-check" onclick="planToggleTask(${di},${ti})" aria-label="${t.done ? 'Mark not done' : 'Mark done'}">${t.done ? '✓' : ''}</button>
+              <div class="week-task-main">
+                <span class="week-task-action">${ceEsc(t.action)}</span>
+                ${t.detail ? `<span class="week-task-detail">${ceEsc(t.detail)}</span>` : ''}
+              </div>
+            </div>`).join('')}
+        </div>
       </div>`;
   });
   html += `</div>`;
 
-  // ── Stop Doing ─────────────────────────────────────────────────────────────
-  if (stops.length) {
+  // Keep going
+  if (plan.keepGoing) {
     html += `
-      <div class="plan-stop">
-        <div class="pos-section-lbl plan-stop-lbl">Stop doing these now</div>
-        <ul class="plan-stop-list">
-          ${stops.map(s => `<li class="plan-stop-item">${ceEsc(s)}</li>`).join('')}
-        </ul>
+      <div class="week-keep">
+        <div class="week-keep-lbl">Keep going after Day 7</div>
+        <p class="week-keep-text">${ceEsc(plan.keepGoing)}</p>
       </div>`;
   }
 
-  // ── North Star Metrics ─────────────────────────────────────────────────────
-  if (reverseEngineer || metrics.length) {
-    html += `<div class="plan-metrics">`;
-    if (reverseEngineer) {
-      html += `
-        <div class="plan-reverse-eng">
-          <span class="plan-reverse-lbl">Reverse-engineered from your goal</span>
-          <p class="plan-reverse-text">${ceEsc(reverseEngineer)}</p>
-        </div>`;
-    }
-    if (metrics.length) {
-      html += `
-        <div class="pos-section-lbl" style="margin-bottom:12px;margin-top:${reverseEngineer ? '18px' : '0'}">North star metrics</div>
-        <div class="plan-metrics-list">
-          ${metrics.map(m => `
-            <div class="plan-metric">
-              <span class="plan-metric-label">${ceEsc(m.label)}</span>
-              <span class="plan-metric-baseline">${ceEsc(m.baseline)}</span>
-              <span class="plan-metric-arrow">→</span>
-              <span class="plan-metric-target">${ceEsc(m.target)}</span>
-            </div>`).join('')}
-        </div>`;
-    }
-    html += `</div>`;
-  }
-
-  // ── Decision Rules ─────────────────────────────────────────────────────────
-  if (rules.length) {
-    html += `
-      <div class="plan-decisions">
-        <div class="pos-section-lbl plan-decisions-lbl">Decision rules</div>
-        <div class="plan-rules-list">
-          ${rules.map(r => {
-            const arrowIdx = r.indexOf(' → ');
-            const condition = arrowIdx > -1
-              ? r.slice(0, arrowIdx).replace(/^IF\s+/i, '').trim()
-              : r.replace(/^IF\s+/i, '').trim();
-            const action = arrowIdx > -1 ? r.slice(arrowIdx + 3).trim() : '';
-            return `<div class="plan-rule">
-              <span class="plan-rule-if">IF</span>
-              <span class="plan-rule-cond">${ceEsc(condition)}</span>
-              ${action ? `<span class="plan-rule-arrow">→</span><span class="plan-rule-then">${ceEsc(action)}</span>` : ''}
-            </div>`;
-          }).join('')}
-        </div>
-      </div>`;
-  }
-
-  // ── Actions ────────────────────────────────────────────────────────────────
+  // Footer actions
   html += `
     <div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap">
       <button class="btn ghost" style="height:38px;padding:0 16px;font-size:13px" onclick="planDownload()">↓ Download .md</button>
-      <button class="btn secondary" style="height:38px;padding:0 16px;font-size:13px" onclick="planReset()">Generate new plan</button>
+      <button class="btn secondary" style="height:38px;padding:0 16px;font-size:13px" onclick="planReset()">New week plan</button>
     </div>`;
 
   $('planResult').innerHTML = html;
 }
 
+function planToggleTask(di, ti) {
+  const plan = state.weekPlan;
+  const task = plan?.days?.[di]?.tasks?.[ti];
+  if (!task) return;
+  task.done = !task.done;
+  save();
+
+  const row = document.getElementById(`wtask-${di}-${ti}`);
+  if (row) {
+    row.classList.toggle('done', task.done);
+    const cb = row.querySelector('.week-check');
+    if (cb) { cb.textContent = task.done ? '✓' : ''; cb.setAttribute('aria-label', task.done ? 'Mark not done' : 'Mark done'); }
+    const dayEl = row.closest('.week-day');
+    if (dayEl) {
+      const dDone = plan.days[di].tasks.filter(t => t.done).length;
+      const cnt = dayEl.querySelector('.week-day-count');
+      if (cnt) cnt.textContent = `${dDone}/${plan.days[di].tasks.length}`;
+      dayEl.classList.toggle('week-day-complete', dDone === plan.days[di].tasks.length);
+    }
+  }
+  planUpdateProgress();
+}
+
+function planUpdateProgress() {
+  const plan = state.weekPlan; if (!plan) return;
+  let total = 0, done = 0;
+  plan.days.forEach(d => d.tasks.forEach(t => { total++; if (t.done) done++; }));
+  const pct = total ? Math.round(done / total * 100) : 0;
+  const bar = $('planProgBar'), lbl = $('planProgLabel');
+  if (bar) bar.style.width = pct + '%';
+  if (lbl) lbl.textContent = `${done} / ${total} done`;
+}
+
+// Render the saved week plan on load so checkboxes persist across reloads
+function planRenderSaved() {
+  if (state.weekPlan && state.weekPlan.days?.length) {
+    $('planEmpty').style.display = 'none';
+    planRender(state.weekPlan);
+  }
+}
+
 function planDownload() {
-  if (!_plan.rawText) return;
-  const blob = new Blob([_plan.rawText], { type: 'text/markdown' });
+  const plan = state.weekPlan;
+  if (!plan) return;
+  let md = `# 1-Week Marketing Plan\n\n`;
+  if (plan.niche) md += `**Product:** ${plan.niche}\n\n`;
+  if (plan.focus) md += `**This week is about:** ${plan.focus}\n\n`;
+  plan.days.forEach((d, i) => {
+    md += `## Day ${i + 1} — ${d.theme}\n\n`;
+    d.tasks.forEach(t => { md += `- [${t.done ? 'x' : ' '}] ${t.action}${t.detail ? ` — ${t.detail}` : ''}\n`; });
+    md += `\n`;
+  });
+  if (plan.keepGoing) md += `## Keep going\n\n${plan.keepGoing}\n`;
+  const blob = new Blob([md], { type: 'text/markdown' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = '90-day-marketing-plan.md';
+  a.download = '1-week-marketing-plan.md';
   a.click();
   URL.revokeObjectURL(a.href);
   toast('Downloading plan');
 }
 
 function planReset() {
-  _plan.rawText = '';
-  _plan.result = null;
+  state.weekPlan = null;
+  save();
   _plan.loading = false;
   $('planResult').innerHTML = '';
   $('planEmpty').style.display = '';
-  ['planNiche','planGoal','planMrr','planLeads'].forEach(id => { const el = $(id); if (el) el.value = ''; });
   $('planNiche')?.focus();
 }
 

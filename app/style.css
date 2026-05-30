@@ -707,3 +707,40 @@
   .queue-item-actions{display:flex;align-items:center;gap:6px;flex-shrink:0}
   .queue-del{width:26px;height:26px;border-radius:7px;background:transparent;border:1px solid var(--line);color:var(--muted);font-size:16px;line-height:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0}
   .queue-del:hover{color:#f87171;border-color:rgba(248,113,113,.4)}
+
+  /* ── 1-Week Plan (jobs to be done) ─────────────────────────────────────────── */
+  .week-progress{margin-bottom:18px}
+  .week-prog-top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px}
+  .week-prog-title{font-size:13px;font-weight:700;color:var(--ink);letter-spacing:.02em}
+  .week-prog-label{font-size:13px;color:#4ade80;font-weight:700;font-variant-numeric:tabular-nums}
+  .week-prog-track{height:8px;background:#141414;border:1px solid var(--line);border-radius:99px;overflow:hidden}
+  .week-prog-bar{height:100%;background:linear-gradient(90deg,#22c55e,#4ade80);border-radius:99px;transition:width .35s ease}
+
+  .week-focus-card{background:linear-gradient(160deg,#0e1116,#08090c);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:18px}
+  .week-focus-lbl{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#60a5fa;margin-bottom:6px}
+  .week-focus-text{font-size:16px;line-height:1.55;color:var(--ink);margin:0}
+
+  .week-days{display:flex;flex-direction:column;gap:12px}
+  .week-day{background:#080808;border:1px solid var(--line);border-radius:14px;padding:16px 18px;transition:border-color .2s}
+  .week-day-complete{border-color:rgba(74,222,128,.35);background:linear-gradient(160deg,#0a130a,#070b07)}
+  .week-day-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  .week-day-num{font-size:12px;font-weight:800;letter-spacing:.03em;color:#0a0a0a;background:linear-gradient(180deg,#fff,#cfcfcf);padding:3px 10px;border-radius:7px;flex-shrink:0}
+  .week-day-complete .week-day-num{background:linear-gradient(180deg,#4ade80,#22c55e);color:#04210f}
+  .week-day-theme{font-size:16px;font-weight:700;color:var(--ink);flex:1;min-width:0;letter-spacing:-.2px}
+  .week-day-count{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;flex-shrink:0}
+  .week-day-complete .week-day-count{color:#4ade80;font-weight:700}
+
+  .week-tasks{display:flex;flex-direction:column;gap:8px}
+  .week-task{display:flex;align-items:flex-start;gap:12px;background:#0d0d0d;border:1px solid var(--line);border-radius:10px;padding:11px 13px;transition:opacity .15s,background .15s}
+  .week-task.done{opacity:.55}
+  .week-task.done .week-task-action{text-decoration:line-through;text-decoration-color:rgba(255,255,255,.4)}
+  .week-check{flex-shrink:0;width:24px;height:24px;border-radius:7px;border:1.5px solid var(--line);background:transparent;color:#04210f;font-size:14px;font-weight:900;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:.15s;line-height:1;margin-top:1px}
+  .week-check:hover{border-color:#4ade80}
+  .week-task.done .week-check{background:linear-gradient(180deg,#4ade80,#22c55e);border-color:#4ade80}
+  .week-task-main{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+  .week-task-action{font-size:15px;font-weight:600;color:var(--ink);line-height:1.4}
+  .week-task-detail{font-size:13px;color:var(--muted);line-height:1.5}
+
+  .week-keep{margin-top:16px;background:linear-gradient(160deg,#111,#0a0a0a);border:1px solid var(--line);border-left:3px solid #4ade80;border-radius:0 14px 14px 0;padding:16px 18px}
+  .week-keep-lbl{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#4ade80;margin-bottom:6px}
+  .week-keep-text{font-size:15px;line-height:1.6;color:var(--ink);margin:0}

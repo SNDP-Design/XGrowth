@@ -83,8 +83,8 @@
           Positioning Map
         </button>
         <button data-view="plan" aria-current="false">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          90-Day Plan
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          1-Week Plan
         </button>
         <button data-view="calendar" aria-current="false">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="8" cy="15" r=".8" fill="currentColor"/><circle cx="12" cy="15" r=".8" fill="currentColor"/><circle cx="16" cy="15" r=".8" fill="currentColor"/><circle cx="8" cy="19" r=".8" fill="currentColor"/><circle cx="12" cy="19" r=".8" fill="currentColor"/></svg>
@@ -275,12 +275,12 @@
     </section>
 
     <!-- 90-DAY MARKETING PLAN -->
-    <section data-view="plan" class="hide" aria-label="90-Day Marketing Plan">
+    <section data-view="plan" class="hide" aria-label="1-Week Marketing Plan">
       <div class="ce-step ce-output" style="position:static;max-height:none;overflow:visible">
 
         <div style="margin-bottom:22px">
-          <h2 class="section" style="margin-bottom:4px">90-Day Marketing Plan</h2>
-          <p class="lede">Your product, stage, and goal — get a week-by-week plan with experiments, what to stop doing, and the metrics that matter.</p>
+          <h2 class="section" style="margin-bottom:4px">Your First Week</h2>
+          <p class="lede">A day-by-day marketing to-do list for your product. Exactly what to do Day 1 to Day 7 — check tasks off as you go.</p>
         </div>
 
         <!-- Form -->
@@ -289,11 +289,7 @@
             <label for="planNiche">Product &amp; niche</label>
             <input id="planNiche" type="text" placeholder="e.g. AI writing assistant for B2B sales teams" style="height:48px"/>
           </div>
-          <div>
-            <label for="planGoal">90-day goal</label>
-            <input id="planGoal" type="text" placeholder="e.g. 100 paying customers, $5k MRR" style="height:48px"/>
-          </div>
-          <div>
+          <div style="grid-column:1/-1">
             <label for="planStage">Current stage</label>
             <select id="planStage" style="height:48px">
               <option value="pre-launch">Pre-launch / private beta</option>
@@ -302,48 +298,31 @@
               <option value="post-pmf">Post-PMF ($10k+ MRR)</option>
             </select>
           </div>
-          <div>
-            <label for="planBudget">Monthly marketing budget</label>
-            <select id="planBudget" style="height:48px">
-              <option value="0">$0 — bootstrapped</option>
-              <option value="low">Under $500/month</option>
-              <option value="mid" selected>$500–$2,000/month</option>
-              <option value="high">$2,000+/month</option>
-            </select>
-          </div>
-          <div>
-            <label for="planMrr">Current MRR <span style="color:var(--muted);font-weight:400;font-size:11px">— optional</span></label>
-            <input id="planMrr" type="text" placeholder="e.g. $0, $500/mo, $3k MRR" style="height:48px"/>
-          </div>
-          <div>
-            <label for="planLeads">Weekly leads / signups <span style="color:var(--muted);font-weight:400;font-size:11px">— optional</span></label>
-            <input id="planLeads" type="text" placeholder="e.g. 0–2/week, ~10 trials/month" style="height:48px"/>
-          </div>
         </div>
 
         <!-- Channel chips -->
         <div style="margin-bottom:22px">
-          <label style="display:block;margin-bottom:8px">Active channels <span style="color:var(--muted);font-weight:400;font-size:12px">· tap to toggle on/off</span></label>
+          <label style="display:block;margin-bottom:8px">Channels you'll use <span style="color:var(--muted);font-weight:400;font-size:12px">· tap to toggle — tasks adapt to these</span></label>
           <div class="plan-channel-chips" id="planChannelChips">
             <button type="button" class="portal-chip active" data-ch="X / Twitter">X / Twitter</button>
             <button type="button" class="portal-chip active" data-ch="LinkedIn">LinkedIn</button>
             <button type="button" class="portal-chip active" data-ch="Email newsletter">Email</button>
-            <button type="button" class="portal-chip" data-ch="Content / SEO">Content / SEO</button>
+            <button type="button" class="portal-chip active" data-ch="Content / SEO">Content / SEO</button>
             <button type="button" class="portal-chip" data-ch="Paid ads">Paid ads</button>
             <button type="button" class="portal-chip active" data-ch="Reddit / communities">Reddit</button>
             <button type="button" class="portal-chip" data-ch="Cold outreach">Cold outreach</button>
-            <button type="button" class="portal-chip" data-ch="Product Hunt">Product Hunt</button>
+            <button type="button" class="portal-chip active" data-ch="Product Hunt">Product Hunt</button>
           </div>
         </div>
 
-        <button class="btn" id="planGenBtn" onclick="planGenerate()" style="width:100%;margin-bottom:28px">Build my plan →</button>
+        <button class="btn" id="planGenBtn" onclick="planGenerate()" style="width:100%;margin-bottom:28px">Build my week →</button>
 
         <!-- Results -->
-        <div id="planResult" aria-live="polite" aria-label="90-day marketing plan"></div>
+        <div id="planResult" aria-live="polite" aria-label="1-week marketing plan"></div>
 
         <div class="ce-empty" id="planEmpty">
-          <div class="ce-empty-title">Your 90-day plan will appear here</div>
-          <span style="color:var(--muted);font-size:14px">Fill in your product, goal, and stage — get a week-by-week roadmap with experiments and the 5 metrics that will tell you if it's working.</span>
+          <div class="ce-empty-title">Your 7-day plan will appear here</div>
+          <span style="color:var(--muted);font-size:14px">Tell us your product, stage, and channels — get a checklist of the exact marketing jobs to do each day this week.</span>
         </div>
 
       </div>
