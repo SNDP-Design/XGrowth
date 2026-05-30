@@ -668,8 +668,8 @@ function cePlatformSectionHTML(platform){
   const currentType = _ce.postTypes[platform]||'hot-take';
 
   const TYPES = [
-    {key:'hot-take',label:'Hot Take'},{key:'story',label:'Story'},{key:'teach',label:'Teach'},
-    {key:'data',label:'Data-Led'},{key:'question',label:'Question'},{key:'founder',label:'Founder'},
+    {key:'hot-take',label:'Hot Take'},{key:'story',label:'Story'},
+    {key:'data',label:'Data-Led'},{key:'question',label:'Question'},
   ];
   // aria-pressed="true/false" exposes toggle state to screen readers (4.1.2)
   const typeChips = TYPES.map(t =>

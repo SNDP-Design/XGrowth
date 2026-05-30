@@ -1231,10 +1231,8 @@ BODY:
   const typeGuides = {
     'hot-take':   'Take the most contrarian angle. Say what others are afraid to say. Be specific about what people get wrong. Use plain words.',
     'story':      'Tell a short story: what happened → what went wrong → what you learned. First person. Keep it real and simple. Short sentences.',
-    'teach':      'Explain one idea clearly. Use simple words and short sentences. Teach it like you are explaining to a smart friend who is new to the topic.',
     'data':       'Lead with the strongest number or fact from the content. Build the whole post around that one number. Explain what it means in plain words.',
     'question':   'Ask one clear question that makes people stop and think. Explain in 2–3 simple sentences why it matters. Short words, short sentences.',
-    'founder':    'Write like a founder sharing something real from building their product. Personal, honest, and easy to understand. No big words.',
     'default':    'Clear, specific, and easy to read. Short sentences. Simple words. Like a smart person talking to a friend.',
     'shorter':    'Make it shorter. Cut every word that is not needed. Keep only the most important idea.',
     'contrarian': 'Disagree with the common view. Say clearly what you think people are getting wrong. Use plain, simple language.',
