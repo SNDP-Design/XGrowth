@@ -1,4 +1,4 @@
-# GrowOS — Project Handoff Summary
+# XGrowth — Project Handoff Summary
 
 > Paste this into a new Claude Code chat to continue building. Everything below reflects current state as of 2026-05-10.
 
@@ -6,13 +6,13 @@
 
 ## 1. Product Overview
 
-**GrowOS** — "The Marketing OS for Digital Products"
+**XGrowth** — "The Marketing OS for Digital Products"
 
 A web app + marketing site that helps SaaS founders, indie hackers, and digital-product makers generate content, run campaigns, and track multi-channel marketing analytics across X, LinkedIn, Instagram, Threads, TikTok, and more. Currently free during beta.
 
 - **Live URLs**: https://www.xgrowth.uno (landing), https://www.xgrowth.uno/app/ (dashboard), /privacy/, /terms/
-- **Repo**: https://github.com/SNDP-Design/GrowOS (public, deploys via GitHub Pages)
-- **Local path**: `/Users/sandeeprathi/Desktop/Claude Code/GrowOS`
+- **Repo**: https://github.com/SNDP-Design/XGrowth (public, deploys via GitHub Pages)
+- **Local path**: `/Users/sandeeprathi/Desktop/Claude Code/XGrowth`
 - **Owner email**: `sndpdesign@gmail.com`
 - **Support email**: `support@xgrowth.uno`
 
@@ -22,7 +22,7 @@ A web app + marketing site that helps SaaS founders, indie hackers, and digital-
 
 | Service | Detail |
 |---|---|
-| Hosting | GitHub Pages, repo `SNDP-Design/GrowOS`, branch `main`, root |
+| Hosting | GitHub Pages, repo `SNDP-Design/XGrowth`, branch `main`, root |
 | Domain | `xgrowth.uno`, registered at Hostinger |
 | DNS records | CNAME `www` → `sndp-design.github.io`; 4× A records on `@` → `185.199.108-111.153` |
 | SSL | Let's Encrypt via GitHub Pages, auto-renewed |
@@ -33,7 +33,7 @@ A web app + marketing site that helps SaaS founders, indie hackers, and digital-
 | Google OAuth Client ID | `595634587931-0m14acb1o9tiqbqt6qcnsafma4c03tm6.apps.googleusercontent.com` (auto-created by Firebase, in project `xgrowth-351de`) |
 | Authorized JS origins | `https://www.xgrowth.uno`, `https://xgrowth.uno`, `https://auth.xgrowth.uno` |
 | Authorized redirect URIs | `https://xgrowth-351de.firebaseapp.com/__/auth/handler`, `https://auth.xgrowth.uno/__/auth/handler` |
-| OAuth Consent Screen App name | `GrowOS` (set in `xgrowth-351de` GCP project), domain verified in Google Search Console via DNS TXT |
+| OAuth Consent Screen App name | `XGrowth` (set in `xgrowth-351de` GCP project), domain verified in Google Search Console via DNS TXT |
 | Custom auth subdomain | `auth.xgrowth.uno` — set up via Firebase Hosting custom domain; **not yet cut over in code** (waiting for user confirmation that SSL is fully provisioned) |
 | Email forwarding | None set up yet — `support@xgrowth.uno` is a placeholder in copy |
 
@@ -46,7 +46,7 @@ A web app + marketing site that helps SaaS founders, indie hackers, and digital-
 ## 3. File Structure
 
 ```
-GrowOS/
+XGrowth/
 ├── index.html              # Marketing landing page (~870 lines)
 ├── CNAME                   # Contains: www.xgrowth.uno
 ├── .nojekyll               # Prevents Jekyll processing on GitHub Pages
@@ -76,7 +76,7 @@ All HTML files are **single-file** with inline CSS and JS — no build step, no 
 
 ### 4.2 Sidebar (left, sticky on desktop, drawer on mobile)
 Top to bottom:
-1. **Brand** — black rounded-square logo (white X drawn as filled parallelogram paths) + "GrowOS" wordmark, 18px
+1. **Brand** — black rounded-square logo (white X drawn as filled parallelogram paths) + "XGrowth" wordmark, 18px
 2. **Nav buttons** with 18px stroked SVG icons (Lucide-style):
    - Dashboard (grid icon)
    - Personal Brand Kit (user icon)
@@ -187,7 +187,7 @@ Both at `/privacy/` and `/terms/`. Same dark theme, system-ui font, ~280 lines e
 
 - Privacy Policy covers Google Sign-In data, Firestore cloud storage, GitHub hosting, GDPR/CCPA rights
 - Terms cover acceptance, eligibility (18+), acceptable use, AI-generated content disclaimer, paid plans (prospective), liability cap ($50 or 12mo payments), governing law (California), indemnification, etc.
-- Page titles use middle-dot separator: `Privacy Policy · GrowOS`
+- Page titles use middle-dot separator: `Privacy Policy · XGrowth`
 - Both have tiny nav (Home, App, Privacy, Terms) in top bar and footer with logo + back-to-app link
 - Operator listed as `SNDP-Design`
 - Effective date: May 8, 2026
@@ -221,7 +221,7 @@ Both at `/privacy/` and `/terms/`. Same dark theme, system-ui font, ~280 lines e
 ✅ Landing page with hero, mockup, pain, features, how-it-works, beta card, FAQ, footer
 ✅ Marketing CTAs trigger Google sign-in popup directly from landing
 ✅ App auth gate prevents dashboard flash before sign-in
-✅ Google sign-in shows "to continue to GrowOS" (App name set in Cloud Console)
+✅ Google sign-in shows "to continue to XGrowth" (App name set in Cloud Console)
 ✅ Custom domain `https://www.xgrowth.uno` with HTTPS enforced
 ✅ Privacy + Terms pages live with proper legal templates
 ✅ Cross-device sync via Firestore (changes in browser A appear in browser B after sign-in)
@@ -351,7 +351,7 @@ User types /app/ in URL (no ?signin=1)
 ## 12. Deploying
 
 ```bash
-cd "/Users/sandeeprathi/Desktop/Claude Code/GrowOS"
+cd "/Users/sandeeprathi/Desktop/Claude Code/XGrowth"
 git add -A
 git commit -m "describe change"
 git push
