@@ -1,6 +1,6 @@
 # xgrowth-api
 
-Cloudflare Worker that proxies the XGrowth Content Engine to Google Gemini.
+Cloudflare Worker that proxies the GrowOS Content Engine to Google Gemini.
 The Gemini API key lives **only** as a Wrangler secret — never in code, never in git, never in the browser.
 
 ## One-time setup

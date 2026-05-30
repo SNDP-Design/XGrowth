@@ -1,2 +1,2 @@
-# foundergrowth-ai
-foundergrowth-ai
+# GrowOS
+The operating system for your product's marketing.

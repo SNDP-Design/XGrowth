@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "xgrowth",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "-l", "7654", "/Users/sandeeprathi/Desktop/Claude Code/XGrowth"],
+      "port": 7654
+    }
+  ]
+}

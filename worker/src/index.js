@@ -1,5 +1,5 @@
 /**
- * XGrowth Content Engine — Cloudflare Worker proxy to Google Gemini.
+ * GrowOS Content Engine — Cloudflare Worker proxy to Google Gemini.
  *
  * Endpoints:
  *   POST /generate  Body shape depends on `kind`:
@@ -24,10 +24,10 @@
  *   GET  /health       health check (no auth)
  *
  * Auth: every non-health request requires `Authorization: Bearer <firebase-id-token>`.
- * The token is verified against Firebase's JWKS — only signed-in XGrowth users can call.
+ * The token is verified against Firebase's JWKS — only signed-in GrowOS users can call.
  *
  * GEMINI_API_KEY lives ONLY as a Wrangler secret. Never sent to the browser.
- * CORS locked to known XGrowth origins.
+ * CORS locked to known GrowOS origins.
  */
 
 const ALLOWED_ORIGINS = [
@@ -252,7 +252,7 @@ async function fetchLandingPageText(url) {
   try {
     const resp = await fetch(url, {
       signal: ctrl.signal,
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; XGrowthBot/1.0)' },
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; GrowOSBot/1.0)' },
       redirect: 'follow',
     });
     clearTimeout(tid);
@@ -678,7 +678,7 @@ async function fetchAndFilterFeed(feed, keywords) {
     const tid = setTimeout(() => ctrl.abort(), 5000);
     const res = await fetch(feed.url, {
       signal: ctrl.signal,
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; XGrowthBot/1.0; +https://xgrowth.uno)' },
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; GrowOSBot/1.0; +https://xgrowth.uno)' },
     });
     clearTimeout(tid);
     if (!res.ok) return [];
@@ -799,7 +799,7 @@ async function handlePreview(body, origin, allowed) {
     // ── Regular URL: fetch HTML and extract OG tags ────────────────────────
     const resp = await fetch(articleUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; XGrowthBot/1.0; +https://xgrowth.uno)',
+        'User-Agent': 'Mozilla/5.0 (compatible; GrowOSBot/1.0; +https://xgrowth.uno)',
         'Accept': 'text/html,application/xhtml+xml',
       },
       redirect: 'follow',
@@ -872,7 +872,7 @@ async function handleXProfile(body, origin, allowed) {
       const tid  = setTimeout(() => ctrl.abort(), 7000);
       const res  = await fetch(`https://${host}/${username}/rss`, {
         signal:  ctrl.signal,
-        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; XGrowthBot/1.0; +https://xgrowth.uno)' },
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; GrowOSBot/1.0; +https://xgrowth.uno)' },
       });
       clearTimeout(tid);
       if (!res.ok) continue;
@@ -1245,7 +1245,7 @@ function buildCampaignPrompt(body) {
     voiceNiche, voiceStyle,
   } = body;
 
-  return `You are a senior growth marketer writing a real, runnable campaign brief for a founder using XGrowth. Audience: SaaS founders, indie hackers, digital-product makers.${voiceTail({ voiceNiche, voiceStyle })}
+  return `You are a senior growth marketer writing a real, runnable campaign brief for a founder using GrowOS. Audience: SaaS founders, indie hackers, digital-product makers.${voiceTail({ voiceNiche, voiceStyle })}
 
 CAMPAIGN INPUTS:
 - Type: ${campaignType}
