@@ -144,7 +144,7 @@ export default {
       return json({ error: 'Server missing GEMINI_API_KEY secret' }, 500, origin, allowed);
     }
 
-    let prompt, postProcess = (t) => t;
+    let prompt, postProcess = (t) => t, genOpts = {};
     try {
       if (kind === 'post') {
         const { topic, articleTitle, articleAngle, platform, voiceNiche, voiceStyle, inputMode, refineInstruction } = body;
@@ -196,6 +196,8 @@ export default {
           return json({ error: 'niche is required' }, 400, origin, allowed);
         }
         prompt = buildMarketingPlanPrompt(body);
+        // Long, structured output + lower temperature for sharper, grounded specifics
+        genOpts = { maxOutputTokens: 4096, temperature: 0.6 };
       } else if (kind === 'positioning') {
         const rawUrls = (body.competitors || [])
           .filter(u => typeof u === 'string' && u.trim().startsWith('http'))
@@ -236,7 +238,7 @@ export default {
         return json({ error: 'Unknown kind: ' + kind }, 400, origin, allowed);
       }
 
-      const { text, model } = await callGemini(env.GEMINI_API_KEY, prompt);
+      const { text, model } = await callGemini(env.GEMINI_API_KEY, prompt, genOpts);
       return json({ ok: true, text, kind, model }, 200, origin, allowed);
     } catch (err) {
       return json({ error: 'Generation failed: ' + (err.message || 'unknown') }, 502, origin, allowed);
@@ -297,7 +299,44 @@ function buildMarketingPlanPrompt({ niche, stage, goal, channels, budget, metric
   const currentMrr    = (metrics.mrr         || '').trim();
   const weeklyLeads   = (metrics.weeklyLeads  || '').trim();
 
+  // What "good" looks like at this stage — keeps advice from being one-size-fits-all.
+  const stagePlaybook = {
+    'pre-launch':     'At pre-launch the only two things that matter are (1) a waitlist of people who match the ideal customer, and (2) proof the message lands. Do NOT recommend paid ads or scaling anything. Win through building in public, manual 1:1 outreach, and a landing page that converts cold traffic. Unscalable is correct here.',
+    'launched':       'A just-launched founder must find ONE channel that produces repeatable signups before building any system. Month 1 is getting the first 10–20 customers by hand — direct outreach, niche communities, founder-led posts — not automation. Manual and scrappy is the right answer.',
+    'early-traction': 'With early traction, the job is to turn one scrappy channel into a repeatable, measured loop and kill everything that does not move the primary metric. Focus beats breadth — one channel mastered outperforms four dabbled in. Month 2–3 is about removing yourself from the loop.',
+    'post-pmf':       'Post-PMF, scale the one channel that already works and add a second only once the first is systematized. Paid acquisition, hiring, and outsourcing become reasonable. The main risk is pouring spend into a leaky funnel — fix conversion before scaling traffic.',
+  }[stage] || '';
+
+  // Concrete, channel-native tactics so actions name real moves, not "post content".
+  const CHANNEL_TACTICS = [
+    { k: ['linkedin'],            t: 'LinkedIn — founder-led posts 3–5×/week around ONE content pillar; comment on 5 ideal-customer posts/day; turn post-engagers into DM conversations.' },
+    { k: ['x', 'twitter'],        t: 'X/Twitter — build-in-public updates; thoughtful replies to 10 target accounts/day; one thread/week on a hard-won lesson with a specific number.' },
+    { k: ['email', 'newsletter'], t: 'Email — a lead magnet feeding a 3–5 email welcome sequence; one value email/week; segment by behavior; judge by reply rate, not opens.' },
+    { k: ['seo', 'content'],      t: 'Content/SEO — target bottom-funnel keywords that convert (comparison pages, "best X for [audience]", alternatives pages); 2 AI-assisted posts/week; one pillar page.' },
+    { k: ['paid', 'ads'],         t: 'Paid ads — start with retargeting + one high-intent search campaign; small test budget; kill any ad set above target CAC within 7 days.' },
+    { k: ['reddit', 'communit'],  t: 'Reddit/communities — name 3–5 EXACT subreddits or Slack/Discord groups; 80/20 help-to-promote ratio; answer questions where the product is the obvious fix.' },
+    { k: ['cold', 'outreach'],    t: 'Cold outreach — build a 50-name list from a named source; 3-touch sequence; personalized first line referencing their real situation; aim 10–15% reply rate.' },
+    { k: ['product hunt', 'ph'],  t: 'Product Hunt — warm up an email list + secure a hunter pre-launch; prep a launch-day asset pack; aim top-5 of the day; treat as a spike, not a channel.' },
+  ];
+  const selectedChannels = Array.isArray(channels) ? channels : [];
+  const tacticLines = CHANNEL_TACTICS
+    .filter(ct => selectedChannels.some(c => ct.k.some(k => String(c).toLowerCase().includes(k))))
+    .map(ct => `- ${ct.t}`)
+    .join('\n');
+  const channelTacticsBlock = tacticLines
+    ? `\nCHANNEL TACTICS — use these as the concrete vocabulary for actions on the selected channels. Adapt each to THIS product; never copy verbatim:\n${tacticLines}\n`
+    : '';
+
   return `You are a growth advisor who has helped 100+ early-stage SaaS founders get real traction. You think in 90-day sprints. Every action you recommend is executable by a solo founder with no marketing team today.
+
+STAGE PLAYBOOK — internalize this before writing; it defines what "good" looks like right now:
+${stagePlaybook}
+${channelTacticsBlock}
+SPECIFICITY BAR — every action, experiment, and metric must clear this bar:
+- Name the exact thing: not "post on LinkedIn" but "post a teardown of [specific competitor/workflow] on LinkedIn". Not "engage in communities" but "answer pricing questions in r/[specific subreddit]".
+- Quantify everything: counts, $, %, time. "Send 30 cold DMs to [specific segment]", not "do outreach".
+- Tie to the primary metric: if an action doesn't plausibly move the one number that defines success, cut it.
+- BANNED vague phrases: "create valuable content", "engage your audience", "build brand awareness", "leverage", "optimize your funnel", "be consistent", "grow your presence", "reach out to influencers". If you write any of these, rewrite with the concrete move instead.
 
 PRODUCT CONTEXT:
 - Product / niche: ${niche.trim()}
@@ -376,6 +415,16 @@ REVERSE ENGINEER: [show the math backwards from the 90-day goal — e.g. "100 cu
 - IF [warning sign appears] → [course correction]
 
 ${HARD_RULES}
+
+SHARPNESS RULES — these are what separate a usable plan from generic advice:
+- Every WEEK action names a concrete, executable move (a specific post topic, the exact subreddit/segment, the precise page or email to write). If an action could appear in any other founder's plan unchanged, it is too generic — rewrite it.
+- Each WEEK's three actions must be genuinely different moves, not three rephrasings of the same task.
+- EXPERIMENT WIN thresholds must be measurable WITHIN that month and tied to the primary metric (e.g. "≥8 trial signups from this in 14 days"), never "more engagement" or "better results".
+- Budget must reconcile: every BUDGET line and the BUDGET SPLIT must add up to at most the stated monthly budget (${budgetDesc}). Use realistic unit costs (e.g. cold-email tool ~$30/mo, LinkedIn ad CPC ~$8–15). If budget is $0, every action must be free — no paid tools, ads, or sponsorships anywhere.
+${currentMrr || weeklyLeads ? `- Ground baselines in the founder's REAL numbers${currentMrr ? ` (MRR: ${currentMrr})` : ''}${weeklyLeads ? ` (weekly leads: ${weeklyLeads})` : ''}. The REVERSE ENGINEER math and every metric baseline must start from these, not invented numbers.` : '- Metric baselines must be realistic for this exact stage — do not assume traffic or revenue the founder almost certainly does not have yet.'}
+- The REVERSE ENGINEER line must show real arithmetic that ends at a weekly number the founder can act on.
+
+FORMATTING RULES:
 - Use · (middle dot U+00B7) as the ONLY separator between actions in week lines and MONTH CHECK questions.
 - Exactly 3 actions per WEEK line. WEEK 1 (QUICK WIN) also gets exactly 3 actions.
 - EXPERIMENT format: Name | If X then Y because Z | WIN: threshold — exactly two pipe characters.
@@ -1748,15 +1797,16 @@ ${HARD_RULES}
 
 /* ─── Gemini client ────────────────────────────────────────────────────────── */
 
-async function callGemini(apiKey, prompt) {
+async function callGemini(apiKey, prompt, opts = {}) {
+  const { maxOutputTokens = 2048, temperature = 0.85 } = opts;
   const errors = [];
   for (const model of GEMINI_MODELS) {
     // thinkingConfig suppresses chain-of-thought bleed-through on thinking-capable models.
     // Older models (2.0 and below) reject this field → only send it for known thinking models.
     const generationConfig = {
-      temperature: 0.85,
+      temperature,
       topP: 0.95,
-      maxOutputTokens: 2048,
+      maxOutputTokens,
       ...(THINKING_MODELS.has(model) ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
     };
 
