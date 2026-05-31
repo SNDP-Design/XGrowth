@@ -95,6 +95,16 @@
   .user-chip .meta span{color:var(--muted);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
   .signout{background:transparent;border:1px solid var(--line);color:var(--muted);padding:0 10px;border-radius:8px;font-size:11px;font-weight:500;cursor:pointer;height:28px;flex-shrink:0;transition:.15s}
   .signout:hover{color:var(--ink);border-color:#3a3a3a;background:rgba(255,255,255,.04)}
+  /* Product profile button — sits above the user chip */
+  .profile-btn{display:flex;align-items:center;gap:9px;width:100%;padding:10px 12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;color:var(--ink);font-size:13px;font-weight:600;cursor:pointer;transition:.15s;text-align:left}
+  .profile-btn:hover{border-color:#3a3a3a;background:rgba(255,255,255,.04)}
+  .profile-btn svg{width:15px;height:15px;color:var(--muted);flex-shrink:0}
+  .profile-btn:hover svg{color:var(--ink)}
+
+  /* Product profile modal — competitor groups */
+  .pp-comp-head{font-size:13px;color:var(--muted);margin:18px 0 8px;padding-top:14px;border-top:1px solid var(--line)}
+  .pp-comp{background:#0a0a0a;border:1px solid var(--line);border-radius:12px;padding:13px 14px;margin-bottom:10px}
+  .pp-comp-title{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:9px}
   /* Profile button (top-right of dashboard, beside range selector) */
   .profile-btn{display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 14px;background:var(--chip);border:1px solid var(--line);color:var(--ink);border-radius:10px;font-size:12px;font-weight:600;line-height:1;cursor:pointer;transition:.15s}
   .profile-btn:hover{background:#1f1f1f;border-color:#3a3a3a}

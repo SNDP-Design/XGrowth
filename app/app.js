@@ -111,6 +111,7 @@ document.querySelectorAll('.modal').forEach(m=>{
   m.addEventListener('click', (e)=>{
     if(e.target === m){
       if(m.id === 'welcome') closeWelcome(true);
+      else if(m.id === 'productProfile') closeProductProfile(true);
       else m.classList.remove('show');
     }
   });
@@ -120,6 +121,7 @@ document.addEventListener('keydown', (e)=>{
   if(e.key === 'Escape'){
     document.querySelectorAll('.modal.show').forEach(m=>{
       if(m.id === 'welcome') closeWelcome(true);
+      else if(m.id === 'productProfile') closeProductProfile(true);
       else m.classList.remove('show');
     });
     // Mobile sidebar drawer
@@ -160,6 +162,71 @@ function applyProfile(){
   const goalEl  = document.getElementById('goalTag');  if(goalEl)  goalEl.textContent  = p.goal;
   const audEl   = document.getElementById('audienceTag'); if(audEl) audEl.textContent = p.target || '—';
   const st = document.getElementById('sessionTag'); if(st) st.textContent = p.niche?.split(' ')[0] || '';
+}
+
+/* ========= Product Profile ========= */
+function openProductProfile(){
+  const p = state.productProfile || {};
+  const c = p.competitors || [];
+  const setv = (id, v) => { const el = $(id); if(el) el.value = v || ''; };
+  setv('ppName', p.name);
+  setv('ppWebsite', p.website);
+  setv('ppBio', p.bio);
+  setv('ppC1Site', c[0]?.website); setv('ppC1Li', c[0]?.linkedin); setv('ppC1X', c[0]?.x);
+  setv('ppC2Site', c[1]?.website); setv('ppC2Li', c[1]?.linkedin); setv('ppC2X', c[1]?.x);
+  document.getElementById('productProfile').classList.add('show');
+  setTimeout(()=>$('ppName')?.focus(), 50);
+}
+
+function closeProductProfile(skip){
+  document.getElementById('productProfile').classList.remove('show');
+  // If dismissed during onboarding with nothing saved, leave a marker so it
+  // doesn't reopen on every load (user can still edit from the sidebar).
+  if(skip && !state.productProfile){
+    state.productProfile = { name:'', website:'', bio:'', competitors:[], skipped:true };
+    save();
+  }
+}
+
+function saveProductProfile(){
+  const name = ($('ppName')?.value || '').trim();
+  if(!name){ toast('Add your product name'); $('ppName')?.focus(); return; }
+
+  const mk = (s,l,x) => ({
+    website:  ($(s)?.value || '').trim(),
+    linkedin: ($(l)?.value || '').trim(),
+    x:        ($(x)?.value || '').trim(),
+  });
+  const competitors = [ mk('ppC1Site','ppC1Li','ppC1X'), mk('ppC2Site','ppC2Li','ppC2X') ]
+    .filter(c => c.website || c.linkedin || c.x);
+
+  const bio = ($('ppBio')?.value || '').trim();
+  state.productProfile = {
+    name,
+    website: ($('ppWebsite')?.value || '').trim(),
+    bio,
+    competitors,
+  };
+  // Feed product context into the marketing niche so every generator personalizes
+  state.profile = { ...(state.profile || {}), niche: bio || name };
+
+  save();
+  applyProfile();
+  ppPrefillPositioning();
+  document.getElementById('productProfile').classList.remove('show');
+  toast('Product profile saved');
+}
+
+// Prefill the Positioning Map's product + competitor fields from the saved profile
+function ppPrefillPositioning(){
+  const p = state.productProfile;
+  if(!p) return;
+  const fill = (id, v) => { const el = $(id); if(el && !el.value && v) el.value = v; };
+  fill('posProductName', p.name);
+  fill('posProductWhat', p.bio);
+  const sites = (p.competitors || []).map(c => c.website).filter(Boolean);
+  fill('posUrl1', sites[0]);
+  fill('posUrl2', sites[1]);
 }
 
 function parseGoals(s){
@@ -2289,7 +2356,9 @@ fbAuth.onAuthStateChanged(user=>{
     }
     applyUser();
     loadFromCloud().then(()=>{
-      if(!state.profile){ openWelcome(); }
+      ppPrefillPositioning();
+      // First-time onboarding: ask for the product profile on registration
+      if(!state.productProfile){ openProductProfile(); }
     });
     ceInit();
   } else {
