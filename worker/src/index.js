@@ -198,6 +198,13 @@ export default {
         prompt = buildWeekPlanPrompt(body);
         // Long, structured 7-day output + lower temperature for grounded, specific tasks
         genOpts = { maxOutputTokens: 4096, temperature: 0.65 };
+      } else if (kind === 'launch-posts') {
+        const hasCtx = (body.product && body.product.name) || (body.niche && body.niche.trim().length >= 3);
+        if (!hasCtx) {
+          return json({ error: 'product or niche is required' }, 400, origin, allowed);
+        }
+        prompt = buildLaunchPostsPrompt(body);
+        genOpts = { maxOutputTokens: 2048, temperature: 0.9 };
       } else if (kind === 'positioning') {
         const rawUrls = (body.competitors || [])
           .filter(u => typeof u === 'string' && u.trim().startsWith('http'))
@@ -275,6 +282,55 @@ function extractVisibleText(html) {
     .replace(/<[^>]+>/g, ' ')
     .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&nbsp;/g, ' ')
     .replace(/\s{3,}/g, '\n\n').trim();
+}
+
+function buildLaunchPostsPrompt({ product = {}, niche = '' }) {
+  const name    = (product.name || niche || 'this product').toString().trim();
+  const what    = (product.what || niche || '').toString().trim();
+  const website = (product.website || '').toString().trim();
+
+  return `You are a social media ghostwriter for a startup founder. Write posts that are 100% ready to publish today — the founder should be able to copy, paste, and post with zero edits.
+
+PRODUCT: ${name}
+WHAT IT DOES: ${what || name}
+${website ? `WEBSITE: ${website}` : ''}
+
+Write 3 LinkedIn posts and 3 X (Twitter) posts that introduce this product to the founder's audience. The 6 posts must each take a DIFFERENT angle — never repeat the same idea:
+- Angle 1: the problem it solves — lead with the pain the reader feels
+- Angle 2: a build-in-public / founder story — why you built it, what you learned
+- Angle 3: a bold, contrarian, or surprising claim about the space
+
+Write in first person as the founder. Plain, simple English. Sound like a sharp human, not a marketer.
+
+LinkedIn posts: 500–1100 characters. One strong opening line (not "I" or "As a founder"). Short paragraphs. You may use → as a bullet marker. End with a genuine question that invites replies (never "thoughts?"). Max 2 hashtags on the final line. No links.
+X posts: under 280 characters each. Punchy, one clear idea. No hashtags. No links.
+
+Format EXACTLY like this — these exact headings, nothing before ## LINKEDIN 1:
+
+## LINKEDIN 1
+[full post text]
+
+## LINKEDIN 2
+[full post text]
+
+## LINKEDIN 3
+[full post text]
+
+## X 1
+[tweet text]
+
+## X 2
+[tweet text]
+
+## X 3
+[tweet text]
+
+${HARD_RULES}
+- NO emojis. NO "Introducing". NO "Excited to share". NO meta-commentary.
+- Every post stands alone and is publishable exactly as written.
+- Each X post MUST be under 280 characters — count before returning.
+- Be specific to THIS product. No generic startup filler.
+- Return ONLY the 6 labeled posts. No preamble, no notes, no text after ## X 3.`;
 }
 
 function buildWeekPlanPrompt({ niche, stage, channels }) {

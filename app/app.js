@@ -1183,18 +1183,35 @@ async function planGenerate() {
   $('planResult').innerHTML = `
     <div class="roast-loading" role="status" aria-live="polite">
       <div class="ce-spinner" aria-hidden="true"></div>
-      <span>Mapping your 7-day marketing sprint…</span>
+      <span>Mapping your week and writing your Day 1 posts…</span>
     </div>`;
 
+  // Product context for the ready-to-post Day 1 launch posts
+  const pp = state.productProfile || {};
+  const product = { name: pp.name || niche, what: pp.bio || niche, website: pp.website || '' };
+
   try {
-    const data = await xgFetch('/generate', { kind: 'plan-week', niche, stage, channels });
-    const parsed = planParse(data.text || '');
+    // Run the 7-day plan and the Day 1 posts together — Day 1 posts are optional
+    const [planRes, postsRes] = await Promise.allSettled([
+      xgFetch('/generate', { kind: 'plan-week', niche, stage, channels }),
+      xgFetch('/generate', { kind: 'launch-posts', niche, product }),
+    ]);
+    if (planRes.status !== 'fulfilled') {
+      throw new Error(planRes.reason?.message || "Couldn't build the week — try again");
+    }
+    const parsed = planParse(planRes.value.text || '');
     if (!parsed.days.length) throw new Error("Couldn't build the week — try again");
+
+    const day1Posts = postsRes.status === 'fulfilled'
+      ? planParseLaunchPosts(postsRes.value.text || '')
+      : [];
+
     state.weekPlan = {
-      rawText:   data.text || '',
+      rawText:   planRes.value.text || '',
       niche, stage,
       focus:     parsed.focus,
       days:      parsed.days,
+      day1Posts,
       keepGoing: parsed.keepGoing,
       createdAt: Date.now(),
     };
@@ -1208,6 +1225,30 @@ async function planGenerate() {
     _plan.loading = false;
     if (btn) { btn.disabled = false; btn.innerHTML = 'Build my week →'; }
   }
+}
+
+// Parse the launch-posts output → [{platform, text, posted}] (3 LinkedIn, 3 X)
+function planParseLaunchPosts(text) {
+  const posts = [];
+  [['LINKEDIN', 'linkedin'], ['X', 'x']].forEach(([label, platform]) => {
+    for (let i = 1; i <= 3; i++) {
+      const re = new RegExp(`## ${label} ${i}\\s*\\n([\\s\\S]*?)(?=## (?:LINKEDIN|X) \\d|$)`, 'i');
+      const m = re.exec(text);
+      const body = m ? m[1].trim() : '';
+      if (body) posts.push({ platform, text: body, posted: false });
+    }
+  });
+  return posts;
+}
+
+// Per-day completion: Day 1 = posts (done = posted), other days = tasks (done)
+function planDayStats(plan, i) {
+  if (i === 0) {
+    const a = plan.day1Posts || [];
+    return { total: a.length, done: a.filter(p => p.posted).length };
+  }
+  const a = plan.days[i]?.tasks || [];
+  return { total: a.length, done: a.filter(t => t.done).length };
 }
 
 function planParse(text) {
@@ -1250,7 +1291,7 @@ function planRender(plan) {
   $('planEmpty').style.display = 'none';
 
   let total = 0, done = 0;
-  plan.days.forEach(d => d.tasks.forEach(t => { total++; if (t.done) done++; }));
+  plan.days.forEach((d, i) => { const s = planDayStats(plan, i); total += s.total; done += s.done; });
   const pct = total ? Math.round(done / total * 100) : 0;
 
   let html = '';
@@ -1274,23 +1315,25 @@ function planRender(plan) {
       </div>`;
   }
 
-  // Active day — default to the first day that still has unchecked tasks
+  // Active day — default to the first day with unfinished items
   if (typeof _plan.activeDay !== 'number' || _plan.activeDay < 0 || _plan.activeDay >= plan.days.length) {
-    const firstIncomplete = plan.days.findIndex(d => d.tasks.some(t => !t.done));
+    let firstIncomplete = -1;
+    for (let i = 0; i < plan.days.length; i++) { const s = planDayStats(plan, i); if (s.total === 0 || s.done < s.total) { firstIncomplete = i; break; } }
     _plan.activeDay = firstIncomplete > -1 ? firstIncomplete : 0;
   }
 
   // Day tabs
   html += `<div class="week-tabs" role="tablist" aria-label="Days of the week">`;
   plan.days.forEach((day, di) => {
-    const dDone = day.tasks.filter(t => t.done).length;
-    const allDone = day.tasks.length > 0 && dDone === day.tasks.length;
+    const s = planDayStats(plan, di);
+    const allDone = s.total > 0 && s.done === s.total;
+    const status = (di === 0 && s.total === 0) ? '✨' : (allDone ? '✓' : `${s.done}/${s.total}`);
     html += `
       <button class="week-tab${di === _plan.activeDay ? ' active' : ''}${allDone ? ' done' : ''}" role="tab"
         id="weekTab-${di}" aria-selected="${di === _plan.activeDay ? 'true' : 'false'}"
         onclick="planSelectDay(${di})">
         <span class="week-tab-day">Day ${di + 1}</span>
-        <span class="week-tab-status">${allDone ? '✓' : `${dDone}/${day.tasks.length}`}</span>
+        <span class="week-tab-status">${status}</span>
       </button>`;
   });
   html += `</div>`;
@@ -1317,8 +1360,9 @@ function planRender(plan) {
   $('planResult').innerHTML = html;
 }
 
-// HTML for one day's panel (theme header + checkable tasks)
+// HTML for one day's panel — Day 1 = prepared posts, other days = checkable tasks
 function planRenderDay(plan, di) {
+  if (di === 0) return planRenderDay1(plan);
   const day = plan.days[di];
   if (!day) return '';
   return `
@@ -1336,6 +1380,128 @@ function planRenderDay(plan, di) {
           </div>
         </div>`).join('')}
     </div>`;
+}
+
+// Day 1 — XGrowth has already written the posts; the founder just reviews & ships
+function planRenderDay1(plan) {
+  const posts = plan.day1Posts || [];
+  let html = `
+    <div class="week-day-head">
+      <span class="week-day-num">Day 1</span>
+      <span class="week-day-theme">Your posts are ready</span>
+    </div>`;
+
+  if (_plan.day1Loading) {
+    html += `<div class="roast-loading" role="status" aria-live="polite" style="margin-top:8px">
+      <div class="ce-spinner" aria-hidden="true"></div><span>Writing your 6 posts…</span></div>`;
+    return html;
+  }
+
+  if (!posts.length) {
+    html += `
+      <p class="day1-intro">We couldn't prepare your posts yet. Add your product details, then generate them — you just review and publish.</p>
+      <button class="btn" style="height:42px" onclick="planPrepareDay1()">✨ Prepare my posts</button>`;
+    return html;
+  }
+
+  html += `<p class="day1-intro">XGrowth wrote these for you — 3 for LinkedIn, 3 for X. Review, tweak if you like, then post. You're the editor, not the writer.</p>`;
+
+  [['linkedin', 'LinkedIn'], ['x', 'X / Twitter']].forEach(([pl]) => {
+    const group = posts.map((p, idx) => ({ p, idx })).filter(o => o.p.platform === pl);
+    if (!group.length) return;
+    const info = CE_PLAT_INFO[pl] || CE_PLAT_INFO.linkedin;
+    html += `<div class="day1-group-label">${info.svg} ${info.label}</div>
+      <div class="day1-posts">${group.map(({ p, idx }) => planDay1Card(p, idx)).join('')}</div>`;
+  });
+
+  html += `<div style="margin-top:8px;display:flex;justify-content:flex-end">
+      <button class="btn secondary" style="height:36px;padding:0 14px;font-size:13px" onclick="planPrepareDay1()">↻ Rewrite all posts</button>
+    </div>`;
+  return html;
+}
+
+function planDay1Card(p, idx) {
+  const len = p.text.length;
+  const isX = p.platform === 'x';
+  const over = isX && len > 280;
+  const url = isX
+    ? `https://twitter.com/intent/tweet?text=${encodeURIComponent(p.text.slice(0, 280))}`
+    : `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(p.text.slice(0, 1300))}`;
+  return `
+    <div class="day1-post${p.posted ? ' posted' : ''}" id="day1post-${idx}">
+      <div class="day1-post-head">
+        <button class="week-check" onclick="planTogglePosted(${idx})" aria-label="${p.posted ? 'Mark not posted' : 'Mark as posted'}">${p.posted ? '✓' : ''}</button>
+        <span class="day1-post-status">${p.posted ? 'Posted' : 'Ready to post'}</span>
+        <span class="day1-char${over ? ' over' : ''}">${len}${isX ? '/280' : ' chars'}</span>
+      </div>
+      <p class="day1-post-text">${ceEsc(p.text)}</p>
+      <div class="day1-post-foot">
+        <button class="btn ghost" style="height:32px;font-size:13px" data-ce-copy="${ceEsc(p.text)}" onclick="ceCopyAttr(this)">Copy</button>
+        <a class="btn publish" style="height:32px;font-size:13px" href="${url}" target="_blank" rel="noopener noreferrer" onclick="planSetPosted(${idx},true)">Post →</a>
+      </div>
+    </div>`;
+}
+
+function planTogglePosted(idx) {
+  const p = state.weekPlan?.day1Posts?.[idx];
+  if (!p) return;
+  planSetPosted(idx, !p.posted);
+}
+
+function planSetPosted(idx, val) {
+  const p = state.weekPlan?.day1Posts?.[idx];
+  if (!p || p.posted === val) return;
+  p.posted = val;
+  save();
+  const card = document.getElementById(`day1post-${idx}`);
+  if (card) {
+    card.classList.toggle('posted', val);
+    const cb = card.querySelector('.week-check');
+    if (cb) { cb.textContent = val ? '✓' : ''; cb.setAttribute('aria-label', val ? 'Mark not posted' : 'Mark as posted'); }
+    const st = card.querySelector('.day1-post-status');
+    if (st) st.textContent = val ? 'Posted' : 'Ready to post';
+  }
+  planRefreshTab(0);
+  planUpdateProgress();
+}
+
+// (Re)generate the Day 1 launch posts on demand
+async function planPrepareDay1() {
+  if (_plan.day1Loading) return;
+  const plan = state.weekPlan;
+  if (!plan) return;
+  _plan.day1Loading = true;
+  const panel = document.getElementById('weekDayPanel');
+  if (panel && _plan.activeDay === 0) panel.innerHTML = planRenderDay1(plan);
+  try {
+    const pp = state.productProfile || {};
+    const product = { name: pp.name || plan.niche, what: pp.bio || plan.niche, website: pp.website || '' };
+    const data = await xgFetch('/generate', { kind: 'launch-posts', niche: plan.niche, product });
+    const posts = planParseLaunchPosts(data.text || '');
+    if (posts.length) plan.day1Posts = posts;
+    else toast("Couldn't parse the posts — try again");
+    save();
+  } catch (err) {
+    toast(err.message || 'Could not prepare posts');
+  } finally {
+    _plan.day1Loading = false;
+    if (panel && _plan.activeDay === 0) panel.innerHTML = planRenderDay1(plan);
+    planRefreshTab(0);
+    planUpdateProgress();
+  }
+}
+
+// Update a single day's tab status chip
+function planRefreshTab(i) {
+  const plan = state.weekPlan;
+  if (!plan) return;
+  const s = planDayStats(plan, i);
+  const allDone = s.total > 0 && s.done === s.total;
+  const tab = document.getElementById(`weekTab-${i}`);
+  if (!tab) return;
+  tab.classList.toggle('done', allDone);
+  const st = tab.querySelector('.week-tab-status');
+  if (st) st.textContent = (i === 0 && s.total === 0) ? '✨' : (allDone ? '✓' : `${s.done}/${s.total}`);
 }
 
 function planSelectDay(di) {
@@ -1379,7 +1545,7 @@ function planToggleTask(di, ti) {
 function planUpdateProgress() {
   const plan = state.weekPlan; if (!plan) return;
   let total = 0, done = 0;
-  plan.days.forEach(d => d.tasks.forEach(t => { total++; if (t.done) done++; }));
+  plan.days.forEach((d, i) => { const s = planDayStats(plan, i); total += s.total; done += s.done; });
   const pct = total ? Math.round(done / total * 100) : 0;
   const bar = $('planProgBar'), lbl = $('planProgLabel');
   if (bar) bar.style.width = pct + '%';
@@ -1401,6 +1567,13 @@ function planDownload() {
   if (plan.niche) md += `**Product:** ${plan.niche}\n\n`;
   if (plan.focus) md += `**This week is about:** ${plan.focus}\n\n`;
   plan.days.forEach((d, i) => {
+    if (i === 0) {
+      md += `## Day 1 — Your posts (review & publish)\n\n`;
+      (plan.day1Posts || []).forEach(p => {
+        md += `**${p.platform === 'x' ? 'X / Twitter' : 'LinkedIn'}${p.posted ? ' — posted' : ''}:**\n\n${p.text}\n\n---\n\n`;
+      });
+      return;
+    }
     md += `## Day ${i + 1} — ${d.theme}\n\n`;
     d.tasks.forEach(t => { md += `- [${t.done ? 'x' : ' '}] ${t.action}${t.detail ? ` — ${t.detail}` : ''}\n`; });
     md += `\n`;
