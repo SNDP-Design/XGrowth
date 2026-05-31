@@ -2,10 +2,12 @@ name = "xgrowth-api"
 main = "src/index.js"
 compatibility_date = "2024-12-01"
 
-# Account ID is picked up automatically after `wrangler login`.
+# Pinned so deploys skip the flaky "retrieve account IDs" auto-lookup.
+# (Account ID is not a secret — the Gemini key stays a Wrangler secret.)
+account_id = "8b888f92ac06f3ad4fead2a17e74233d"
+
 # The Worker will be served at:
 #   https://xgrowth-api.xgrowth.workers.dev
-# The Gemini API key is stored as a secret (see README) — never in this file.
 
 [ai]
 binding = "AI"
