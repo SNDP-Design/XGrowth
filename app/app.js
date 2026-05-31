@@ -1217,6 +1217,7 @@ async function planGenerate() {
       keepGoing: parsed.keepGoing,
       createdAt: Date.now(),
     };
+    _plan.activeDay = 0;
     save();
     planRender(state.weekPlan);
   } catch (err) {
@@ -1292,31 +1293,29 @@ function planRender(plan) {
       </div>`;
   }
 
-  // Day cards
-  html += `<div class="week-days">`;
+  // Active day — default to the first day that still has unchecked tasks
+  if (typeof _plan.activeDay !== 'number' || _plan.activeDay < 0 || _plan.activeDay >= plan.days.length) {
+    const firstIncomplete = plan.days.findIndex(d => d.tasks.some(t => !t.done));
+    _plan.activeDay = firstIncomplete > -1 ? firstIncomplete : 0;
+  }
+
+  // Day tabs
+  html += `<div class="week-tabs" role="tablist" aria-label="Days of the week">`;
   plan.days.forEach((day, di) => {
     const dDone = day.tasks.filter(t => t.done).length;
     const allDone = day.tasks.length > 0 && dDone === day.tasks.length;
     html += `
-      <div class="week-day${allDone ? ' week-day-complete' : ''}">
-        <div class="week-day-head">
-          <span class="week-day-num">Day ${di + 1}</span>
-          <span class="week-day-theme">${ceEsc(day.theme)}</span>
-          <span class="week-day-count">${dDone}/${day.tasks.length}</span>
-        </div>
-        <div class="week-tasks">
-          ${day.tasks.map((t, ti) => `
-            <div class="week-task${t.done ? ' done' : ''}" id="wtask-${di}-${ti}">
-              <button class="week-check" onclick="planToggleTask(${di},${ti})" aria-label="${t.done ? 'Mark not done' : 'Mark done'}">${t.done ? '✓' : ''}</button>
-              <div class="week-task-main">
-                <span class="week-task-action">${ceEsc(t.action)}</span>
-                ${t.detail ? `<span class="week-task-detail">${ceEsc(t.detail)}</span>` : ''}
-              </div>
-            </div>`).join('')}
-        </div>
-      </div>`;
+      <button class="week-tab${di === _plan.activeDay ? ' active' : ''}${allDone ? ' done' : ''}" role="tab"
+        id="weekTab-${di}" aria-selected="${di === _plan.activeDay ? 'true' : 'false'}"
+        onclick="planSelectDay(${di})">
+        <span class="week-tab-day">Day ${di + 1}</span>
+        <span class="week-tab-status">${allDone ? '✓' : `${dDone}/${day.tasks.length}`}</span>
+      </button>`;
   });
   html += `</div>`;
+
+  // Active day panel
+  html += `<div class="week-day-panel" id="weekDayPanel" role="tabpanel">${planRenderDay(plan, _plan.activeDay)}</div>`;
 
   // Keep going
   if (plan.keepGoing) {
@@ -1337,6 +1336,39 @@ function planRender(plan) {
   $('planResult').innerHTML = html;
 }
 
+// HTML for one day's panel (theme header + checkable tasks)
+function planRenderDay(plan, di) {
+  const day = plan.days[di];
+  if (!day) return '';
+  return `
+    <div class="week-day-head">
+      <span class="week-day-num">Day ${di + 1}</span>
+      <span class="week-day-theme">${ceEsc(day.theme)}</span>
+    </div>
+    <div class="week-tasks">
+      ${day.tasks.map((t, ti) => `
+        <div class="week-task${t.done ? ' done' : ''}" id="wtask-${di}-${ti}">
+          <button class="week-check" onclick="planToggleTask(${di},${ti})" aria-label="${t.done ? 'Mark not done' : 'Mark done'}">${t.done ? '✓' : ''}</button>
+          <div class="week-task-main">
+            <span class="week-task-action">${ceEsc(t.action)}</span>
+            ${t.detail ? `<span class="week-task-detail">${ceEsc(t.detail)}</span>` : ''}
+          </div>
+        </div>`).join('')}
+    </div>`;
+}
+
+function planSelectDay(di) {
+  if (!state.weekPlan?.days?.[di]) return;
+  _plan.activeDay = di;
+  document.querySelectorAll('.week-tab').forEach((el, i) => {
+    const sel = i === di;
+    el.classList.toggle('active', sel);
+    el.setAttribute('aria-selected', sel ? 'true' : 'false');
+  });
+  const panel = document.getElementById('weekDayPanel');
+  if (panel) panel.innerHTML = planRenderDay(state.weekPlan, di);
+}
+
 function planToggleTask(di, ti) {
   const plan = state.weekPlan;
   const task = plan?.days?.[di]?.tasks?.[ti];
@@ -1349,13 +1381,16 @@ function planToggleTask(di, ti) {
     row.classList.toggle('done', task.done);
     const cb = row.querySelector('.week-check');
     if (cb) { cb.textContent = task.done ? '✓' : ''; cb.setAttribute('aria-label', task.done ? 'Mark not done' : 'Mark done'); }
-    const dayEl = row.closest('.week-day');
-    if (dayEl) {
-      const dDone = plan.days[di].tasks.filter(t => t.done).length;
-      const cnt = dayEl.querySelector('.week-day-count');
-      if (cnt) cnt.textContent = `${dDone}/${plan.days[di].tasks.length}`;
-      dayEl.classList.toggle('week-day-complete', dDone === plan.days[di].tasks.length);
-    }
+  }
+  // Update this day's tab indicator
+  const day = plan.days[di];
+  const dDone = day.tasks.filter(t => t.done).length;
+  const allDone = day.tasks.length > 0 && dDone === day.tasks.length;
+  const tab = document.getElementById(`weekTab-${di}`);
+  if (tab) {
+    tab.classList.toggle('done', allDone);
+    const st = tab.querySelector('.week-tab-status');
+    if (st) st.textContent = allDone ? '✓' : `${dDone}/${day.tasks.length}`;
   }
   planUpdateProgress();
 }
@@ -1401,6 +1436,7 @@ function planDownload() {
 
 function planReset() {
   state.weekPlan = null;
+  _plan.activeDay = 0;
   save();
   _plan.loading = false;
   $('planResult').innerHTML = '';

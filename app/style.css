@@ -720,15 +720,25 @@
   .week-focus-lbl{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#60a5fa;margin-bottom:6px}
   .week-focus-text{font-size:16px;line-height:1.55;color:var(--ink);margin:0}
 
-  .week-days{display:flex;flex-direction:column;gap:12px}
-  .week-day{background:#080808;border:1px solid var(--line);border-radius:14px;padding:16px 18px;transition:border-color .2s}
-  .week-day-complete{border-color:rgba(74,222,128,.35);background:linear-gradient(160deg,#0a130a,#070b07)}
+  /* Day tabs */
+  .week-tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:14px;-webkit-overflow-scrolling:touch}
+  .week-tabs::-webkit-scrollbar{height:5px}
+  .week-tabs::-webkit-scrollbar-thumb{background:var(--line);border-radius:99px}
+  .week-tab{flex:1 0 auto;min-width:78px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 10px;background:#0d0d0d;border:1px solid var(--line);border-radius:10px;cursor:pointer;transition:.15s;color:var(--muted)}
+  .week-tab:hover{border-color:#2c2c2c;color:var(--ink)}
+  .week-tab.active{background:linear-gradient(180deg,#1c1c1c,#121212);border-color:#3a3a3a;color:var(--ink)}
+  .week-tab-day{font-size:13px;font-weight:700;letter-spacing:.01em}
+  .week-tab.active .week-tab-day{color:var(--ink)}
+  .week-tab-status{font-size:11px;font-variant-numeric:tabular-nums;color:var(--muted);line-height:1}
+  .week-tab.done{border-color:rgba(74,222,128,.32)}
+  .week-tab.active.done{border-color:rgba(74,222,128,.55)}
+  .week-tab.done .week-tab-status{color:#4ade80;font-weight:800}
+
+  /* Active day panel */
+  .week-day-panel{background:#080808;border:1px solid var(--line);border-radius:14px;padding:16px 18px}
   .week-day-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
   .week-day-num{font-size:12px;font-weight:800;letter-spacing:.03em;color:#0a0a0a;background:linear-gradient(180deg,#fff,#cfcfcf);padding:3px 10px;border-radius:7px;flex-shrink:0}
-  .week-day-complete .week-day-num{background:linear-gradient(180deg,#4ade80,#22c55e);color:#04210f}
   .week-day-theme{font-size:16px;font-weight:700;color:var(--ink);flex:1;min-width:0;letter-spacing:-.2px}
-  .week-day-count{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;flex-shrink:0}
-  .week-day-complete .week-day-count{color:#4ade80;font-weight:700}
 
   .week-tasks{display:flex;flex-direction:column;gap:8px}
   .week-task{display:flex;align-items:flex-start;gap:12px;background:#0d0d0d;border:1px solid var(--line);border-radius:10px;padding:11px 13px;transition:opacity .15s,background .15s}
