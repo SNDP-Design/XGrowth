@@ -152,8 +152,8 @@ export default {
         if (!articleTitle || typeof articleTitle !== 'string') {
           return json({ error: 'Missing articleTitle' }, 400, origin, allowed);
         }
-        if (!['linkedin', 'x', 'threads', 'instagram', 'reddit'].includes(platform)) {
-          return json({ error: 'platform must be linkedin | x | threads | instagram | reddit' }, 400, origin, allowed);
+        if (!['linkedin', 'x', 'threads'].includes(platform)) {
+          return json({ error: 'platform must be linkedin | x | threads' }, 400, origin, allowed);
         }
         prompt = buildPostPrompt({ topic, articleTitle, articleAngle, platform, mode, voiceNiche, voiceStyle, inputMode, refineInstruction });
         if (platform === 'x' && mode !== 'thread') postProcess = trimForX;
@@ -305,7 +305,7 @@ THIS WEEK IS ABOUT: ${stageFocus}
 Pull the daily tasks from this menu of real founder marketing jobs. Adapt each to THIS product and niche, and only pick what fits the stage and the active channels — do not use every item:
 - SOCIAL: post today on each active channel (say which) · optimize each profile (bio, link, banner) · follow and reply to 10 ideal-customer accounts
 - CONTENT: write one short blog post and publish it on Substack, Beehiiv, Medium, Dev.to or Hashnode · record a 60-second Loom demo · turn the blog into 3 social posts · write one thread that teaches a single lesson
-- COMMUNITY: answer 3 real questions on Reddit, Indie Hackers or Quora in your niche · join 2 Slack/Discord communities and introduce yourself · make one genuinely useful post in a NAMED subreddit
+- COMMUNITY: answer 3 real questions on Indie Hackers, Quora or a niche forum · join 2 Slack/Discord communities and introduce yourself · make one genuinely useful post in a named community where your buyers hang out
 - OUTREACH: send 10 personalized DMs or emails to ideal users · book 3 user feedback calls · DM 5 people who engaged with your posts
 - DISTRIBUTION: submit your product to directories (BetaList, There's An AI For That, SaaSHub, AlternativeTo, G2, Capterra, Indie Hackers) · set up a Product Hunt "upcoming" page
 - WEBSITE / SEO: set up Google Analytics and Search Console · publish a comparison or "[competitor] alternative" page · add testimonials and one clear call-to-action to your landing page · add an email signup with a simple lead magnet
@@ -337,7 +337,7 @@ FORMATTING RULES:
 - Each day has 3–5 TASK lines. Each TASK is ONE concrete job a founder can finish in a day — never vague ("market your product", "build awareness") and never a multi-week project.
 - Every TASK line uses exactly ONE pipe character |, separating the action from the how/where.
 - Only recommend posting on the active channels listed above; do not invent channels the founder didn't select. Universal jobs (analytics, directories, landing page, email, proof, foundation) are always fair game.
-- Make tasks specific to THIS product: name the kind of post, the relevant subreddit, the comparison-page topic, the lead magnet idea.
+- Make tasks specific to THIS product: name the kind of post, the relevant community, the comparison-page topic, the lead magnet idea.
 - Sequence sensibly: foundation and visibility early in the week, content and outreach mid-week, distribution and proof later, a short review on Day 7.
 - No text before ## WEEK FOCUS or after the ## KEEP GOING paragraph.`;
 }
@@ -1116,23 +1116,6 @@ Structure:
 - 1–2 hashtags max (optional)
 - NO URLs
 - BEFORE returning, COUNT your characters. If over 500, rewrite shorter.`,
-
-    instagram: `Write an Instagram caption. Return exactly two labeled sections:
-
-CAPTION:
-[Hook + 2–3 short lines of substance. Max 250 characters. NO URLs. NO hashtags here.]
-
-HASHTAGS:
-[20 relevant hashtags — mix of broad (#marketing), mid (#saasfounder), niche (#b2bgrowth). Space-separated on one line.]`,
-
-    reddit: `Write a Reddit post. Return exactly three labeled sections:
-
-SUBREDDIT: r/[single best subreddit — e.g. r/startups, r/SaaS, r/Entrepreneur, r/technology]
-
-TITLE: [post title — max 200 chars, compelling and specific, not clickbait]
-
-BODY:
-[2–4 paragraphs. Reddit tone: direct, a bit opinionated, conversational. Share a real perspective. Ask a question at the end to spark discussion. NO self-promotion. NO URLs.]`,
   };
 
   const typeGuides = {
