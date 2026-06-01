@@ -1326,17 +1326,22 @@ function planRender(plan) {
     _plan.activeDay = firstIncomplete > -1 ? firstIncomplete : 0;
   }
 
-  // Day tabs
+  // Day tabs — show actual dates derived from plan creation timestamp (user's local timezone)
+  const planStart = plan.createdAt ? new Date(plan.createdAt) : new Date();
+  // Normalise to midnight so day offsets are calendar-day-accurate
+  planStart.setHours(0, 0, 0, 0);
   html += `<div class="week-tabs" role="tablist" aria-label="Days of the week">`;
   plan.days.forEach((day, di) => {
     const s = planDayStats(plan, di);
     const allDone = s.total > 0 && s.done === s.total;
     const status = (di === 0 && s.total === 0) ? '✨' : (allDone ? '✓' : `${s.done}/${s.total}`);
+    const dayDate = new Date(planStart); dayDate.setDate(planStart.getDate() + di);
+    const dateLabel = dayDate.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
     html += `
       <button class="week-tab${di === _plan.activeDay ? ' active' : ''}${allDone ? ' done' : ''}" role="tab"
         id="weekTab-${di}" aria-selected="${di === _plan.activeDay ? 'true' : 'false'}"
         onclick="planSelectDay(${di})">
-        <span class="week-tab-day">Day ${di + 1}</span>
+        <span class="week-tab-day">${dateLabel}</span>
         <span class="week-tab-status">${status}</span>
       </button>`;
   });
