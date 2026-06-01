@@ -2543,6 +2543,8 @@ fbAuth.onAuthStateChanged(user=>{
       ppPrefillPositioning();
       // First-time onboarding: ask for the product profile on registration
       if(!state.productProfile){ openProductProfile(); }
+      // Auto-generate the week plan on load if none exists yet and profile is set
+      if(!state.weekPlan && state.productProfile?.name) planGenerate();
     });
     ceInit();
   } else {
