@@ -96,8 +96,9 @@ async function loadFromCloud(){
 const nav = document.getElementById('nav');
 nav.addEventListener('click', e=>{
   const b = e.target.closest('button[data-view]'); if(!b) return;
-  document.querySelectorAll('#nav button').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('#nav button').forEach(x=>{ x.classList.remove('active'); x.setAttribute('aria-current','false'); });
   b.classList.add('active');
+  b.setAttribute('aria-current','page');
   const v = b.dataset.view;
   document.querySelectorAll('main > section').forEach(s=>s.classList.add('hide'));
   const sec = document.querySelector(`section[data-view="${v}"]`);
@@ -1327,14 +1328,14 @@ function planRender(plan) {
     html += `
       <button class="week-tab${di === _plan.activeDay ? ' active' : ''}${allDone ? ' done' : ''}" role="tab"
         id="weekTab-${di}" aria-selected="${di === _plan.activeDay ? 'true' : 'false'}"
-        onclick="planSelectDay(${di})">
+        aria-controls="weekDayPanel" onclick="planSelectDay(${di})">
         <span class="week-tab-day">${dateLabel}</span>
       </button>`;
   });
   html += `</div>`;
 
   // Active day panel
-  html += `<div class="week-day-panel" id="weekDayPanel" role="tabpanel">${planRenderDay(plan, _plan.activeDay)}</div>`;
+  html += `<div class="week-day-panel" id="weekDayPanel" role="tabpanel" tabindex="0" aria-labelledby="weekTab-${_plan.activeDay}">${planRenderDay(plan, _plan.activeDay)}</div>`;
 
   $('planResult').innerHTML = html;
 }
@@ -1506,7 +1507,7 @@ function planSelectDay(di) {
     el.setAttribute('aria-selected', sel ? 'true' : 'false');
   });
   const panel = document.getElementById('weekDayPanel');
-  if (panel) panel.innerHTML = planRenderDay(state.weekPlan, di);
+  if (panel) { panel.setAttribute('aria-labelledby', `weekTab-${di}`); panel.innerHTML = planRenderDay(state.weekPlan, di); }
   // Lazily generate this day's posts the first time it's opened
   if (!planDayPosts(state.weekPlan, di).length && !_plan.loadingDays[di]) planPrepareDay(di);
 }
