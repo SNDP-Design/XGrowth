@@ -204,7 +204,8 @@ export default {
           return json({ error: 'product or niche is required' }, 400, origin, allowed);
         }
         prompt = buildLaunchPostsPrompt(body);
-        genOpts = { maxOutputTokens: 2048, temperature: 0.9 };
+        // 3 long LinkedIn posts (1300–1900 chars) + 3 X posts need ample room
+        genOpts = { maxOutputTokens: body.single ? 1024 : 4096, temperature: 0.9 };
       } else if (kind === 'positioning') {
         const rawUrls = (body.competitors || [])
           .filter(u => typeof u === 'string' && u.trim().startsWith('http'))
@@ -289,9 +290,13 @@ const LAUNCH_CRAFT = `VOICE — sharp & contrarian:
 - Write as an opinionated founder with a real point of view. Take a side. Say the thing most people in this space won't.
 - Confident and direct, a little provocative. Never hypey, never salesy. No exclamation marks.
 
-THE HOOK decides everything — the first line is the sharpest line:
+THE HOOK decides everything — LinkedIn hides everything after ~140 characters behind a "see more" cutoff:
+- Your first 1–2 lines (under ~140 characters) must work ALONE as a scroll-stopper and create curiosity to expand. Front-load the sharpest idea — never waste the first line on setup.
 - Open on ONE concrete moment, a specific number, or a claim with an edge. Make the reader stop.
 - BANNED openers: "Most founders…", "Most people…", "Most companies…", "In a world…", "Let's be honest", "Here's the thing", "Imagine…", or any definition. No warm-up sentence.
+
+DRIVE COMMENTS (comments distribute a post harder than length):
+- End on a sharp, specific question or a strong opinion that makes a reader want to reply — never a soft "thoughts?" or a recap.
 
 BE SPECIFIC, NOT VAGUE:
 - Use real detail: an actual scenario, a number, a named task/tool/moment, a concrete before-and-after.
@@ -317,7 +322,7 @@ function buildLaunchPostsPrompt({ product = {}, niche = '', single = false, plat
   const year    = new Date().getUTCFullYear();
   const themeBlock = `\nCURRENT YEAR: ${year}${theme ? `\nTODAY'S MARKETING FOCUS (Day ${dayNum || ''}): ${theme}\nEvery post must serve this focus while staying about the product.` : ''}\n`;
 
-  const liSpec = 'LinkedIn posts: 400–900 characters. Strong opening line. Short paragraphs (1–2 sentences each). Optional: up to 3 "→" bullets if they earn it. End with one sharp, specific question a real reader would actually answer.';
+  const liSpec = 'LinkedIn posts: 1300–1900 characters — LinkedIn\'s highest-engagement range. Long but TIGHT: every line must earn attention, zero padding or filler. Short paragraphs (1–2 sentences each) with a blank line between them for white space. Optional: up to 3 "→" bullets if they earn it.';
   const xSpec  = 'X posts: under 280 characters. One clear idea, punchy. COUNT characters before returning — if over 280, cut it down.';
 
   // Single-post regeneration — one fresh post for one platform
@@ -1194,12 +1199,12 @@ function buildPostPrompt({ topic, articleTitle, articleAngle, platform, mode, vo
   const isWrite = inputMode === 'freewrite';
 
   const platformGuides = {
-    linkedin: `Write a LinkedIn post. 1000–1600 characters total.
+    linkedin: `Write a LinkedIn post. 1300–1900 characters total — LinkedIn's highest-engagement range. Long but TIGHT: every line earns attention, zero padding.
 Structure:
-- 1 sharp opener sentence (not "I" or "As a founder")
-- 2–4 sentences of specific reaction that references the actual content
+- HOOK: the first 1–2 lines (under ~140 characters) must work ALONE — LinkedIn hides the rest behind a "see more" cutoff. Front-load the sharpest idea and create curiosity to expand. No warm-up, not "I" or "As a founder".
+- 3–6 sentences of specific reaction that references the actual content. Short paragraphs with a blank line between them for white space.
 - Optional: 2–3 bullet points using → as bullet marker (not numbers)
-- 1 short question that invites a real reply (NOT "thoughts?" or "what do you think?")
+- End with a sharp, specific question or strong opinion that makes people want to comment (NOT "thoughts?" or "what do you think?")
 - 2 hashtags max on the final line
 - NO URLs anywhere in the post.`,
 

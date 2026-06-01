@@ -785,7 +785,7 @@ function cePlatformSectionHTML(platform){
   if(p.text && !p.loading){
     const limit=info.limit, len=p.text.length;
     const platUrls = {
-      linkedin:`https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(p.text.slice(0,1300))}`,
+      linkedin:`https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(p.text.slice(0,2900))}`,
       x:`https://twitter.com/intent/tweet?text=${encodeURIComponent(p.text.slice(0,280))}`,
     };
     const postBtn = `<a class="btn publish" href="${platUrls[platform]||'#'}" target="_blank" rel="noopener noreferrer">Post ↗</a>`;
@@ -829,7 +829,7 @@ function cePostCard(platform, loading, text){
 
   const limit = info.limit, len = text.length;
   const postUrl = {
-    linkedin: `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(text.slice(0,1300))}`,
+    linkedin: `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(text.slice(0,2900))}`,
     x:        `https://twitter.com/intent/tweet?text=${encodeURIComponent(text.slice(0,280))}`,
   }[platform]||'#';
 
@@ -1389,7 +1389,7 @@ function planDayCard(p, di, idx, platform) {
   const info = CE_PLAT_INFO[isX ? 'x' : 'linkedin'] || CE_PLAT_INFO.linkedin;
   const url = isX
     ? `https://twitter.com/intent/tweet?text=${encodeURIComponent(p.text.slice(0, 280))}`
-    : `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(p.text.slice(0, 1300))}`;
+    : `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(p.text.slice(0, 2900))}`;
   if (p._regen) {
     return `
     <div class="day1-post" id="day${di}post-${idx}">
