@@ -392,8 +392,8 @@ const _ce = {
   topic: '',
   article: null,
   platform: 'linkedin',        // legacy compat — primary state is now per-card
-  postType: 'hot-take',        // legacy compat
-  postTypes: { linkedin:'hot-take', x:'hot-take' },
+  postType: 'blend',           // legacy compat
+  postTypes: { linkedin:'blend', x:'blend' },
   threadMode: false,
   refineInstruction: '',
   posts: {},
@@ -633,7 +633,7 @@ async function ceGeneratePlatform(platform, articlePickedAt){
   const article = _ce.article;
   if(!article) return;
   const myGen = _ce._platGen[platform];
-  const type = _ce.postTypes[platform] || 'hot-take';
+  const type = _ce.postTypes[platform] || 'blend';
   const text = await ceCallAPI(platform, article, type);
   // Stale-check: abort if article changed OR a newer gen for this platform started
   if(_ce._pickedAt !== articlePickedAt) return;
@@ -737,9 +737,10 @@ function ceRenderCurrentPost(){ ceRenderAllPosts(); }
 function cePlatformSectionHTML(platform){
   const info = CE_PLAT_INFO[platform]||CE_PLAT_INFO.linkedin;
   const p = _ce.posts[platform];
-  const currentType = _ce.postTypes[platform]||'hot-take';
+  const currentType = _ce.postTypes[platform]||'blend';
 
   const TYPES = [
+    {key:'blend',label:'All-in-one'},
     {key:'hot-take',label:'Hot Take'},{key:'story',label:'Story'},
     {key:'data',label:'Data-Led'},{key:'question',label:'Question'},
   ];

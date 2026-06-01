@@ -1231,6 +1231,7 @@ Structure:
   };
 
   const typeGuides = {
+    'blend':      'Weave ALL FOUR angles into ONE natural post — never four labeled chunks:\n1) HOOK: open with a contrarian take people would argue with (no warm-up).\n2) STORY: bring in one short, concrete moment or example.\n3) DATA: anchor it with one specific number or fact.\n4) QUESTION: end with one sharp question that invites a real reply.\nIt must read as a single flowing post. On X or other short formats, compress hard — lead with the contrarian hook and end with the question, and include a number only if it fits the limit.',
     'hot-take':   'Take the most contrarian angle. Say what others are afraid to say. Be specific about what people get wrong. Use plain words.',
     'story':      'Tell a short story: what happened → what went wrong → what you learned. First person. Keep it real and simple. Short sentences.',
     'data':       'Lead with the strongest number or fact from the content. Build the whole post around that one number. Explain what it means in plain words.',
