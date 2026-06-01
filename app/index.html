@@ -272,21 +272,7 @@
           <p class="lede">A day-by-day marketing to-do list for your product. Exactly what to do Day 1 to Day 7 — check tasks off as you go.</p>
         </div>
 
-        <!-- Channel chips -->
-        <div style="margin-bottom:22px">
-          <label style="display:block;margin-bottom:8px">Channels you'll use <span style="color:var(--muted);font-weight:400;font-size:12px">· tap to toggle — tasks adapt to these</span></label>
-          <div class="plan-channel-chips" id="planChannelChips">
-            <button type="button" class="portal-chip active" data-ch="X / Twitter">X / Twitter</button>
-            <button type="button" class="portal-chip active" data-ch="LinkedIn">LinkedIn</button>
-            <button type="button" class="portal-chip active" data-ch="Email newsletter">Email</button>
-            <button type="button" class="portal-chip active" data-ch="Content / SEO">Content / SEO</button>
-            <button type="button" class="portal-chip" data-ch="Paid ads">Paid ads</button>
-            <button type="button" class="portal-chip" data-ch="Cold outreach">Cold outreach</button>
-            <button type="button" class="portal-chip active" data-ch="Product Hunt">Product Hunt</button>
-          </div>
-        </div>
-
-        <button class="btn" id="planGenBtn" onclick="planGenerate()" style="width:100%;margin-bottom:28px">Build my week →</button>
+        <button class="btn secondary" id="planGenBtn" onclick="planGenerate()" style="display:none;margin-bottom:28px">↻ Rebuild my week</button>
 
         <!-- Results -->
         <div id="planResult" aria-live="polite" aria-label="1-week marketing plan"></div>

@@ -1178,10 +1178,7 @@ const _plan = {
   loading: false,
 };
 
-function planGetChannels() {
-  return [...document.querySelectorAll('#planChannelChips .portal-chip.active')]
-    .map(b => b.dataset.ch);
-}
+const PLAN_DEFAULT_CHANNELS = ['X / Twitter', 'LinkedIn', 'Email newsletter', 'Content / SEO', 'Product Hunt'];
 
 async function planGenerate() {
   if (_plan.loading) return;
@@ -1189,12 +1186,11 @@ async function planGenerate() {
   const niche = (pp?.bio || pp?.name || '').trim();
   if (!niche || niche.length < 3) { toast('Set up your Product Profile first'); openProductProfile(); return; }
   const stage    = pp?.stage || 'pre-launch';
-  const channels = planGetChannels();
-  if (!channels.length) { toast('Pick at least one channel'); return; }
+  const channels = PLAN_DEFAULT_CHANNELS;
 
   _plan.loading = true;
   const btn = $('planGenBtn');
-  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="ce-spinner"></span>Building your week…'; }
+  if (btn) { btn.style.display = 'none'; }
   $('planEmpty').style.display = 'none';
   $('planResult').innerHTML = `
     <div class="roast-loading" role="status" aria-live="polite">
@@ -1238,7 +1234,7 @@ async function planGenerate() {
       `<div class="ce-skeleton" style="color:#f87171;min-height:80px;border-color:rgba(248,113,113,.3)">${ceEsc(err.message || 'Generation failed — try again')}</div>`;
   } finally {
     _plan.loading = false;
-    if (btn) { btn.disabled = false; btn.innerHTML = 'Build my week →'; }
+    if (btn) { btn.style.display = ''; btn.disabled = false; btn.innerHTML = '↻ Rebuild my week'; }
   }
 }
 
@@ -1572,6 +1568,7 @@ function planRenderSaved() {
   if (state.weekPlan && state.weekPlan.days?.length) {
     $('planEmpty').style.display = 'none';
     planRender(state.weekPlan);
+    const btn = $('planGenBtn'); if (btn) { btn.style.display = ''; btn.innerHTML = '↻ Rebuild my week'; }
   }
 }
 
