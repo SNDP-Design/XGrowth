@@ -1189,8 +1189,6 @@ async function planGenerate() {
   const channels = PLAN_DEFAULT_CHANNELS;
 
   _plan.loading = true;
-  const btn = $('planGenBtn');
-  if (btn) { btn.style.display = 'none'; }
   $('planEmpty').style.display = 'none';
   $('planResult').innerHTML = `
     <div class="roast-loading" role="status" aria-live="polite">
@@ -1234,7 +1232,6 @@ async function planGenerate() {
       `<div class="ce-skeleton" style="color:#f87171;min-height:80px;border-color:rgba(248,113,113,.3)">${ceEsc(err.message || 'Generation failed — try again')}</div>`;
   } finally {
     _plan.loading = false;
-    if (btn) { btn.style.display = ''; btn.disabled = false; btn.innerHTML = '↻ Rebuild my week'; }
   }
 }
 
@@ -1568,7 +1565,6 @@ function planRenderSaved() {
   if (state.weekPlan && state.weekPlan.days?.length) {
     $('planEmpty').style.display = 'none';
     planRender(state.weekPlan);
-    const btn = $('planGenBtn'); if (btn) { btn.style.display = ''; btn.innerHTML = '↻ Rebuild my week'; }
   }
 }
 
