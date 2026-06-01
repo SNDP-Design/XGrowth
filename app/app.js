@@ -102,6 +102,11 @@ nav.addEventListener('click', e=>{
   document.querySelectorAll('main > section').forEach(s=>s.classList.add('hide'));
   const sec = document.querySelector(`section[data-view="${v}"]`);
   if(sec) sec.classList.remove('hide');
+  // Sync stage from product profile into the 1-Week Plan dropdown on navigation
+  if(v === 'plan'){
+    const s = state.productProfile?.stage;
+    const el = $('planStage'); if(el && s) el.value = s;
+  }
 });
 
 /* ========= Welcome / Profile ========= */
@@ -172,6 +177,7 @@ function openProductProfile(){
   setv('ppName', p.name);
   setv('ppWebsite', p.website);
   setv('ppBio', p.bio);
+  if(p.stage){ const el = $('ppStage'); if(el) el.value = p.stage; }
   setv('ppC1Site', c[0]?.website); setv('ppC1Li', c[0]?.linkedin); setv('ppC1X', c[0]?.x);
   setv('ppC2Site', c[1]?.website); setv('ppC2Li', c[1]?.linkedin); setv('ppC2X', c[1]?.x);
   document.getElementById('productProfile').classList.add('show');
@@ -201,14 +207,18 @@ function saveProductProfile(){
     .filter(c => c.website || c.linkedin || c.x);
 
   const bio = ($('ppBio')?.value || '').trim();
+  const stage = $('ppStage')?.value || 'pre-launch';
   state.productProfile = {
     name,
     website: ($('ppWebsite')?.value || '').trim(),
     bio,
+    stage,
     competitors,
   };
   // Feed product context into the marketing niche so every generator personalizes
   state.profile = { ...(state.profile || {}), niche: bio || name };
+  // Sync stage to the 1-Week Plan dropdown if it's visible
+  const planStageEl = $('planStage'); if(planStageEl) planStageEl.value = stage;
 
   save();
   applyProfile();
