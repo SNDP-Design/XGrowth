@@ -1419,6 +1419,17 @@ function planDay1Card(p, idx, platform) {
   const url = isX
     ? `https://twitter.com/intent/tweet?text=${encodeURIComponent(p.text.slice(0, 280))}`
     : `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(p.text.slice(0, 1300))}`;
+  if (p._regen) {
+    return `
+    <div class="day1-post" id="day1post-${idx}">
+      <div class="day1-post-head">
+        <span class="day1-plat-label">${info.svg} ${info.label}</span>
+      </div>
+      <div class="roast-loading" role="status" aria-live="polite" style="flex:1;min-height:80px">
+        <div class="ce-spinner" aria-hidden="true"></div><span>Rewriting this post…</span>
+      </div>
+    </div>`;
+  }
   return `
     <div class="day1-post${p.posted ? ' posted' : ''}" id="day1post-${idx}">
       <div class="day1-post-head">
@@ -1427,6 +1438,7 @@ function planDay1Card(p, idx, platform) {
       </div>
       <p class="day1-post-text">${ceEsc(p.text)}</p>
       <div class="day1-post-foot">
+        <button class="btn ghost" style="height:32px;font-size:13px" onclick="planRegenerateCard(${idx})">↻ Regenerate</button>
         <button class="btn ghost" style="height:32px;font-size:13px" data-ce-copy="${ceEsc(p.text)}" onclick="ceCopyAttr(this)">Copy</button>
         <a class="btn publish" style="height:32px;font-size:13px" href="${url}" target="_blank" rel="noopener noreferrer" onclick="planSetPosted(${idx},true)">Post →</a>
       </div>
@@ -1442,6 +1454,35 @@ function planSetPosted(idx, val) {
   if (card) card.classList.toggle('posted', val);
   planRefreshTab(0);
   planUpdateProgress();
+}
+
+// Regenerate a single Day 1 post (one card) with a fresh variation
+async function planRegenerateCard(idx) {
+  const plan = state.weekPlan;
+  const p = plan?.day1Posts?.[idx];
+  if (!p || p._regen) return;
+  p._regen = true;
+  const panel = document.getElementById('weekDayPanel');
+  if (panel && _plan.activeDay === 0) panel.innerHTML = planRenderDay1(plan);
+  try {
+    const pp = state.productProfile || {};
+    const product = { name: pp.name || plan.niche, what: pp.bio || plan.niche, website: pp.website || '' };
+    const data = await xgFetch('/generate', {
+      kind: 'launch-posts', single: true, platform: p.platform,
+      niche: plan.niche, product,
+    });
+    const posts = planParseLaunchPosts(data.text || '');
+    if (posts.length && posts[0].text) { p.text = posts[0].text; p.posted = false; }
+    else toast("Couldn't rewrite — try again");
+  } catch (err) {
+    toast(err.message || 'Could not regenerate');
+  } finally {
+    delete p._regen;
+    save();
+    if (panel && _plan.activeDay === 0) panel.innerHTML = planRenderDay1(plan);
+    planRefreshTab(0);
+    planUpdateProgress();
+  }
 }
 
 // (Re)generate the Day 1 launch posts on demand

@@ -284,10 +284,39 @@ function extractVisibleText(html) {
     .replace(/\s{3,}/g, '\n\n').trim();
 }
 
-function buildLaunchPostsPrompt({ product = {}, niche = '' }) {
+function buildLaunchPostsPrompt({ product = {}, niche = '', single = false, platform = '' }) {
   const name    = (product.name || niche || 'this product').toString().trim();
   const what    = (product.what || niche || '').toString().trim();
   const website = (product.website || '').toString().trim();
+
+  // Single-post regeneration — one fresh post for one platform
+  if (single) {
+    const isX = platform === 'x';
+    const heading = isX ? '## X 1' : '## LINKEDIN 1';
+    const spec = isX
+      ? 'Write ONE X (Twitter) post: under 280 characters, punchy, one clear idea, no hashtags, no links.'
+      : 'Write ONE LinkedIn post: 500–1100 characters. One strong opening line (not "I" or "As a founder"). Short paragraphs. You may use → as a bullet marker. End with a genuine question that invites replies (never "thoughts?"). Max 2 hashtags on the final line. No links.';
+    return `You are a social media ghostwriter for a startup founder. Write a post that is 100% ready to publish today — copy, paste, post with zero edits.
+
+PRODUCT: ${name}
+WHAT IT DOES: ${what || name}
+${website ? `WEBSITE: ${website}` : ''}
+
+${spec}
+Pick a fresh, specific angle (a pain point, a build-in-public story, or a contrarian take) — make it distinct and surprising. Write in first person as the founder. Plain, simple English. Sound like a sharp human, not a marketer.
+
+Format EXACTLY like this — this exact heading, nothing before it:
+
+${heading}
+[full post text]
+
+${HARD_RULES}
+- NO emojis. NO "Introducing". NO "Excited to share". NO meta-commentary.
+- The post stands alone and is publishable exactly as written.
+${isX ? '- MUST be under 280 characters — count before returning.' : ''}
+- Be specific to THIS product. No generic startup filler.
+- Return ONLY the single labeled post. No preamble, no notes after it.`;
+  }
 
   return `You are a social media ghostwriter for a startup founder. Write posts that are 100% ready to publish today — the founder should be able to copy, paste, and post with zero edits.
 
