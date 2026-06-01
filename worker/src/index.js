@@ -284,6 +284,31 @@ function extractVisibleText(html) {
     .replace(/\s{3,}/g, '\n\n').trim();
 }
 
+// Shared craft rules for the ready-to-publish launch posts — sharp, contrarian, concrete, human.
+const LAUNCH_CRAFT = `VOICE — sharp & contrarian:
+- Write as an opinionated founder with a real point of view. Take a side. Say the thing most people in this space won't.
+- Confident and direct, a little provocative. Never hypey, never salesy. No exclamation marks.
+
+THE HOOK decides everything — the first line is the sharpest line:
+- Open on ONE concrete moment, a specific number, or a claim with an edge. Make the reader stop.
+- BANNED openers: "Most founders…", "Most people…", "Most companies…", "In a world…", "Let's be honest", "Here's the thing", "Imagine…", or any definition. No warm-up sentence.
+
+BE SPECIFIC, NOT VAGUE:
+- Use real detail: an actual scenario, a number, a named task/tool/moment, a concrete before-and-after.
+- Cut abstractions like "unify your workflow", "scale your growth", "one operating system", "streamline everything". Show the real situation instead.
+- One idea per post. Each post must make a genuinely DIFFERENT point — never rephrase the same claim.
+
+TIGHT:
+- Every line earns its place. If a sentence can be cut, cut it. No summary/recap line at the end.
+- BANNED endings: "Stop X. Start Y.", "It's just a sales pitch.", "The future isn't X, it's Y.", and any generic CTA.
+
+PLAIN ENGLISH (global audience, many non-native speakers):
+- Short sentences, simple words. Say "use" not "utilize", "problems" not "pain points", "launch" not "go-to-market", "help" not "facilitate".
+- NO jargon: leverage, scalable, robust, frictionless, seamless, ecosystem, value proposition, empower, innovative, cutting-edge, best-in-class, synergy, paradigm, game-changer, move the needle, productivity killer, level up, 10x, deep dive.
+- NO emojis. NO hashtags. NO links. NO bold/italics. NO "Introducing", NO "Excited to share", NO meta-commentary.
+- NEVER write a specific calendar year (no "in 2024", "in 2025") unless it appears in the inputs above.
+- First person, present tense. Sound like a real person talking, not a brand account.`;
+
 function buildLaunchPostsPrompt({ product = {}, niche = '', single = false, platform = '', dayTheme = '', dayNum = 0 }) {
   const name    = (product.name || niche || 'this product').toString().trim();
   const what    = (product.what || niche || '').toString().trim();
@@ -291,46 +316,43 @@ function buildLaunchPostsPrompt({ product = {}, niche = '', single = false, plat
   const theme   = (dayTheme || '').toString().trim();
   const themeBlock = theme ? `\nTODAY'S MARKETING FOCUS (Day ${dayNum || ''}): ${theme}\nEvery post must serve this focus while staying about the product.\n` : '';
 
+  const liSpec = 'LinkedIn posts: 400–900 characters. Strong opening line. Short paragraphs (1–2 sentences each). Optional: up to 3 "→" bullets if they earn it. End with one sharp, specific question a real reader would actually answer.';
+  const xSpec  = 'X posts: under 280 characters. One clear idea, punchy. COUNT characters before returning — if over 280, cut it down.';
+
   // Single-post regeneration — one fresh post for one platform
   if (single) {
     const isX = platform === 'x';
     const heading = isX ? '## X 1' : '## LINKEDIN 1';
-    const spec = isX
-      ? 'Write ONE X (Twitter) post: under 280 characters, punchy, one clear idea, no hashtags, no links.'
-      : 'Write ONE LinkedIn post: 500–1100 characters. One strong opening line (not "I" or "As a founder"). Short paragraphs. You may use → as a bullet marker. End with a genuine question that invites replies (never "thoughts?"). Max 2 hashtags on the final line. No links.';
-    return `You are a social media ghostwriter for a startup founder. Write a post that is 100% ready to publish today — copy, paste, post with zero edits.
+    return `You are ghostwriting ONE social post for a startup founder — 100% ready to publish, zero edits.
 
 PRODUCT: ${name}
 WHAT IT DOES: ${what || name}
 ${website ? `WEBSITE: ${website}` : ''}${themeBlock}
 
-${spec}
-Pick a fresh, specific angle (a pain point, a build-in-public story, or a contrarian take) — make it distinct and surprising. Write in first person as the founder. Plain, simple English. Sound like a sharp human, not a marketer.
+Write ONE ${isX ? 'X (Twitter)' : 'LinkedIn'} post. Pick a fresh, specific, contrarian angle that's distinct and surprising — not a generic intro.
+${isX ? xSpec : liSpec}
+
+${LAUNCH_CRAFT}
 
 Format EXACTLY like this — this exact heading, nothing before it:
 
 ${heading}
 [full post text]
 
-${HARD_RULES}
-- NO emojis. NO "Introducing". NO "Excited to share". NO meta-commentary.
-- The post stands alone and is publishable exactly as written.
-${isX ? '- MUST be under 280 characters — count before returning.' : ''}
-- Be specific to THIS product. No generic startup filler.
-- Return ONLY the single labeled post. No preamble, no notes after it.`;
+Return ONLY the single labeled post. No preamble, no notes after it.`;
   }
 
   const angles = theme
-    ? `Write 3 LinkedIn posts and 3 X (Twitter) posts for today's focus above. The 6 posts must each take a DIFFERENT angle on that focus — never repeat the same idea:
-- Angle 1: lead with the specific pain or moment the reader feels around this focus
-- Angle 2: a build-in-public / founder story tied to this focus
-- Angle 3: a bold, contrarian, or surprising take related to this focus`
-    : `Write 3 LinkedIn posts and 3 X (Twitter) posts that introduce this product to the founder's audience. The 6 posts must each take a DIFFERENT angle — never repeat the same idea:
-- Angle 1: the problem it solves — lead with the pain the reader feels
-- Angle 2: a build-in-public / founder story — why you built it, what you learned
-- Angle 3: a bold, contrarian, or surprising claim about the space`;
+    ? `Write 3 LinkedIn posts and 3 X (Twitter) posts for today's focus above. Each takes a DIFFERENT angle — never the same point twice:
+- Post 1: the contrarian truth about this focus — name what most people do here that quietly fails, lead with a concrete moment.
+- Post 2: a build-in-public moment tied to this focus — a specific decision or mistake, and the unpopular lesson from it.
+- Post 3: a bold claim about this focus most people would push back on — then back it up in one or two concrete lines.`
+    : `Write 3 LinkedIn posts and 3 X (Twitter) posts that introduce this product. Each takes a DIFFERENT angle — never the same point twice:
+- Post 1: the contrarian problem — name the common approach in this space that quietly fails the reader, lead with a concrete moment they recognise.
+- Post 2: build-in-public with an edge — a specific decision or mistake you made building this, and the unpopular lesson.
+- Post 3: a bold claim about the category most people would disagree with — then defend it with one concrete reason.`;
 
-  return `You are a social media ghostwriter for a startup founder. Write posts that are 100% ready to publish today — the founder should be able to copy, paste, and post with zero edits.
+  return `You are ghostwriting social posts for a startup founder — every post 100% ready to publish, zero edits.
 
 PRODUCT: ${name}
 WHAT IT DOES: ${what || name}
@@ -338,10 +360,10 @@ ${website ? `WEBSITE: ${website}` : ''}${themeBlock}
 
 ${angles}
 
-Write in first person as the founder. Plain, simple English. Sound like a sharp human, not a marketer.
+${liSpec}
+${xSpec}
 
-LinkedIn posts: 500–1100 characters. One strong opening line (not "I" or "As a founder"). Short paragraphs. You may use → as a bullet marker. End with a genuine question that invites replies (never "thoughts?"). Max 2 hashtags on the final line. No links.
-X posts: under 280 characters each. Punchy, one clear idea. No hashtags. No links.
+${LAUNCH_CRAFT}
 
 Format EXACTLY like this — these exact headings, nothing before ## LINKEDIN 1:
 
@@ -363,12 +385,7 @@ Format EXACTLY like this — these exact headings, nothing before ## LINKEDIN 1:
 ## X 3
 [tweet text]
 
-${HARD_RULES}
-- NO emojis. NO "Introducing". NO "Excited to share". NO meta-commentary.
-- Every post stands alone and is publishable exactly as written.
-- Each X post MUST be under 280 characters — count before returning.
-- Be specific to THIS product. No generic startup filler.
-- Return ONLY the 6 labeled posts. No preamble, no notes, no text after ## X 3.`;
+Return ONLY the 6 labeled posts. No preamble, no notes, no text after ## X 3.`;
 }
 
 function buildWeekPlanPrompt({ niche, stage, channels }) {
