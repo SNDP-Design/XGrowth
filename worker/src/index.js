@@ -284,10 +284,12 @@ function extractVisibleText(html) {
     .replace(/\s{3,}/g, '\n\n').trim();
 }
 
-function buildLaunchPostsPrompt({ product = {}, niche = '', single = false, platform = '' }) {
+function buildLaunchPostsPrompt({ product = {}, niche = '', single = false, platform = '', dayTheme = '', dayNum = 0 }) {
   const name    = (product.name || niche || 'this product').toString().trim();
   const what    = (product.what || niche || '').toString().trim();
   const website = (product.website || '').toString().trim();
+  const theme   = (dayTheme || '').toString().trim();
+  const themeBlock = theme ? `\nTODAY'S MARKETING FOCUS (Day ${dayNum || ''}): ${theme}\nEvery post must serve this focus while staying about the product.\n` : '';
 
   // Single-post regeneration — one fresh post for one platform
   if (single) {
@@ -300,7 +302,7 @@ function buildLaunchPostsPrompt({ product = {}, niche = '', single = false, plat
 
 PRODUCT: ${name}
 WHAT IT DOES: ${what || name}
-${website ? `WEBSITE: ${website}` : ''}
+${website ? `WEBSITE: ${website}` : ''}${themeBlock}
 
 ${spec}
 Pick a fresh, specific angle (a pain point, a build-in-public story, or a contrarian take) — make it distinct and surprising. Write in first person as the founder. Plain, simple English. Sound like a sharp human, not a marketer.
@@ -318,16 +320,23 @@ ${isX ? '- MUST be under 280 characters — count before returning.' : ''}
 - Return ONLY the single labeled post. No preamble, no notes after it.`;
   }
 
+  const angles = theme
+    ? `Write 3 LinkedIn posts and 3 X (Twitter) posts for today's focus above. The 6 posts must each take a DIFFERENT angle on that focus — never repeat the same idea:
+- Angle 1: lead with the specific pain or moment the reader feels around this focus
+- Angle 2: a build-in-public / founder story tied to this focus
+- Angle 3: a bold, contrarian, or surprising take related to this focus`
+    : `Write 3 LinkedIn posts and 3 X (Twitter) posts that introduce this product to the founder's audience. The 6 posts must each take a DIFFERENT angle — never repeat the same idea:
+- Angle 1: the problem it solves — lead with the pain the reader feels
+- Angle 2: a build-in-public / founder story — why you built it, what you learned
+- Angle 3: a bold, contrarian, or surprising claim about the space`;
+
   return `You are a social media ghostwriter for a startup founder. Write posts that are 100% ready to publish today — the founder should be able to copy, paste, and post with zero edits.
 
 PRODUCT: ${name}
 WHAT IT DOES: ${what || name}
-${website ? `WEBSITE: ${website}` : ''}
+${website ? `WEBSITE: ${website}` : ''}${themeBlock}
 
-Write 3 LinkedIn posts and 3 X (Twitter) posts that introduce this product to the founder's audience. The 6 posts must each take a DIFFERENT angle — never repeat the same idea:
-- Angle 1: the problem it solves — lead with the pain the reader feels
-- Angle 2: a build-in-public / founder story — why you built it, what you learned
-- Angle 3: a bold, contrarian, or surprising claim about the space
+${angles}
 
 Write in first person as the founder. Plain, simple English. Sound like a sharp human, not a marketer.
 

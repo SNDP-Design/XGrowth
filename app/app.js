@@ -1172,6 +1172,7 @@ function ceParseRoastSections(text) {
 
 const _plan = {
   loading: false,
+  loadingDays: {},   // di -> true while that day's posts are generating
 };
 
 const PLAN_DEFAULT_CHANNELS = ['X / Twitter', 'LinkedIn', 'Email newsletter', 'Content / SEO', 'Product Hunt'];
@@ -1207,16 +1208,17 @@ async function planGenerate() {
     const parsed = planParse(planRes.value.text || '');
     if (!parsed.days.length) throw new Error("Couldn't build the week — try again");
 
+    // Day 1 (index 0) launch posts go straight onto that day
     const day1Posts = postsRes.status === 'fulfilled'
       ? planParseLaunchPosts(postsRes.value.text || '')
       : [];
+    if (parsed.days[0]) parsed.days[0].posts = day1Posts;
 
     state.weekPlan = {
       rawText:   planRes.value.text || '',
       niche, stage,
       focus:     parsed.focus,
       days:      parsed.days,
-      day1Posts,
       keepGoing: parsed.keepGoing,
       createdAt: Date.now(),
     };
@@ -1245,14 +1247,18 @@ function planParseLaunchPosts(text) {
   return posts;
 }
 
-// Per-day completion: Day 1 = posts (done = posted), other days = tasks (done)
+// Posts for a given day — migrates legacy plan.day1Posts onto day 0
+function planDayPosts(plan, di) {
+  const day = plan.days?.[di];
+  if (!day) return [];
+  if (di === 0 && !day.posts && plan.day1Posts) { day.posts = plan.day1Posts; delete plan.day1Posts; }
+  return day.posts || [];
+}
+
+// Per-day completion — every day = ready-to-publish posts (done = posted)
 function planDayStats(plan, i) {
-  if (i === 0) {
-    const a = plan.day1Posts || [];
-    return { total: a.length, done: a.filter(p => p.posted).length };
-  }
-  const a = plan.days[i]?.tasks || [];
-  return { total: a.length, done: a.filter(t => t.done).length };
+  const a = planDayPosts(plan, i);
+  return { total: a.length, done: a.filter(p => p.posted).length };
 }
 
 function planParse(text) {
@@ -1278,7 +1284,7 @@ function planParse(text) {
       const detail = pipe > -1 ? raw.slice(pipe + 1).trim() : '';
       if (action) tasks.push({ action, detail, done: false });
     }
-    if (tasks.length) days.push({ theme, tasks });
+    if (theme) days.push({ theme, tasks, posts: [] });
   }
 
   const keepM = /## KEEP GOING\s*\n([\s\S]*?)$/i.exec(text);
@@ -1315,7 +1321,7 @@ function planRender(plan) {
   plan.days.forEach((day, di) => {
     const s = planDayStats(plan, di);
     const allDone = s.total > 0 && s.done === s.total;
-    const status = (di === 0 && s.total === 0) ? '✨' : (allDone ? '✓' : `${s.done}/${s.total}`);
+    const status = s.total === 0 ? '✨' : (allDone ? '✓' : `${s.done}/${s.total}`);
     const dayDate = new Date(planStart); dayDate.setDate(planStart.getDate() + di);
     const dateLabel = dayDate.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
     html += `
@@ -1350,47 +1356,29 @@ function planRender(plan) {
   $('planResult').innerHTML = html;
 }
 
-// HTML for one day's panel — Day 1 = prepared posts, other days = checkable tasks
+// HTML for one day's panel — every day = ready-to-publish post pairs
 function planRenderDay(plan, di) {
-  if (di === 0) return planRenderDay1(plan);
   const day = plan.days[di];
   if (!day) return '';
-  return `
-    <div class="week-day-head">
-      <span class="week-day-num">Day ${di + 1}</span>
-      <span class="week-day-theme">${ceEsc(day.theme)}</span>
-    </div>
-    <div class="week-tasks">
-      ${day.tasks.map((t, ti) => `
-        <div class="week-task${t.done ? ' done' : ''}" id="wtask-${di}-${ti}">
-          <button class="week-check" onclick="planToggleTask(${di},${ti})" aria-label="${t.done ? 'Mark not done' : 'Mark done'}">${t.done ? '✓' : ''}</button>
-          <div class="week-task-main">
-            <span class="week-task-action">${ceEsc(t.action)}</span>
-            ${t.detail ? `<span class="week-task-detail">${ceEsc(t.detail)}</span>` : ''}
-          </div>
-        </div>`).join('')}
-    </div>`;
-}
+  const posts = planDayPosts(plan, di);
+  const subtitle = day.theme || 'Your posts are ready';
 
-// Day 1 — XGrowth has already written the posts; the founder just reviews & ships
-function planRenderDay1(plan) {
-  const posts = plan.day1Posts || [];
   let html = `
     <div class="week-day-head">
-      <span class="week-day-num">Day 1</span>
-      <span class="week-day-theme">Your posts are ready</span>
+      <span class="week-day-num">Day ${di + 1}</span>
+      <span class="week-day-theme">${ceEsc(subtitle)}</span>
     </div>`;
 
-  if (_plan.day1Loading) {
+  if (_plan.loadingDays[di]) {
     html += `<div class="roast-loading" role="status" aria-live="polite" style="margin-top:8px">
-      <div class="ce-spinner" aria-hidden="true"></div><span>Writing your 6 posts…</span></div>`;
+      <div class="ce-spinner" aria-hidden="true"></div><span>Writing your posts for this day…</span></div>`;
     return html;
   }
 
   if (!posts.length) {
     html += `
-      <p class="day1-intro">We couldn't prepare your posts yet. Add your product details, then generate them — you just review and publish.</p>
-      <button class="btn" style="height:42px" onclick="planPrepareDay1()">✨ Prepare my posts</button>`;
+      <p class="day1-intro">Generate ready-to-publish posts for this day — you just review and ship.</p>
+      <button class="btn" style="height:42px" onclick="planPrepareDay(${di})">✨ Prepare my posts</button>`;
     return html;
   }
 
@@ -1400,18 +1388,18 @@ function planRenderDay1(plan) {
   const count = Math.max(liPosts.length, xPosts.length);
   for (let n = 0; n < count; n++) {
     html += `<div class="day1-pair-head">Post ${n + 1}</div><div class="day1-pair-row">`;
-    if (liPosts[n]) html += planDay1Card(liPosts[n].p, liPosts[n].i, 'linkedin');
-    if (xPosts[n])  html += planDay1Card(xPosts[n].p,  xPosts[n].i,  'x');
+    if (liPosts[n]) html += planDayCard(liPosts[n].p, di, liPosts[n].i, 'linkedin');
+    if (xPosts[n])  html += planDayCard(xPosts[n].p,  di, xPosts[n].i,  'x');
     html += `</div>`;
   }
 
   html += `<div style="margin-top:12px;display:flex;justify-content:flex-end">
-      <button class="btn secondary" style="height:36px;padding:0 14px;font-size:13px" onclick="planPrepareDay1()">↻ Rewrite all posts</button>
+      <button class="btn secondary" style="height:36px;padding:0 14px;font-size:13px" onclick="planPrepareDay(${di})">↻ Rewrite all posts</button>
     </div>`;
   return html;
 }
 
-function planDay1Card(p, idx, platform) {
+function planDayCard(p, di, idx, platform) {
   const len = p.text.length;
   const isX = (platform || p.platform) === 'x';
   const over = isX && len > 280;
@@ -1421,7 +1409,7 @@ function planDay1Card(p, idx, platform) {
     : `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(p.text.slice(0, 1300))}`;
   if (p._regen) {
     return `
-    <div class="day1-post" id="day1post-${idx}">
+    <div class="day1-post" id="day${di}post-${idx}">
       <div class="day1-post-head">
         <span class="day1-plat-label">${info.svg} ${info.label}</span>
       </div>
@@ -1431,45 +1419,46 @@ function planDay1Card(p, idx, platform) {
     </div>`;
   }
   return `
-    <div class="day1-post${p.posted ? ' posted' : ''}" id="day1post-${idx}">
+    <div class="day1-post${p.posted ? ' posted' : ''}" id="day${di}post-${idx}">
       <div class="day1-post-head">
         <span class="day1-plat-label">${info.svg} ${info.label}</span>
         <span class="day1-char${over ? ' over' : ''}">${len}${isX ? '/280' : ' chars'}</span>
       </div>
       <p class="day1-post-text">${ceEsc(p.text)}</p>
       <div class="day1-post-foot">
-        <button class="btn ghost" style="height:32px;font-size:13px" onclick="planRegenerateCard(${idx})">↻ Regenerate</button>
+        <button class="btn ghost" style="height:32px;font-size:13px" onclick="planRegenerateCard(${di},${idx})">↻ Regenerate</button>
         <button class="btn ghost" style="height:32px;font-size:13px" data-ce-copy="${ceEsc(p.text)}" onclick="ceCopyAttr(this)">Copy</button>
-        <a class="btn publish" style="height:32px;font-size:13px" href="${url}" target="_blank" rel="noopener noreferrer" onclick="planSetPosted(${idx},true)">Post →</a>
+        <a class="btn publish" style="height:32px;font-size:13px" href="${url}" target="_blank" rel="noopener noreferrer" onclick="planSetPosted(${di},${idx},true)">Post →</a>
       </div>
     </div>`;
 }
 
-function planSetPosted(idx, val) {
-  const p = state.weekPlan?.day1Posts?.[idx];
+function planSetPosted(di, idx, val) {
+  const p = planDayPosts(state.weekPlan, di)[idx];
   if (!p || p.posted === val) return;
   p.posted = val;
   save();
-  const card = document.getElementById(`day1post-${idx}`);
+  const card = document.getElementById(`day${di}post-${idx}`);
   if (card) card.classList.toggle('posted', val);
-  planRefreshTab(0);
+  planRefreshTab(di);
   planUpdateProgress();
 }
 
-// Regenerate a single Day 1 post (one card) with a fresh variation
-async function planRegenerateCard(idx) {
+// Regenerate a single post (one card) with a fresh variation
+async function planRegenerateCard(di, idx) {
   const plan = state.weekPlan;
-  const p = plan?.day1Posts?.[idx];
+  const p = planDayPosts(plan, di)[idx];
   if (!p || p._regen) return;
   p._regen = true;
   const panel = document.getElementById('weekDayPanel');
-  if (panel && _plan.activeDay === 0) panel.innerHTML = planRenderDay1(plan);
+  if (panel && _plan.activeDay === di) panel.innerHTML = planRenderDay(plan, di);
   try {
     const pp = state.productProfile || {};
     const product = { name: pp.name || plan.niche, what: pp.bio || plan.niche, website: pp.website || '' };
     const data = await xgFetch('/generate', {
       kind: 'launch-posts', single: true, platform: p.platform,
       niche: plan.niche, product,
+      dayTheme: di > 0 ? (plan.days[di]?.theme || '') : '', dayNum: di + 1,
     });
     const posts = planParseLaunchPosts(data.text || '');
     if (posts.length && posts[0].text) { p.text = posts[0].text; p.posted = false; }
@@ -1479,34 +1468,37 @@ async function planRegenerateCard(idx) {
   } finally {
     delete p._regen;
     save();
-    if (panel && _plan.activeDay === 0) panel.innerHTML = planRenderDay1(plan);
-    planRefreshTab(0);
+    if (panel && _plan.activeDay === di) panel.innerHTML = planRenderDay(plan, di);
+    planRefreshTab(di);
     planUpdateProgress();
   }
 }
 
-// (Re)generate the Day 1 launch posts on demand
-async function planPrepareDay1() {
-  if (_plan.day1Loading) return;
+// (Re)generate all posts for a given day — themed to that day's focus
+async function planPrepareDay(di) {
+  if (_plan.loadingDays[di]) return;
   const plan = state.weekPlan;
-  if (!plan) return;
-  _plan.day1Loading = true;
+  if (!plan || !plan.days[di]) return;
+  _plan.loadingDays[di] = true;
   const panel = document.getElementById('weekDayPanel');
-  if (panel && _plan.activeDay === 0) panel.innerHTML = planRenderDay1(plan);
+  if (panel && _plan.activeDay === di) panel.innerHTML = planRenderDay(plan, di);
   try {
     const pp = state.productProfile || {};
     const product = { name: pp.name || plan.niche, what: pp.bio || plan.niche, website: pp.website || '' };
-    const data = await xgFetch('/generate', { kind: 'launch-posts', niche: plan.niche, product });
+    const data = await xgFetch('/generate', {
+      kind: 'launch-posts', niche: plan.niche, product,
+      dayTheme: di > 0 ? (plan.days[di]?.theme || '') : '', dayNum: di + 1,
+    });
     const posts = planParseLaunchPosts(data.text || '');
-    if (posts.length) plan.day1Posts = posts;
+    if (posts.length) plan.days[di].posts = posts;
     else toast("Couldn't parse the posts — try again");
     save();
   } catch (err) {
     toast(err.message || 'Could not prepare posts');
   } finally {
-    _plan.day1Loading = false;
-    if (panel && _plan.activeDay === 0) panel.innerHTML = planRenderDay1(plan);
-    planRefreshTab(0);
+    delete _plan.loadingDays[di];
+    if (panel && _plan.activeDay === di) panel.innerHTML = planRenderDay(plan, di);
+    planRefreshTab(di);
     planUpdateProgress();
   }
 }
@@ -1521,7 +1513,7 @@ function planRefreshTab(i) {
   if (!tab) return;
   tab.classList.toggle('done', allDone);
   const st = tab.querySelector('.week-tab-status');
-  if (st) st.textContent = (i === 0 && s.total === 0) ? '✨' : (allDone ? '✓' : `${s.done}/${s.total}`);
+  if (st) st.textContent = s.total === 0 ? '✨' : (allDone ? '✓' : `${s.done}/${s.total}`);
 }
 
 function planSelectDay(di) {
@@ -1534,32 +1526,8 @@ function planSelectDay(di) {
   });
   const panel = document.getElementById('weekDayPanel');
   if (panel) panel.innerHTML = planRenderDay(state.weekPlan, di);
-}
-
-function planToggleTask(di, ti) {
-  const plan = state.weekPlan;
-  const task = plan?.days?.[di]?.tasks?.[ti];
-  if (!task) return;
-  task.done = !task.done;
-  save();
-
-  const row = document.getElementById(`wtask-${di}-${ti}`);
-  if (row) {
-    row.classList.toggle('done', task.done);
-    const cb = row.querySelector('.week-check');
-    if (cb) { cb.textContent = task.done ? '✓' : ''; cb.setAttribute('aria-label', task.done ? 'Mark not done' : 'Mark done'); }
-  }
-  // Update this day's tab indicator
-  const day = plan.days[di];
-  const dDone = day.tasks.filter(t => t.done).length;
-  const allDone = day.tasks.length > 0 && dDone === day.tasks.length;
-  const tab = document.getElementById(`weekTab-${di}`);
-  if (tab) {
-    tab.classList.toggle('done', allDone);
-    const st = tab.querySelector('.week-tab-status');
-    if (st) st.textContent = allDone ? '✓' : `${dDone}/${day.tasks.length}`;
-  }
-  planUpdateProgress();
+  // Lazily generate this day's posts the first time it's opened
+  if (!planDayPosts(state.weekPlan, di).length && !_plan.loadingDays[di]) planPrepareDay(di);
 }
 
 function planUpdateProgress() {
@@ -1587,16 +1555,12 @@ function planDownload() {
   if (plan.niche) md += `**Product:** ${plan.niche}\n\n`;
   if (plan.focus) md += `**This week is about:** ${plan.focus}\n\n`;
   plan.days.forEach((d, i) => {
-    if (i === 0) {
-      md += `## Day 1 — Your posts (review & publish)\n\n`;
-      (plan.day1Posts || []).forEach(p => {
-        md += `**${p.platform === 'x' ? 'X / Twitter' : 'LinkedIn'}${p.posted ? ' — posted' : ''}:**\n\n${p.text}\n\n---\n\n`;
-      });
-      return;
-    }
-    md += `## Day ${i + 1} — ${d.theme}\n\n`;
-    d.tasks.forEach(t => { md += `- [${t.done ? 'x' : ' '}] ${t.action}${t.detail ? ` — ${t.detail}` : ''}\n`; });
-    md += `\n`;
+    md += `## Day ${i + 1}${d.theme ? ` — ${d.theme}` : ''}\n\n`;
+    const posts = planDayPosts(plan, i);
+    if (!posts.length) { md += `_Posts not generated yet._\n\n`; return; }
+    posts.forEach(p => {
+      md += `**${p.platform === 'x' ? 'X / Twitter' : 'LinkedIn'}${p.posted ? ' — posted' : ''}:**\n\n${p.text}\n\n---\n\n`;
+    });
   });
   if (plan.keepGoing) md += `## Keep going\n\n${plan.keepGoing}\n`;
   const blob = new Blob([md], { type: 'text/markdown' });
