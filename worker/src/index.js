@@ -306,7 +306,7 @@ PLAIN ENGLISH (global audience, many non-native speakers):
 - Short sentences, simple words. Say "use" not "utilize", "problems" not "pain points", "launch" not "go-to-market", "help" not "facilitate".
 - NO jargon: leverage, scalable, robust, frictionless, seamless, ecosystem, value proposition, empower, innovative, cutting-edge, best-in-class, synergy, paradigm, game-changer, move the needle, productivity killer, level up, 10x, deep dive.
 - NO emojis. NO hashtags. NO links. NO bold/italics. NO "Introducing", NO "Excited to share", NO meta-commentary.
-- NEVER write a specific calendar year (no "in 2024", "in 2025") unless it appears in the inputs above.
+- If you reference a year at all, it MUST be the CURRENT YEAR shown above — never an older year like 2023 or 2024. Better: don't name a year, the post stays evergreen.
 - First person, present tense. Sound like a real person talking, not a brand account.`;
 
 function buildLaunchPostsPrompt({ product = {}, niche = '', single = false, platform = '', dayTheme = '', dayNum = 0 }) {
@@ -314,7 +314,8 @@ function buildLaunchPostsPrompt({ product = {}, niche = '', single = false, plat
   const what    = (product.what || niche || '').toString().trim();
   const website = (product.website || '').toString().trim();
   const theme   = (dayTheme || '').toString().trim();
-  const themeBlock = theme ? `\nTODAY'S MARKETING FOCUS (Day ${dayNum || ''}): ${theme}\nEvery post must serve this focus while staying about the product.\n` : '';
+  const year    = new Date().getUTCFullYear();
+  const themeBlock = `\nCURRENT YEAR: ${year}${theme ? `\nTODAY'S MARKETING FOCUS (Day ${dayNum || ''}): ${theme}\nEvery post must serve this focus while staying about the product.` : ''}\n`;
 
   const liSpec = 'LinkedIn posts: 400–900 characters. Strong opening line. Short paragraphs (1–2 sentences each). Optional: up to 3 "→" bullets if they earn it. End with one sharp, specific question a real reader would actually answer.';
   const xSpec  = 'X posts: under 280 characters. One clear idea, punchy. COUNT characters before returning — if over 280, cut it down.';
