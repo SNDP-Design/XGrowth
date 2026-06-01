@@ -1335,13 +1335,6 @@ function planRender(plan) {
   // Active day panel
   html += `<div class="week-day-panel" id="weekDayPanel" role="tabpanel">${planRenderDay(plan, _plan.activeDay)}</div>`;
 
-  // Footer actions
-  html += `
-    <div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap">
-      <button class="btn ghost" style="height:38px;padding:0 16px;font-size:13px" onclick="planDownload()">↓ Download .md</button>
-      <button class="btn secondary" style="height:38px;padding:0 16px;font-size:13px" onclick="planReset()">New week plan</button>
-    </div>`;
-
   $('planResult').innerHTML = html;
 }
 
