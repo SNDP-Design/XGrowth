@@ -1394,38 +1394,41 @@ function planRenderDay1(plan) {
     return html;
   }
 
-  html += `<p class="day1-intro">XGrowth wrote these for you — 3 for LinkedIn, 3 for X. Review, tweak if you like, then post. You're the editor, not the writer.</p>`;
+  // Pair LinkedIn + X by index into Post 1, Post 2, Post 3 rows
+  const liPosts = posts.map((p, i) => ({ p, i })).filter(o => o.p.platform === 'linkedin');
+  const xPosts  = posts.map((p, i) => ({ p, i })).filter(o => o.p.platform === 'x');
+  const count = Math.max(liPosts.length, xPosts.length);
+  for (let n = 0; n < count; n++) {
+    html += `<div class="day1-pair-head">Post ${n + 1}</div><div class="day1-pair-row">`;
+    if (liPosts[n]) html += planDay1Card(liPosts[n].p, liPosts[n].i, 'linkedin');
+    if (xPosts[n])  html += planDay1Card(xPosts[n].p,  xPosts[n].i,  'x');
+    html += `</div>`;
+  }
 
-  [['linkedin', 'LinkedIn'], ['x', 'X / Twitter']].forEach(([pl]) => {
-    const group = posts.map((p, idx) => ({ p, idx })).filter(o => o.p.platform === pl);
-    if (!group.length) return;
-    const info = CE_PLAT_INFO[pl] || CE_PLAT_INFO.linkedin;
-    html += `<div class="day1-group-label">${info.svg} ${info.label}</div>
-      <div class="day1-posts">${group.map(({ p, idx }) => planDay1Card(p, idx)).join('')}</div>`;
-  });
-
-  html += `<div style="margin-top:8px;display:flex;justify-content:flex-end">
+  html += `<div style="margin-top:12px;display:flex;justify-content:flex-end">
       <button class="btn secondary" style="height:36px;padding:0 14px;font-size:13px" onclick="planPrepareDay1()">↻ Rewrite all posts</button>
     </div>`;
   return html;
 }
 
-function planDay1Card(p, idx) {
+function planDay1Card(p, idx, platform) {
   const len = p.text.length;
-  const isX = p.platform === 'x';
+  const isX = (platform || p.platform) === 'x';
   const over = isX && len > 280;
+  const info = CE_PLAT_INFO[isX ? 'x' : 'linkedin'] || CE_PLAT_INFO.linkedin;
   const url = isX
     ? `https://twitter.com/intent/tweet?text=${encodeURIComponent(p.text.slice(0, 280))}`
     : `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(p.text.slice(0, 1300))}`;
   return `
     <div class="day1-post${p.posted ? ' posted' : ''}" id="day1post-${idx}">
       <div class="day1-post-head">
-        <button class="week-check" onclick="planTogglePosted(${idx})" aria-label="${p.posted ? 'Mark not posted' : 'Mark as posted'}">${p.posted ? '✓' : ''}</button>
-        <span class="day1-post-status">${p.posted ? 'Posted' : 'Ready to post'}</span>
+        <span class="day1-plat-label">${info.svg} ${info.label}</span>
         <span class="day1-char${over ? ' over' : ''}">${len}${isX ? '/280' : ' chars'}</span>
       </div>
       <p class="day1-post-text">${ceEsc(p.text)}</p>
       <div class="day1-post-foot">
+        <button class="week-check" onclick="planTogglePosted(${idx})" aria-label="${p.posted ? 'Mark not posted' : 'Mark as posted'}">${p.posted ? '✓' : ''}</button>
+        <span class="day1-post-status">${p.posted ? 'Posted' : 'Ready to post'}</span>
         <button class="btn ghost" style="height:32px;font-size:13px" data-ce-copy="${ceEsc(p.text)}" onclick="ceCopyAttr(this)">Copy</button>
         <a class="btn publish" style="height:32px;font-size:13px" href="${url}" target="_blank" rel="noopener noreferrer" onclick="planSetPosted(${idx},true)">Post →</a>
       </div>
