@@ -297,7 +297,7 @@
   .ce-section-content{min-height:48px}
   .ce-section-foot{display:flex;flex-direction:column;align-items:flex-start;gap:8px;margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
   .ce-section-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap;width:100%}
-  .ce-section-actions .btn.publish{background:linear-gradient(180deg,#fafafa,#d4d4d4);color:#0a0a0a;text-decoration:none;display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;font-size:12px;flex:1;justify-content:center}
+  .ce-section-actions .btn.publish{background:linear-gradient(180deg,#fafafa,#d4d4d4);color:#0a0a0a;text-decoration:none;display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 16px;font-size:12px}
   .ce-section-actions .btn.publish:hover{background:linear-gradient(180deg,#fff,#e5e5e5)}
   /* Legacy single-card container (kept for history items etc) */
   .ce-posts{display:flex;flex-direction:column;gap:14px}
