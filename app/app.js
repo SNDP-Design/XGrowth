@@ -1203,7 +1203,6 @@ async function planGenerate() {
     </div>`;
 
   // Product context for the ready-to-post Day 1 launch posts
-  const pp = state.productProfile || {};
   const product = { name: pp.name || niche, what: pp.bio || niche, website: pp.website || '' };
 
   try {
