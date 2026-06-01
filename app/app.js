@@ -187,8 +187,8 @@ function openProductProfile(){
   setv('ppWebsite', p.website);
   setv('ppBio', p.bio);
   if(p.stage){ const el = $('ppStage'); if(el) el.value = p.stage; }
-  setv('ppC1Site', c[0]?.website); setv('ppC1Li', c[0]?.linkedin); setv('ppC1X', c[0]?.x);
-  setv('ppC2Site', c[1]?.website); setv('ppC2Li', c[1]?.linkedin); setv('ppC2X', c[1]?.x);
+  setv('ppC1Site', c[0]?.website);
+  setv('ppC2Site', c[1]?.website);
   document.getElementById('productProfile').classList.add('show');
   setTimeout(()=>$('ppName')?.focus(), 50);
 }
@@ -207,13 +207,9 @@ function saveProductProfile(){
   const name = ($('ppName')?.value || '').trim();
   if(!name){ toast('Add your product name'); $('ppName')?.focus(); return; }
 
-  const mk = (s,l,x) => ({
-    website:  ($(s)?.value || '').trim(),
-    linkedin: ($(l)?.value || '').trim(),
-    x:        ($(x)?.value || '').trim(),
-  });
-  const competitors = [ mk('ppC1Site','ppC1Li','ppC1X'), mk('ppC2Site','ppC2Li','ppC2X') ]
-    .filter(c => c.website || c.linkedin || c.x);
+  const mk = s => ({ website: ($(s)?.value || '').trim() });
+  const competitors = [ mk('ppC1Site'), mk('ppC2Site') ]
+    .filter(c => c.website);
 
   const bio = ($('ppBio')?.value || '').trim();
   const stage = $('ppStage')?.value || 'pre-launch';

@@ -451,38 +451,35 @@
     <label for="ppName">Product name</label>
     <input id="ppName" type="text" placeholder="e.g. XGrowth"/>
 
-    <label for="ppWebsite">Product website</label>
-    <input id="ppWebsite" type="url" placeholder="https://yourproduct.com"/>
+    <div class="grid cols-2" style="gap:10px">
+      <div>
+        <label for="ppWebsite">Product website</label>
+        <input id="ppWebsite" type="url" placeholder="https://yourproduct.com"/>
+      </div>
+      <div>
+        <label for="ppStage">Current stage</label>
+        <select id="ppStage">
+          <option value="pre-launch">Pre-launch / private beta</option>
+          <option value="launched">Just launched (&lt;10 customers)</option>
+          <option value="early-traction">Early traction ($1k–$10k MRR)</option>
+          <option value="post-pmf">Post-PMF ($10k+ MRR)</option>
+        </select>
+      </div>
+    </div>
 
     <label for="ppBio">What it does <span class="muted" style="font-weight:400;font-size:12px">— a line or two</span></label>
     <textarea id="ppBio" placeholder="e.g. AI marketing OS that helps founders ship content, plans, and campaigns." style="min-height:78px"></textarea>
 
-    <label for="ppStage">Current stage</label>
-    <select id="ppStage">
-      <option value="pre-launch">Pre-launch / private beta</option>
-      <option value="launched">Just launched (&lt;10 customers)</option>
-      <option value="early-traction">Early traction ($1k–$10k MRR)</option>
-      <option value="post-pmf">Post-PMF ($10k+ MRR)</option>
-    </select>
-
-    <div class="pp-comp-head">Competitors <span class="muted" style="font-weight:400;font-size:12px">— up to 2, with their socials</span></div>
+    <div class="pp-comp-head">Competitors <span class="muted" style="font-weight:400;font-size:12px">— up to 2</span></div>
 
     <div class="pp-comp">
       <div class="pp-comp-title">Competitor 1</div>
-      <input id="ppC1Site" type="url" placeholder="Website — https://competitor-one.com"/>
-      <div class="grid cols-2" style="gap:10px;margin-top:8px">
-        <input id="ppC1Li" type="url" placeholder="LinkedIn profile URL"/>
-        <input id="ppC1X" type="url" placeholder="X / Twitter profile URL"/>
-      </div>
+      <input id="ppC1Site" type="url" placeholder="https://competitor-one.com"/>
     </div>
 
     <div class="pp-comp">
       <div class="pp-comp-title">Competitor 2</div>
-      <input id="ppC2Site" type="url" placeholder="Website — https://competitor-two.com"/>
-      <div class="grid cols-2" style="gap:10px;margin-top:8px">
-        <input id="ppC2Li" type="url" placeholder="LinkedIn profile URL"/>
-        <input id="ppC2X" type="url" placeholder="X / Twitter profile URL"/>
-      </div>
+      <input id="ppC2Site" type="url" placeholder="https://competitor-two.com"/>
     </div>
 
     <div class="row" style="margin-top:18px;justify-content:flex-end">
