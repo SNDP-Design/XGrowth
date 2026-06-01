@@ -1335,15 +1335,6 @@ function planRender(plan) {
   // Active day panel
   html += `<div class="week-day-panel" id="weekDayPanel" role="tabpanel">${planRenderDay(plan, _plan.activeDay)}</div>`;
 
-  // Keep going
-  if (plan.keepGoing) {
-    html += `
-      <div class="week-keep">
-        <div class="week-keep-lbl">Keep going after Day 7</div>
-        <p class="week-keep-text">${ceEsc(plan.keepGoing)}</p>
-      </div>`;
-  }
-
   // Footer actions
   html += `
     <div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap">
