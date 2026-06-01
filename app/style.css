@@ -455,8 +455,8 @@
   .gbtn-card:focus-visible,.portal-chip:focus-visible,.range button:focus-visible,
   #roastUrlBtn:focus-visible,#roastCopyBtn:focus-visible{outline:2px solid #d4d4d4;outline-offset:3px}
 
-  /* 4 · Input border contrast — #606060 on #0a0a0a ≈ 3.1:1  (1.4.11 Non-text Contrast) */
-  input[type=text],input[type=number],input[type=url],select,textarea{border-color:#606060}
+  /* 4 · Input border — subtle light grey, softer than the original #606060 */
+  input[type=text],input[type=number],input[type=url],select,textarea{border-color:#3a3a3a}
 
   /* 5 · Links — underline in content areas so they're not colour-only (1.4.1) */
   main a:not(.btn):not(.publish),
