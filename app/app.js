@@ -1300,25 +1300,6 @@ function planRender(plan) {
 
   let html = '';
 
-  // Progress bar
-  html += `
-    <div class="week-progress">
-      <div class="week-prog-top">
-        <span class="week-prog-title">Your week</span>
-        <span class="week-prog-label" id="planProgLabel">${done} / ${total} done</span>
-      </div>
-      <div class="week-prog-track"><div class="week-prog-bar" id="planProgBar" style="width:${pct}%"></div></div>
-    </div>`;
-
-  // Week focus
-  if (plan.focus) {
-    html += `
-      <div class="week-focus-card">
-        <div class="week-focus-lbl">This week is about</div>
-        <p class="week-focus-text">${ceEsc(plan.focus)}</p>
-      </div>`;
-  }
-
   // Active day — default to the first day with unfinished items
   if (typeof _plan.activeDay !== 'number' || _plan.activeDay < 0 || _plan.activeDay >= plan.days.length) {
     let firstIncomplete = -1;
