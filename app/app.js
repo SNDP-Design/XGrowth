@@ -102,10 +102,19 @@ nav.addEventListener('click', e=>{
   document.querySelectorAll('main > section').forEach(s=>s.classList.add('hide'));
   const sec = document.querySelector(`section[data-view="${v}"]`);
   if(sec) sec.classList.remove('hide');
-  // Sync stage from product profile into the 1-Week Plan dropdown on navigation
+
+  // Auto-generate on navigation when profile data is available
   if(v === 'plan'){
-    const s = state.productProfile?.stage;
-    const el = $('planStage'); if(el && s) el.value = s;
+    // Only auto-run if no plan exists yet; profile provides niche + stage
+    if(!state.weekPlan && state.productProfile?.name) planGenerate();
+  }
+  if(v === 'positioning'){
+    // Auto-fill competitor URLs from profile, then auto-analyze if ≥2 are available and no result yet
+    ppPrefillPositioning();
+    if(!_pos.result){
+      const urls = posGetUrls();
+      if(urls.length >= 2) posAnalyze();
+    }
   }
 });
 
@@ -217,8 +226,6 @@ function saveProductProfile(){
   };
   // Feed product context into the marketing niche so every generator personalizes
   state.profile = { ...(state.profile || {}), niche: bio || name };
-  // Sync stage to the 1-Week Plan dropdown if it's visible
-  const planStageEl = $('planStage'); if(planStageEl) planStageEl.value = stage;
 
   save();
   applyProfile();
@@ -232,8 +239,6 @@ function ppPrefillPositioning(){
   const p = state.productProfile;
   if(!p) return;
   const fill = (id, v) => { const el = $(id); if(el && !el.value && v) el.value = v; };
-  fill('posProductName', p.name);
-  fill('posProductWhat', p.bio);
   const sites = (p.competitors || []).map(c => c.website).filter(Boolean);
   fill('posUrl1', sites[0]);
   fill('posUrl2', sites[1]);
@@ -1180,9 +1185,10 @@ function planGetChannels() {
 
 async function planGenerate() {
   if (_plan.loading) return;
-  const niche = ($('planNiche')?.value || '').trim();
-  if (!niche || niche.length < 5) { toast('Describe your product first'); $('planNiche')?.focus(); return; }
-  const stage    = $('planStage')?.value || 'early-traction';
+  const pp = state.productProfile;
+  const niche = (pp?.bio || pp?.name || '').trim();
+  if (!niche || niche.length < 3) { toast('Set up your Product Profile first'); openProductProfile(); return; }
+  const stage    = pp?.stage || 'pre-launch';
   const channels = planGetChannels();
   if (!channels.length) { toast('Pick at least one channel'); return; }
 
@@ -1605,7 +1611,6 @@ function planReset() {
   _plan.loading = false;
   $('planResult').innerHTML = '';
   $('planEmpty').style.display = '';
-  $('planNiche')?.focus();
 }
 
 /* =========================================================
@@ -1654,10 +1659,8 @@ async function posAnalyze() {
   const badUrl = urls.find(u => !u.startsWith('http'));
   if (badUrl) { toast('URLs must start with https://'); return; }
 
-  const product = {
-    name: ($('posProductName')?.value || '').trim(),
-    what: ($('posProductWhat')?.value || '').trim(),
-  };
+  const pp = state.productProfile || {};
+  const product = { name: pp.name || '', what: pp.bio || '' };
 
   _pos.loading = true;
   const btn = $('posAnalyzeBtn');
@@ -1826,8 +1829,6 @@ function posReset() {
   for (let i = 1; i <= 4; i++) {
     const inp = $(`posUrl${i}`); if (inp) inp.value = '';
   }
-  $('posProductName') && ($('posProductName').value = '');
-  $('posProductWhat') && ($('posProductWhat').value = '');
   $('posUrl1')?.focus();
 }
 
