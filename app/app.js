@@ -1427,18 +1427,10 @@ function planDay1Card(p, idx, platform) {
       </div>
       <p class="day1-post-text">${ceEsc(p.text)}</p>
       <div class="day1-post-foot">
-        <button class="week-check" onclick="planTogglePosted(${idx})" aria-label="${p.posted ? 'Mark not posted' : 'Mark as posted'}">${p.posted ? '✓' : ''}</button>
-        <span class="day1-post-status">${p.posted ? 'Posted' : 'Ready to post'}</span>
         <button class="btn ghost" style="height:32px;font-size:13px" data-ce-copy="${ceEsc(p.text)}" onclick="ceCopyAttr(this)">Copy</button>
         <a class="btn publish" style="height:32px;font-size:13px" href="${url}" target="_blank" rel="noopener noreferrer" onclick="planSetPosted(${idx},true)">Post →</a>
       </div>
     </div>`;
-}
-
-function planTogglePosted(idx) {
-  const p = state.weekPlan?.day1Posts?.[idx];
-  if (!p) return;
-  planSetPosted(idx, !p.posted);
 }
 
 function planSetPosted(idx, val) {
@@ -1447,13 +1439,7 @@ function planSetPosted(idx, val) {
   p.posted = val;
   save();
   const card = document.getElementById(`day1post-${idx}`);
-  if (card) {
-    card.classList.toggle('posted', val);
-    const cb = card.querySelector('.week-check');
-    if (cb) { cb.textContent = val ? '✓' : ''; cb.setAttribute('aria-label', val ? 'Mark not posted' : 'Mark as posted'); }
-    const st = card.querySelector('.day1-post-status');
-    if (st) st.textContent = val ? 'Posted' : 'Ready to post';
-  }
+  if (card) card.classList.toggle('posted', val);
   planRefreshTab(0);
   planUpdateProgress();
 }

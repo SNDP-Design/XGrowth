@@ -797,6 +797,5 @@
   .day1-char.over{color:#f87171}
   .day1-post-text{font-size:15px;line-height:1.6;color:#ededed;margin:0;white-space:pre-wrap;word-break:break-word;flex:1}
   .day1-post.posted .day1-post-text{text-decoration:line-through;text-decoration-color:rgba(255,255,255,.25)}
-  .day1-post-foot{display:flex;align-items:center;gap:8px;padding-top:10px;border-top:1px solid var(--line)}
-  .day1-post-foot .day1-post-status{flex:1}
+  .day1-post-foot{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding-top:10px;border-top:1px solid var(--line)}
   .day1-post-foot .btn{flex-shrink:0}
