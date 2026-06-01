@@ -785,17 +785,13 @@
   .day1-pair-head:first-of-type{margin-top:4px}
   .day1-pair-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px}
   @media(max-width:700px){.day1-pair-row{grid-template-columns:1fr}}
-  .day1-post{background:#0d0d0d;border:1px solid var(--line);border-radius:12px;padding:14px 15px;display:flex;flex-direction:column;gap:10px;transition:border-color .15s,opacity .15s}
+  .day1-post{background:#0d0d0d;border:1px solid var(--line);border-radius:12px;padding:14px 15px;display:flex;flex-direction:column;gap:10px;transition:border-color .15s}
   .day1-post:hover{border-color:#2c2c2c}
-  .day1-post.posted{opacity:.6;border-color:rgba(74,222,128,.3)}
   .day1-post-head{display:flex;align-items:center;gap:8px}
   .day1-plat-label{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--ink);flex:1}
   .day1-plat-label svg{width:15px;height:15px;flex-shrink:0}
-  .day1-post-status{font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--muted)}
-  .day1-post.posted .day1-post-status{color:#4ade80}
   .day1-char{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;flex-shrink:0}
   .day1-char.over{color:#f87171}
   .day1-post-text{font-size:15px;line-height:1.6;color:#ededed;margin:0;white-space:pre-wrap;word-break:break-word;flex:1}
-  .day1-post.posted .day1-post-text{text-decoration:line-through;text-decoration-color:rgba(255,255,255,.25)}
   .day1-post-foot{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding-top:10px;border-top:1px solid var(--line)}
   .day1-post-foot .btn{flex-shrink:0}
