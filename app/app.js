@@ -1321,7 +1321,6 @@ function planRender(plan) {
   plan.days.forEach((day, di) => {
     const s = planDayStats(plan, di);
     const allDone = s.total > 0 && s.done === s.total;
-    const status = s.total === 0 ? '✨' : (allDone ? '✓' : `${s.done}/${s.total}`);
     const dayDate = new Date(planStart); dayDate.setDate(planStart.getDate() + di);
     const dateLabel = dayDate.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
     html += `
@@ -1329,7 +1328,6 @@ function planRender(plan) {
         id="weekTab-${di}" aria-selected="${di === _plan.activeDay ? 'true' : 'false'}"
         onclick="planSelectDay(${di})">
         <span class="week-tab-day">${dateLabel}</span>
-        <span class="week-tab-status">${status}</span>
       </button>`;
   });
   html += `</div>`;
@@ -1512,8 +1510,6 @@ function planRefreshTab(i) {
   const tab = document.getElementById(`weekTab-${i}`);
   if (!tab) return;
   tab.classList.toggle('done', allDone);
-  const st = tab.querySelector('.week-tab-status');
-  if (st) st.textContent = s.total === 0 ? '✨' : (allDone ? '✓' : `${s.done}/${s.total}`);
 }
 
 function planSelectDay(di) {
