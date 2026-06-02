@@ -757,7 +757,11 @@
   .week-tab.active{background:linear-gradient(180deg,#1c1c1c,#121212);border-color:#3a3a3a;color:var(--ink)}
   .week-tab-day{font-size:13px;font-weight:700;letter-spacing:.01em}
   .week-tab.active .week-tab-day{color:var(--ink)}
-  .week-tab.today{background:linear-gradient(180deg,#1c1c1c,#141414);border-color:#3a3a3a;color:var(--ink);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+  /* today but not selected — subtle green dot below the date */
+  .week-tab.today:not(.active){color:var(--ink)}
+  .week-tab.today:not(.active) .week-tab-day::after{content:'';display:block;width:4px;height:4px;border-radius:50%;background:#4ade80;margin:3px auto 0}
+  /* today AND selected — full active style */
+  .week-tab.today.active{background:linear-gradient(180deg,#1c1c1c,#141414);border-color:#3a3a3a;color:var(--ink);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
   .week-stale{display:flex;align-items:center;flex-wrap:wrap;gap:6px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.32);color:var(--ink);font-size:14px;border-radius:12px;padding:12px 14px;margin-bottom:14px}
   .week-tab-status{font-size:11px;font-variant-numeric:tabular-nums;color:var(--muted);line-height:1}
   .week-tab.done{border-color:rgba(74,222,128,.32)}
