@@ -1587,31 +1587,13 @@ function planReset() {
 
 const _pos = {
   loading: false,
-  count: 2,      // visible competitor slots (2–4)
   result: null,
 };
 
-function posAddCompetitor() {
-  if (_pos.count >= 4) return;
-  _pos.count++;
-  const slot = $(`posComp${_pos.count}`);
-  if (slot) slot.style.display = '';
-  if (_pos.count >= 4) { const b = $('posAddBtn'); if (b) b.style.display = 'none'; }
-}
-
-function posRemoveCompetitor(n) {
-  const slot = $(`posComp${n}`);
-  if (slot) slot.style.display = 'none';
-  const inp = $(`posUrl${n}`); if (inp) inp.value = '';
-  if (_pos.count === n) _pos.count--;
-  const b = $('posAddBtn'); if (b) b.style.display = '';
-}
-
+// 3 fixed competitor URL fields — collect the non-empty ones
 function posGetUrls() {
   const urls = [];
-  for (let i = 1; i <= 4; i++) {
-    const slot = $(`posComp${i}`);
-    if (!slot || slot.style.display === 'none') continue;
+  for (let i = 1; i <= 3; i++) {
     const val = ($(`posUrl${i}`)?.value || '').trim();
     if (val) urls.push(val);
   }
@@ -1792,7 +1774,7 @@ function posReset() {
   _pos.loading = false;
   $('posResult').innerHTML = '';
   $('posEmpty').style.display = '';
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 3; i++) {
     const inp = $(`posUrl${i}`); if (inp) inp.value = '';
   }
   $('posUrl1')?.focus();

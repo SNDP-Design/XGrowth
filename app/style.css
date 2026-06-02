@@ -616,11 +616,14 @@
   /* ── Competitor Positioning Map ─────────────────────────────────────────── */
 
   /* URL input row — flex so remove × button sits flush right */
-  .pos-url-row{display:flex;gap:8px;align-items:center}
-  .pos-url-row{display:flex;align-items:center;gap:8px}
-  .pos-url-row input{flex:1;height:48px}
-  .pos-remove-btn{flex-shrink:0;width:48px;height:48px;border-radius:10px;background:transparent;border:1px solid var(--line);color:var(--muted);font-size:18px;line-height:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:.15s}
-  .pos-remove-btn:hover{color:#f87171;border-color:rgba(248,113,113,.4)}
+  /* 3 fixed competitor inputs + Analyze, all on one row */
+  .pos-url-grid{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .pos-url-grid input{flex:1 1 180px;min-width:0}
+  .pos-url-grid #posAnalyzeBtn{flex:0 0 auto;padding:0 22px}
+  @media(max-width:760px){
+    .pos-url-grid{flex-direction:column;align-items:stretch}
+    .pos-url-grid #posAnalyzeBtn{width:100%}
+  }
 
   /* Competitor cards grid */
   .pos-comp-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:12px}

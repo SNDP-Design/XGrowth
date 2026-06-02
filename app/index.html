@@ -203,42 +203,20 @@
           <p class="lede">Drop in competitor URLs. Get their positioning decoded, where they all fight, the gap none of them own, and exact copy to win against each one.</p>
         </div>
 
-        <!-- Competitor URL inputs -->
+        <!-- Competitor URL inputs — 3 fixed fields + Analyze, one row -->
         <div style="margin-bottom:6px">
-          <div class="ce-style-label" style="margin-bottom:10px">Competitor URLs <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:11px">— 2 to 4</span></div>
+          <div class="ce-style-label" style="margin-bottom:10px">Competitor URLs <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:11px">— enter up to 3 (at least 2)</span></div>
 
-          <div style="display:flex;flex-direction:column;gap:8px" id="posCompList">
-
-            <div class="pos-url-row" id="posComp1">
-              <label for="posUrl1" class="sr-only">Competitor 1 URL</label>
-              <input id="posUrl1" type="url" placeholder="https://competitor-one.com" style="height:48px"/>
-            </div>
-
-            <div class="pos-url-row" id="posComp2">
-              <label for="posUrl2" class="sr-only">Competitor 2 URL</label>
-              <input id="posUrl2" type="url" placeholder="https://competitor-two.com" style="height:48px"/>
-            </div>
-
-            <div class="pos-url-row" id="posComp3" style="display:none">
-              <label for="posUrl3" class="sr-only">Competitor 3 URL</label>
-              <input id="posUrl3" type="url" placeholder="https://competitor-three.com" style="height:48px;flex:1"/>
-              <button class="pos-remove-btn" onclick="posRemoveCompetitor(3)" aria-label="Remove competitor 3">×</button>
-            </div>
-
-            <div class="pos-url-row" id="posComp4" style="display:none">
-              <label for="posUrl4" class="sr-only">Competitor 4 URL</label>
-              <input id="posUrl4" type="url" placeholder="https://competitor-four.com" style="height:48px;flex:1"/>
-              <button class="pos-remove-btn" onclick="posRemoveCompetitor(4)" aria-label="Remove competitor 4">×</button>
-            </div>
-
+          <div class="pos-url-grid">
+            <label for="posUrl1" class="sr-only">Competitor 1 URL</label>
+            <input id="posUrl1" type="url" placeholder="https://competitor-one.com" style="height:48px"/>
+            <label for="posUrl2" class="sr-only">Competitor 2 URL</label>
+            <input id="posUrl2" type="url" placeholder="https://competitor-two.com" style="height:48px"/>
+            <label for="posUrl3" class="sr-only">Competitor 3 URL</label>
+            <input id="posUrl3" type="url" placeholder="https://competitor-three.com" style="height:48px"/>
+            <button class="btn" id="posAnalyzeBtn" onclick="posAnalyze()" style="height:48px;white-space:nowrap">Analyze →</button>
           </div>
-
-          <button id="posAddBtn" class="btn secondary" style="height:36px;padding:0 14px;font-size:13px;margin-top:8px" onclick="posAddCompetitor()">+ Add competitor</button>
-        </div>
-
-        <div style="margin:20px 0 28px">
-          <button class="btn" id="posAnalyzeBtn" onclick="posAnalyze()" style="width:100%">Analyze →</button>
-          <p style="margin:8px 0 0;color:var(--muted);font-size:12px;text-align:center">Fetches each page server-side — takes 15–25s for 4 competitors</p>
+          <p style="margin:8px 0 0;color:var(--muted);font-size:12px">Fetches each page server-side — takes 15–25s.</p>
         </div>
 
         <!-- Results -->
