@@ -1370,7 +1370,6 @@ function planRender(plan) {
         id="weekTab-${di}" aria-selected="${di === _plan.activeDay ? 'true' : 'false'}"
         aria-controls="weekDayPanel" onclick="planSelectDay(${di})">
         <span class="week-tab-day">${dateLabel}</span>
-        ${isToday ? '<span class="week-tab-today">Today</span>' : ''}
       </button>`;
   });
   html += `</div>`;
