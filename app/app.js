@@ -257,7 +257,7 @@ function saveProductProfile(){
   const name = ($('ppName')?.value || '').trim();
   if(!name){ toast('Add your product name'); $('ppName')?.focus(); return; }
   const bio = ($('ppBio')?.value || '').trim();
-  if(bio.length < 10){ toast('Describe what your product does (a line or two)'); $('ppBio')?.focus(); return; }
+  if(bio.length < 20){ toast('Add a short Product Bio so XGrowth can personalize your content'); $('ppBio')?.focus(); return; }
 
   const mk = s => ({ website: ($(s)?.value || '').trim() });
   const competitors = [ mk('ppC1Site'), mk('ppC2Site') ]
