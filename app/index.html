@@ -203,28 +203,12 @@
           <p class="lede">Drop in competitor URLs. Get their positioning decoded, where they all fight, the gap none of them own, and exact copy to win against each one.</p>
         </div>
 
-        <!-- Competitor URL inputs — 3 fixed fields + Analyze, one row -->
-        <div style="margin-bottom:6px">
-          <div class="ce-style-label" style="margin-bottom:10px">Competitor URLs <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:11px">— enter up to 3 (at least 2)</span></div>
-
-          <div class="pos-url-grid">
-            <label for="posUrl1" class="sr-only">Competitor 1 URL</label>
-            <input id="posUrl1" type="url" placeholder="https://competitor-one.com" style="height:48px"/>
-            <label for="posUrl2" class="sr-only">Competitor 2 URL</label>
-            <input id="posUrl2" type="url" placeholder="https://competitor-two.com" style="height:48px"/>
-            <label for="posUrl3" class="sr-only">Competitor 3 URL</label>
-            <input id="posUrl3" type="url" placeholder="https://competitor-three.com" style="height:48px"/>
-            <button class="btn" id="posAnalyzeBtn" onclick="posAnalyze()" style="height:48px;white-space:nowrap">Analyze →</button>
-          </div>
-          <p style="margin:8px 0 0;color:var(--muted);font-size:12px">Fetches each page server-side — takes 15–25s.</p>
-        </div>
-
-        <!-- Results -->
+        <!-- Results — auto-populated from profile competitors -->
         <div id="posResult" aria-live="polite" aria-label="Positioning analysis"></div>
 
         <div class="ce-empty" id="posEmpty">
           <div class="ce-empty-title">Your positioning map will appear here</div>
-          <span style="color:var(--muted);font-size:14px">Enter competitor URLs above to get a complete breakdown — their claims, where they overlap, and the gap you should own.</span>
+          <span style="color:var(--muted);font-size:14px">Add competitor URLs to your Product Profile — the map generates automatically.</span>
         </div>
 
       </div>

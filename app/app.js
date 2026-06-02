@@ -110,11 +110,17 @@ nav.addEventListener('click', e=>{
     if(!state.weekPlan && state.productProfile?.name) planGenerate();
   }
   if(v === 'positioning'){
-    // Auto-fill competitor URLs from profile, then auto-analyze if ≥2 are available and no result yet
-    ppPrefillPositioning();
-    if(!_pos.result){
-      const urls = posGetUrls();
-      if(urls.length >= 2) posAnalyze();
+    const currentUrls = posGetUrls();
+    const cached = state.posResult;
+    const sameUrls = cached && JSON.stringify(cached.forUrls) === JSON.stringify(currentUrls);
+    if(sameUrls && cached.parsed){
+      // Restore from cache — no re-fetch needed
+      _pos.result = cached.parsed;
+      $('posEmpty').style.display = 'none';
+      posRenderResult(cached.parsed, cached.forUrls);
+    } else {
+      // Competitors changed or no cache — auto-analyze
+      posAnalyze();
     }
   }
 });
@@ -233,16 +239,8 @@ function saveProductProfile(){
   toast('Product profile saved');
 }
 
-// Prefill the Positioning Map's product + competitor fields from the saved profile
-function ppPrefillPositioning(){
-  const p = state.productProfile;
-  if(!p) return;
-  const fill = (id, v) => { const el = $(id); if(el && !el.value && v) el.value = v; };
-  const sites = (p.competitors || []).map(c => c.website).filter(Boolean);
-  fill('posUrl1', sites[0]);
-  fill('posUrl2', sites[1]);
-  fill('posUrl3', sites[2]);
-}
+// No-op: previously prefilled Positioning Map URL inputs; now auto-reads from profile
+function ppPrefillPositioning(){}
 
 function parseGoals(s){
   const out = [];
@@ -1621,29 +1619,26 @@ const _pos = {
   result: null,
 };
 
-// 3 fixed competitor URL fields — collect the non-empty ones
+// Read competitor URLs from the product profile (not DOM inputs)
 function posGetUrls() {
-  const urls = [];
-  for (let i = 1; i <= 3; i++) {
-    const val = ($(`posUrl${i}`)?.value || '').trim();
-    if (val) urls.push(val);
-  }
-  return urls;
+  return (state.productProfile?.competitors || [])
+    .map(c => c.website).filter(Boolean);
 }
 
 async function posAnalyze() {
   if (_pos.loading) return;
   const urls = posGetUrls();
-  if (urls.length < 2) { toast('Enter at least 2 competitor URLs'); return; }
-  const badUrl = urls.find(u => !u.startsWith('http'));
-  if (badUrl) { toast('URLs must start with https://'); return; }
+  if (urls.length < 2) {
+    $('posEmpty').style.display = '';
+    $('posEmpty').querySelector('.ce-empty-title').textContent = 'Add at least 2 competitors to your Product Profile';
+    $('posResult').innerHTML = '';
+    return;
+  }
 
   const pp = state.productProfile || {};
   const product = { name: pp.name || '', what: pp.bio || '' };
 
   _pos.loading = true;
-  const btn = $('posAnalyzeBtn');
-  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="ce-spinner"></span>Fetching & analyzing…'; }
   $('posEmpty').style.display = 'none';
   $('posResult').innerHTML = `
     <div class="roast-loading" role="status" aria-live="polite">
@@ -1659,13 +1654,15 @@ async function posAnalyze() {
     });
     const parsed = posParseResult(data.text || '', urls.length);
     _pos.result = parsed;
+    // Persist result + the URLs it was built from so we can skip re-fetching
+    state.posResult = { parsed, forUrls: urls };
+    save();
     posRenderResult(parsed, urls);
   } catch (err) {
     $('posResult').innerHTML =
       `<div class="ce-skeleton" style="color:#f87171;min-height:80px;border-color:rgba(248,113,113,.3)">${ceEsc(err.message || 'Analysis failed — make sure the URLs are public landing pages')}</div>`;
   } finally {
     _pos.loading = false;
-    if (btn) { btn.disabled = false; btn.innerHTML = 'Analyze →'; }
   }
 }
 
@@ -1791,10 +1788,10 @@ function posRenderResult(parsed, urls) {
     html += `</div></div>`;
   }
 
-  // ── Reset ──────────────────────────────────────────────────────────────────
+  // ── Re-analyze ─────────────────────────────────────────────────────────────
   html += `
     <div style="margin-top:20px;display:flex;justify-content:flex-end">
-      <button class="btn secondary" style="height:38px;padding:0 16px;font-size:13px" onclick="posReset()">Analyze different competitors</button>
+      <button class="btn secondary" style="height:38px;padding:0 16px;font-size:13px" onclick="posReset()">↻ Re-analyze</button>
     </div>`;
 
   $('posResult').innerHTML = html;
@@ -1803,12 +1800,12 @@ function posRenderResult(parsed, urls) {
 function posReset() {
   _pos.result = null;
   _pos.loading = false;
+  state.posResult = null;
+  save();
   $('posResult').innerHTML = '';
   $('posEmpty').style.display = '';
-  for (let i = 1; i <= 3; i++) {
-    const inp = $(`posUrl${i}`); if (inp) inp.value = '';
-  }
-  $('posUrl1')?.focus();
+  // Immediately re-analyze with current profile competitors
+  posAnalyze();
 }
 
 /* =========================================================
@@ -2524,6 +2521,8 @@ fbAuth.onAuthStateChanged(user=>{
       if(!state.productProfile){ openProductProfile(); }
       // Auto-generate the week plan on load if none exists yet and profile is set
       if(!state.weekPlan && state.productProfile?.name) planGenerate();
+      // Restore cached positioning result into memory (so buildCompetitorContext works immediately)
+      if(state.posResult?.parsed) _pos.result = state.posResult.parsed;
     });
     ceInit();
   } else {
