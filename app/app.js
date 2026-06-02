@@ -148,7 +148,7 @@ document.querySelectorAll('.modal').forEach(m=>{
   m.addEventListener('click', (e)=>{
     if(e.target === m){
       if(m.id === 'welcome') closeWelcome(true);
-      else if(m.id === 'productProfile') closeProductProfile(true);
+      else if(m.id === 'productProfile'){ if(m.dataset.mandatory !== '1') closeProductProfile(true); }
       else m.classList.remove('show');
     }
   });
@@ -158,7 +158,7 @@ document.addEventListener('keydown', (e)=>{
   if(e.key === 'Escape'){
     document.querySelectorAll('.modal.show').forEach(m=>{
       if(m.id === 'welcome') closeWelcome(true);
-      else if(m.id === 'productProfile') closeProductProfile(true);
+      else if(m.id === 'productProfile'){ if(m.dataset.mandatory !== '1') closeProductProfile(true); }
       else m.classList.remove('show');
     });
     // Mobile sidebar drawer
@@ -202,7 +202,12 @@ function applyProfile(){
 }
 
 /* ========= Product Profile ========= */
-function openProductProfile(){
+function openProductProfile(mandatory){
+  const modal = document.getElementById('productProfile');
+  // Onboarding for new users is mandatory — no Skip, no overlay/Escape dismiss
+  modal.dataset.mandatory = mandatory ? '1' : '';
+  const skipBtn = $('ppSkipBtn');
+  if(skipBtn) skipBtn.style.display = mandatory ? 'none' : '';
   const p = state.productProfile || {};
   const c = p.competitors || [];
   const setv = (id, v) => { const el = $(id); if(el) el.value = v || ''; };
@@ -231,12 +236,13 @@ function closeProductProfile(skip){
 function saveProductProfile(){
   const name = ($('ppName')?.value || '').trim();
   if(!name){ toast('Add your product name'); $('ppName')?.focus(); return; }
+  const bio = ($('ppBio')?.value || '').trim();
+  if(bio.length < 10){ toast('Describe what your product does (a line or two)'); $('ppBio')?.focus(); return; }
 
   const mk = s => ({ website: ($(s)?.value || '').trim() });
   const competitors = [ mk('ppC1Site'), mk('ppC2Site'), mk('ppC3Site'), mk('ppC4Site') ]
     .filter(c => c.website);
 
-  const bio = ($('ppBio')?.value || '').trim();
   const stage = $('ppStage')?.value || 'pre-launch';
   state.productProfile = {
     name,
@@ -251,8 +257,12 @@ function saveProductProfile(){
   save();
   applyProfile();
   ppPrefillPositioning();
-  document.getElementById('productProfile').classList.remove('show');
+  const modal = document.getElementById('productProfile');
+  modal.dataset.mandatory = '';
+  modal.classList.remove('show');
   toast('Product profile saved');
+  // Kick off the week plan now that we have a profile
+  if(!state.weekPlan && state.productProfile?.name) planGenerate();
 }
 
 // No-op: previously prefilled Positioning Map URL inputs; now auto-reads from profile
@@ -2530,8 +2540,8 @@ fbAuth.onAuthStateChanged(user=>{
     applyUser();
     loadFromCloud().then(()=>{
       ppPrefillPositioning();
-      // First-time onboarding: ask for the product profile on registration
-      if(!state.productProfile){ openProductProfile(); }
+      // First-time onboarding: ask for the product profile on registration (mandatory)
+      if(!state.productProfile){ openProductProfile(true); }
       // Auto-generate the week plan on load if none exists yet and profile is set
       if(!state.weekPlan && state.productProfile?.name) planGenerate();
       // Restore cached positioning result into memory (so buildCompetitorContext works immediately)
