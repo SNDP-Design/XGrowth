@@ -1308,28 +1308,44 @@ function planRender(plan) {
 
   let html = '';
 
-  // Active day — default to the first day with unfinished items
+  // Dates are anchored to when the plan was built (user's local timezone)
+  const planStart = plan.createdAt ? new Date(plan.createdAt) : new Date();
+  planStart.setHours(0, 0, 0, 0);
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const todayIndex = Math.round((today - planStart) / 86400000); // 0..6 when today is inside the week
+  const todayInWeek = todayIndex >= 0 && todayIndex < plan.days.length;
+
+  // Active day — on first open: today's tab if the week covers today, else first day with unfinished posts
   if (typeof _plan.activeDay !== 'number' || _plan.activeDay < 0 || _plan.activeDay >= plan.days.length) {
-    let firstIncomplete = -1;
-    for (let i = 0; i < plan.days.length; i++) { const s = planDayStats(plan, i); if (s.total === 0 || s.done < s.total) { firstIncomplete = i; break; } }
-    _plan.activeDay = firstIncomplete > -1 ? firstIncomplete : 0;
+    if (todayInWeek) {
+      _plan.activeDay = todayIndex;
+    } else {
+      let firstIncomplete = -1;
+      for (let i = 0; i < plan.days.length; i++) { const s = planDayStats(plan, i); if (s.total === 0 || s.done < s.total) { firstIncomplete = i; break; } }
+      _plan.activeDay = firstIncomplete > -1 ? firstIncomplete : 0;
+    }
   }
 
-  // Day tabs — show actual dates derived from plan creation timestamp (user's local timezone)
-  const planStart = plan.createdAt ? new Date(plan.createdAt) : new Date();
-  // Normalise to midnight so day offsets are calendar-day-accurate
-  planStart.setHours(0, 0, 0, 0);
+  // If the plan's week has fully passed, offer to build a fresh one
+  if (todayIndex >= plan.days.length) {
+    const endD = new Date(planStart); endD.setDate(planStart.getDate() + plan.days.length - 1);
+    const endLabel = endD.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+    html += `<div class="week-stale">This week's plan ended on ${endLabel}.
+      <button class="btn" style="height:34px;padding:0 14px;font-size:13px;margin-left:8px" onclick="planGenerate()">Build this week →</button></div>`;
+  }
   html += `<div class="week-tabs" role="tablist" aria-label="Days of the week">`;
   plan.days.forEach((day, di) => {
     const s = planDayStats(plan, di);
     const allDone = s.total > 0 && s.done === s.total;
     const dayDate = new Date(planStart); dayDate.setDate(planStart.getDate() + di);
     const dateLabel = dayDate.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+    const isToday = di === todayIndex;
     html += `
-      <button class="week-tab${di === _plan.activeDay ? ' active' : ''}${allDone ? ' done' : ''}" role="tab"
+      <button class="week-tab${di === _plan.activeDay ? ' active' : ''}${allDone ? ' done' : ''}${isToday ? ' today' : ''}" role="tab"
         id="weekTab-${di}" aria-selected="${di === _plan.activeDay ? 'true' : 'false'}"
         aria-controls="weekDayPanel" onclick="planSelectDay(${di})">
         <span class="week-tab-day">${dateLabel}</span>
+        ${isToday ? '<span class="week-tab-today">Today</span>' : ''}
       </button>`;
   });
   html += `</div>`;

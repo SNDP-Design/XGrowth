@@ -753,6 +753,9 @@
   .week-tab.active{background:linear-gradient(180deg,#1c1c1c,#121212);border-color:#3a3a3a;color:var(--ink)}
   .week-tab-day{font-size:13px;font-weight:700;letter-spacing:.01em}
   .week-tab.active .week-tab-day{color:var(--ink)}
+  .week-tab-today{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#4ade80;line-height:1}
+  .week-tab.today{border-color:rgba(74,222,128,.45)}
+  .week-stale{display:flex;align-items:center;flex-wrap:wrap;gap:6px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.32);color:var(--ink);font-size:14px;border-radius:12px;padding:12px 14px;margin-bottom:14px}
   .week-tab-status{font-size:11px;font-variant-numeric:tabular-nums;color:var(--muted);line-height:1}
   .week-tab.done{border-color:rgba(74,222,128,.32)}
   .week-tab.active.done{border-color:rgba(74,222,128,.55)}
