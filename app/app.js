@@ -281,6 +281,7 @@ function saveProductProfile(){
   modal.dataset.mandatory = '';
   modal.classList.remove('show');
   toast('Product profile saved');
+  planSyncEmptyState(); // Hide the "Set up profile" button now that profile exists
   // Kick off the week plan now that we have a profile
   if(!state.weekPlan && state.productProfile?.name) planGenerate();
 }
@@ -1621,6 +1622,14 @@ function planRenderSaved() {
     $('planEmpty').style.display = 'none';
     planRender(state.weekPlan);
   }
+  planSyncEmptyState();
+}
+
+// Show "Set up your Product Profile" button only when no profile exists yet
+function planSyncEmptyState() {
+  const btn = $('planSetupProfileBtn');
+  if (!btn) return;
+  btn.style.display = state.productProfile?.name ? 'none' : '';
 }
 
 function planDownload() {
