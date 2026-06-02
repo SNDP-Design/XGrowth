@@ -1740,52 +1740,49 @@ function posRenderResult(parsed, urls) {
   });
   html += `</div>`;
 
-  // ── Overlap ────────────────────────────────────────────────────────────────
-  if (overlap) {
-    html += `
-    <div class="pos-overlap-card">
-      <div class="pos-section-lbl">Where they all fight</div>
-      <p class="pos-body-text">${ceEsc(overlap)}</p>
-    </div>`;
+  // ── Row 1: Overlap + Gap side by side ─────────────────────────────────────
+  if (overlap || gap) {
+    html += `<div class="pos-lower-grid">`;
+    if (overlap) html += `
+      <div class="pos-overlap-card">
+        <div class="pos-section-lbl">Where they all fight</div>
+        <p class="pos-body-text">${ceEsc(overlap)}</p>
+      </div>`;
+    if (gap) html += `
+      <div class="pos-gap-card">
+        <div class="pos-section-lbl pos-gap-lbl">The gap you own</div>
+        <p class="pos-gap-text">${ceEsc(gap)}</p>
+      </div>`;
+    html += `</div>`;
   }
 
-  // ── The Gap ────────────────────────────────────────────────────────────────
-  if (gap) {
-    html += `
-    <div class="pos-gap-card">
-      <div class="pos-section-lbl pos-gap-lbl">The gap you own</div>
-      <p class="pos-gap-text">${ceEsc(gap)}</p>
-    </div>`;
-  }
-
-  // ── Positioning statement ──────────────────────────────────────────────────
-  if (positioning) {
-    html += `
-    <div class="pos-statement-card">
-      <div class="pos-section-lbl" style="margin-bottom:10px">Your positioning statement</div>
-      <p class="pos-statement-text">${ceEsc(positioning)}</p>
-      <button class="btn ghost" style="height:30px;font-size:12px;padding:0 12px;margin-top:12px;align-self:flex-start" data-ce-copy="${ceEsc(positioning)}" onclick="ceCopyAttr(this)">Copy</button>
-    </div>`;
-  }
-
-  // ── VS each competitor ─────────────────────────────────────────────────────
+  // ── Row 2: Positioning statement + VS side by side ────────────────────────
   const validVs = vsLines.filter(v => v);
-  if (validVs.length) {
-    html += `
-    <div class="pos-vs-section">
-      <div class="pos-section-lbl" style="margin-bottom:10px">How you win against each</div>
-      <div class="pos-vs-list">`;
-    vsLines.forEach((line, i) => {
-      if (!line) return;
-      const c = competitors[i];
-      const name = c?.name || c?.domain || `Competitor ${i+1}`;
-      html += `
-        <div class="pos-vs-item">
-          <span class="pos-vs-name">${ceEsc(name)}</span>
-          <span class="pos-vs-text">${ceEsc(line)}</span>
-        </div>`;
-    });
-    html += `</div></div>`;
+  if (positioning || validVs.length) {
+    html += `<div class="pos-lower-grid">`;
+    if (positioning) html += `
+      <div class="pos-statement-card">
+        <div class="pos-section-lbl" style="margin-bottom:10px">Your positioning statement</div>
+        <p class="pos-statement-text">${ceEsc(positioning)}</p>
+        <button class="btn ghost" style="height:30px;font-size:12px;padding:0 12px;margin-top:12px;align-self:flex-start" data-ce-copy="${ceEsc(positioning)}" onclick="ceCopyAttr(this)">Copy</button>
+      </div>`;
+    if (validVs.length) {
+      html += `<div class="pos-vs-section">
+        <div class="pos-section-lbl" style="margin-bottom:10px">How you win against each</div>
+        <div class="pos-vs-list">`;
+      vsLines.forEach((line, i) => {
+        if (!line) return;
+        const c = competitors[i];
+        const name = c?.name || c?.domain || `Competitor ${i+1}`;
+        html += `
+          <div class="pos-vs-item">
+            <span class="pos-vs-name">${ceEsc(name)}</span>
+            <span class="pos-vs-text">${ceEsc(line)}</span>
+          </div>`;
+      });
+      html += `</div></div>`;
+    }
+    html += `</div>`;
   }
 
   // ── Re-analyze ─────────────────────────────────────────────────────────────

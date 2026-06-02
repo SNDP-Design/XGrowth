@@ -628,7 +628,9 @@
 
   /* Competitor cards grid */
   .pos-comp-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:12px}
-  @media(max-width:700px){.pos-comp-grid{grid-template-columns:1fr}}
+  .pos-lower-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:12px;align-items:stretch}
+  .pos-lower-grid > *{margin-bottom:0}
+  @media(max-width:700px){.pos-comp-grid,.pos-lower-grid{grid-template-columns:1fr}}
   .pos-comp-card{background:#080808;border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:10px}
   .pos-comp-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
   .pos-comp-name{font-size:16px;font-weight:700;color:var(--ink)}
