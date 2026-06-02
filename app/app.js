@@ -1460,8 +1460,8 @@ function planRenderDay(plan, di) {
   html += `<div class="day1-posts-grid">`;
   for (let n = 0; n < count; n++) {
     html += `<div class="day1-post-col"><div class="day1-pair-head">Post ${n + 1}</div>`;
-    if (liPosts[n]) html += planDayCard(liPosts[n].p, di, liPosts[n].i, 'linkedin');
     if (xPosts[n])  html += planDayCard(xPosts[n].p,  di, xPosts[n].i,  'x');
+    if (liPosts[n]) html += planDayCard(liPosts[n].p, di, liPosts[n].i, 'linkedin');
     html += `</div>`;
   }
   html += `</div>`;
