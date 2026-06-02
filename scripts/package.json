@@ -1,0 +1,12 @@
+{
+  "name": "xgrowth-admin-scripts",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Admin scripts for XGrowth — export signups + product profiles",
+  "scripts": {
+    "export": "node export-users.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.7.0"
+  }
+}
