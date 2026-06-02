@@ -190,6 +190,8 @@ function openProductProfile(){
   if(p.stage){ const el = $('ppStage'); if(el) el.value = p.stage; }
   setv('ppC1Site', c[0]?.website);
   setv('ppC2Site', c[1]?.website);
+  setv('ppC3Site', c[2]?.website);
+  setv('ppC4Site', c[3]?.website);
   document.getElementById('productProfile').classList.add('show');
   setTimeout(()=>$('ppName')?.focus(), 50);
 }
@@ -209,7 +211,7 @@ function saveProductProfile(){
   if(!name){ toast('Add your product name'); $('ppName')?.focus(); return; }
 
   const mk = s => ({ website: ($(s)?.value || '').trim() });
-  const competitors = [ mk('ppC1Site'), mk('ppC2Site') ]
+  const competitors = [ mk('ppC1Site'), mk('ppC2Site'), mk('ppC3Site'), mk('ppC4Site') ]
     .filter(c => c.website);
 
   const bio = ($('ppBio')?.value || '').trim();
@@ -239,6 +241,7 @@ function ppPrefillPositioning(){
   const sites = (p.competitors || []).map(c => c.website).filter(Boolean);
   fill('posUrl1', sites[0]);
   fill('posUrl2', sites[1]);
+  fill('posUrl3', sites[2]);
 }
 
 function parseGoals(s){
