@@ -83,20 +83,32 @@ function resetUserState(){
 async function loadFromCloud(){
   if(!fbAuth.currentUser) return;
   const uid = fbAuth.currentUser.uid;
+  const user = fbAuth.currentUser;
   try{
     const snap = await db.collection('users').doc(uid).get();
     // Always start from a clean slate — never inherit a previous account's localStorage
     resetUserState();
+    // Always stamp user identity so Firestore has email/name alongside product data
+    state._user = {
+      email: user.email || '',
+      name: user.displayName || '',
+      photo: user.photoURL || '',
+      lastLogin: new Date().toISOString(),
+    };
     if(snap.exists){
       const cloud = snap.data() || {};
       Object.assign(state, cloud);
+      // Re-stamp _user in case cloud had stale data
+      state._user = { email: user.email || '', name: user.displayName || '', photo: user.photoURL || '', lastLogin: new Date().toISOString() };
+      if(!state._user.firstSeen && cloud._user?.firstSeen) state._user.firstSeen = cloud._user.firstSeen;
       state.range = 7;
       state.uid = uid;
       localStorage.setItem(KEY, JSON.stringify(state));
       cloudLoaded = true;
       if(state.profile){ applyProfile(); }
     } else {
-      // Brand-new user — clean state (onboarding will trigger), then create the cloud doc
+      // Brand-new user — stamp firstSeen, clean state (onboarding will trigger)
+      state._user.firstSeen = new Date().toISOString();
       state.uid = uid;
       localStorage.setItem(KEY, JSON.stringify(state));
       cloudLoaded = true;
