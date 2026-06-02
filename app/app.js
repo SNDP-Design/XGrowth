@@ -71,20 +71,36 @@ function save(){
   }
 }
 function load(){ try{return JSON.parse(localStorage.getItem(KEY))}catch{return null} }
+// Clear all user-specific data from state (used when a new/different account signs in,
+// so one user's localStorage never leaks into another's session on a shared browser).
+function resetUserState(){
+  ['profile','productProfile','weekPlan','posResult','goals'].forEach(k => delete state[k]);
+  state.metrics = { followers:[], impressions:[], engagement:[], visits:[] };
+  state.range = 7;
+  _pos.result = null;
+}
+
 async function loadFromCloud(){
   if(!fbAuth.currentUser) return;
+  const uid = fbAuth.currentUser.uid;
   try{
-    const snap = await db.collection('users').doc(fbAuth.currentUser.uid).get();
+    const snap = await db.collection('users').doc(uid).get();
+    // Always start from a clean slate — never inherit a previous account's localStorage
+    resetUserState();
     if(snap.exists){
       const cloud = snap.data() || {};
       Object.assign(state, cloud);
       state.range = 7;
+      state.uid = uid;
       localStorage.setItem(KEY, JSON.stringify(state));
       cloudLoaded = true;
       if(state.profile){ applyProfile(); }
     } else {
+      // Brand-new user — clean state (onboarding will trigger), then create the cloud doc
+      state.uid = uid;
+      localStorage.setItem(KEY, JSON.stringify(state));
       cloudLoaded = true;
-      await db.collection('users').doc(fbAuth.currentUser.uid).set(state);
+      await db.collection('users').doc(uid).set(state);
     }
   }catch(err){
     console.error('Cloud load failed', err);
