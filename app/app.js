@@ -2563,8 +2563,8 @@ fbAuth.onAuthStateChanged(user=>{
     loadFromCloud().then(()=>{
       ppPrefillPositioning();
       planRenderSaved(); // Re-render plan with the correct user's Firestore data
-      // First-time onboarding: ask for the product profile on registration (mandatory)
-      if(!state.productProfile){ openProductProfile(true); }
+      // First-time onboarding: show product profile prompt (dismissable)
+      if(!state.productProfile){ openProductProfile(false); }
       // Auto-generate the week plan on load if none exists yet and profile is set
       if(!state.weekPlan && state.productProfile?.name) planGenerate();
       // Restore cached positioning result into memory (so buildCompetitorContext works immediately)
