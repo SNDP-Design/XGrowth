@@ -662,10 +662,31 @@ async function ceGenerateCurrent(pickedAt){
   ceSaveToHistory(platform, text, _ce.postTypes[platform]||_ce.postType, article);
 }
 
+// Build a compact competitor context block from the positioning result (if available)
+// or fall back to raw URLs from the product profile. Sent to both plan + CE generators.
+function buildCompetitorContext() {
+  // Prefer the already-fetched positioning analysis (zero extra latency)
+  if (_pos.result && _pos.result.competitors?.length) {
+    const { competitors, gap, overlap } = _pos.result;
+    const lines = competitors
+      .filter(c => c.name || c.domain)
+      .map(c => `- ${c.name || c.domain}: ${c.claim || ''}${c.weakness ? ` | Weakness: ${c.weakness}` : ''}`);
+    const parts = [];
+    if (lines.length) parts.push(`COMPETITORS:\n${lines.join('\n')}`);
+    if (overlap) parts.push(`WHERE THEY ALL FIGHT: ${overlap.split('\n')[0]}`);
+    if (gap) parts.push(`THE GAP YOU SHOULD OWN: ${gap.split('\n')[0]}`);
+    return parts.join('\n');
+  }
+  // Fall back to raw URLs from profile (worker will fetch + extract key claims)
+  const urls = (state.productProfile?.competitors || []).map(c => c.website).filter(Boolean);
+  return urls.length ? `COMPETITOR_URLS: ${urls.join(', ')}` : '';
+}
+
 async function ceCallAPI(platform, article, type){
   try {
     // For X threads, send mode='thread'. For all other cases, send the post type as mode.
     const mode = (platform === 'x' && _ce.threadMode) ? 'thread' : type;
+    const competitorContext = buildCompetitorContext();
     const payload = {
       kind: 'post',
       topic: _ce.topic,
@@ -678,6 +699,7 @@ async function ceCallAPI(platform, article, type){
       inputMode: article.inputMode || 'search',
     };
     if(_ce.refineInstruction) payload.refineInstruction = _ce.refineInstruction;
+    if(competitorContext) payload.competitorContext = competitorContext;
     const data = await xgFetch('/generate', payload);
     return data.text || ceFallback(platform, article);
   } catch(e){ console.warn('CE API error', e); toast('Generation failed — ' + (e.message || 'please try again')); return ceFallback(platform, article); }
@@ -1197,12 +1219,15 @@ async function planGenerate() {
 
   // Product context for the ready-to-post Day 1 launch posts
   const product = { name: pp.name || niche, what: pp.bio || niche, website: pp.website || '' };
+  const competitorContext = buildCompetitorContext();
 
   try {
     // Run the 7-day plan and the Day 1 posts together — Day 1 posts are optional
+    const launchPayload = { kind: 'launch-posts', niche, product };
+    if (competitorContext) launchPayload.competitorContext = competitorContext;
     const [planRes, postsRes] = await Promise.allSettled([
       xgFetch('/generate', { kind: 'plan-week', niche, stage, channels }),
-      xgFetch('/generate', { kind: 'launch-posts', niche, product }),
+      xgFetch('/generate', launchPayload),
     ]);
     if (planRes.status !== 'fulfilled') {
       throw new Error(planRes.reason?.message || "Couldn't build the week — try again");
@@ -1455,10 +1480,12 @@ async function planRegenerateCard(di, idx) {
   try {
     const pp = state.productProfile || {};
     const product = { name: pp.name || plan.niche, what: pp.bio || plan.niche, website: pp.website || '' };
+    const cc = buildCompetitorContext();
     const data = await xgFetch('/generate', {
       kind: 'launch-posts', single: true, platform: p.platform,
       niche: plan.niche, product,
       dayTheme: di > 0 ? (plan.days[di]?.theme || '') : '', dayNum: di + 1,
+      ...(cc ? { competitorContext: cc } : {}),
     });
     const posts = planParseLaunchPosts(data.text || '');
     if (posts.length && posts[0].text) { p.text = posts[0].text; p.posted = false; }
@@ -1485,9 +1512,11 @@ async function planPrepareDay(di) {
   try {
     const pp = state.productProfile || {};
     const product = { name: pp.name || plan.niche, what: pp.bio || plan.niche, website: pp.website || '' };
+    const cc = buildCompetitorContext();
     const data = await xgFetch('/generate', {
       kind: 'launch-posts', niche: plan.niche, product,
       dayTheme: di > 0 ? (plan.days[di]?.theme || '') : '', dayNum: di + 1,
+      ...(cc ? { competitorContext: cc } : {}),
     });
     const posts = planParseLaunchPosts(data.text || '');
     if (posts.length) plan.days[di].posts = posts;

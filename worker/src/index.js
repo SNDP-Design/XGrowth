@@ -147,7 +147,7 @@ export default {
     let prompt, postProcess = (t) => t, genOpts = {};
     try {
       if (kind === 'post') {
-        const { topic, articleTitle, articleAngle, platform, voiceNiche, voiceStyle, inputMode, refineInstruction } = body;
+        const { topic, articleTitle, articleAngle, platform, voiceNiche, voiceStyle, inputMode, refineInstruction, competitorContext } = body;
         const mode = body.mode || 'hot-take';
         if (!articleTitle || typeof articleTitle !== 'string') {
           return json({ error: 'Missing articleTitle' }, 400, origin, allowed);
@@ -155,7 +155,7 @@ export default {
         if (!['linkedin', 'x', 'threads'].includes(platform)) {
           return json({ error: 'platform must be linkedin | x | threads' }, 400, origin, allowed);
         }
-        prompt = buildPostPrompt({ topic, articleTitle, articleAngle, platform, mode, voiceNiche, voiceStyle, inputMode, refineInstruction });
+        prompt = buildPostPrompt({ topic, articleTitle, articleAngle, platform, mode, voiceNiche, voiceStyle, inputMode, refineInstruction, competitorContext });
         if (platform === 'x' && mode !== 'thread') postProcess = trimForX;
         else if (platform === 'threads') postProcess = (t) => trimAtSentence(t, 500);
         const { text, model } = await callGemini(env.GEMINI_API_KEY, prompt);
@@ -314,13 +314,15 @@ PLAIN ENGLISH (global audience, many non-native speakers):
 - If you reference a year at all, it MUST be the CURRENT YEAR shown above — never an older year like 2023 or 2024. Better: don't name a year, the post stays evergreen.
 - First person, present tense. Sound like a real person talking, not a brand account.`;
 
-function buildLaunchPostsPrompt({ product = {}, niche = '', single = false, platform = '', dayTheme = '', dayNum = 0 }) {
+function buildLaunchPostsPrompt({ product = {}, niche = '', single = false, platform = '', dayTheme = '', dayNum = 0, competitorContext = '' }) {
   const name    = (product.name || niche || 'this product').toString().trim();
   const what    = (product.what || niche || '').toString().trim();
   const website = (product.website || '').toString().trim();
   const theme   = (dayTheme || '').toString().trim();
   const year    = new Date().getUTCFullYear();
-  const themeBlock = `\nCURRENT YEAR: ${year}${theme ? `\nTODAY'S MARKETING FOCUS (Day ${dayNum || ''}): ${theme}\nEvery post must serve this focus while staying about the product.` : ''}\n`;
+  const compCtx = (competitorContext || '').toString().trim();
+  const compBlock = compCtx ? `\nCOMPETITOR INTELLIGENCE (use to sharpen angles — contrast, call out gaps, write against the crowded space):\n${compCtx}\n` : '';
+  const themeBlock = `\nCURRENT YEAR: ${year}${theme ? `\nTODAY'S MARKETING FOCUS (Day ${dayNum || ''}): ${theme}\nEvery post must serve this focus while staying about the product.` : ''}${compBlock}`;
 
   const liSpec = 'LinkedIn posts: 1300–1900 characters — LinkedIn\'s highest-engagement range. Long but TIGHT: every line must earn attention, zero padding or filler. Short paragraphs (1–2 sentences each) with a blank line between them for white space. Optional: up to 3 "→" bullets if they earn it.';
   const xSpec  = 'X posts: under 280 characters. One clear idea, punchy. COUNT characters before returning — if over 280, cut it down.';
@@ -1195,7 +1197,7 @@ const HARD_RULES = `HARD RULES — break ANY of these and the output is unusable
 - NO bold/italics markdown for emphasis on prose lines (headers with ## are fine).
 - Sound like a smart human operator, not a content marketer.`;
 
-function buildPostPrompt({ topic, articleTitle, articleAngle, platform, mode, voiceNiche, voiceStyle, inputMode, refineInstruction }) {
+function buildPostPrompt({ topic, articleTitle, articleAngle, platform, mode, voiceNiche, voiceStyle, inputMode, refineInstruction, competitorContext }) {
   const isWrite = inputMode === 'freewrite';
 
   const platformGuides = {
@@ -1261,7 +1263,9 @@ Structure:
         ? `VIDEO TITLE: ${articleTitle}\n${articleAngle ? `VIDEO DESCRIPTION: ${articleAngle}` : ''}\n\nBase your post on the content of this YouTube video. Write as if you watched it and are sharing the key insight with your audience.`
         : `ARTICLE TITLE: ${articleTitle}\n${articleAngle ? `ARTICLE CONTEXT: ${articleAngle}` : ''}`;
 
-  return `You are writing a social media post for a startup founder. The audience is global — many readers are non-native English speakers. Write in plain, simple, everyday English that anyone can understand.${voice}
+  const compBlock = competitorContext ? `\nCOMPETITOR INTELLIGENCE — use this to write a sharper, more differentiated post. Reference the competitive gap if it strengthens the take. Don't mention competitor names directly unless they're household names:\n${competitorContext}\n` : '';
+
+  return `You are writing a social media post for a startup founder. The audience is global — many readers are non-native English speakers. Write in plain, simple, everyday English that anyone can understand.${voice}${compBlock}
 
 TOPIC: "${topic || 'startup growth'}"
 
