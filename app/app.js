@@ -84,6 +84,16 @@ async function loadFromCloud(){
   if(!fbAuth.currentUser) return;
   const uid = fbAuth.currentUser.uid;
   const user = fbAuth.currentUser;
+  // SYNCHRONOUS user-switch guard: if localStorage has a different user's data,
+  // clear state + DOM RIGHT NOW before ceInit() can render stale content.
+  // (ceInit is called synchronously after this function is invoked, so we must
+  // act before the first `await` or ceInit will render the old user's week plan.)
+  if(state.uid && state.uid !== uid){
+    resetUserState();
+    const pr = document.getElementById('planResult'); if(pr) pr.innerHTML = '';
+    const pe = document.getElementById('planEmpty'); if(pe) pe.style.display = '';
+    const posr = document.getElementById('posResult'); if(posr) posr.innerHTML = '';
+  }
   try{
     const snap = await db.collection('users').doc(uid).get();
     // Always start from a clean slate — never inherit a previous account's localStorage
@@ -2552,6 +2562,7 @@ fbAuth.onAuthStateChanged(user=>{
     applyUser();
     loadFromCloud().then(()=>{
       ppPrefillPositioning();
+      planRenderSaved(); // Re-render plan with the correct user's Firestore data
       // First-time onboarding: ask for the product profile on registration (mandatory)
       if(!state.productProfile){ openProductProfile(true); }
       // Auto-generate the week plan on load if none exists yet and profile is set
