@@ -794,7 +794,9 @@
   .day1-intro{font-size:14px;line-height:1.6;color:var(--muted);margin:0 0 16px}
   .day1-pair-head{font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:20px 0 8px}
   .day1-pair-head:first-of-type{margin-top:4px}
-  .day1-pair-row{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:4px}
+  .day1-posts-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;align-items:start}
+  @media(max-width:900px){.day1-posts-grid{grid-template-columns:1fr}}
+  .day1-post-col{display:flex;flex-direction:column;gap:10px}
   .day1-post{background:#0d0d0d;border:1px solid var(--line);border-radius:12px;padding:14px 15px;display:flex;flex-direction:column;gap:10px;transition:border-color .15s}
   .day1-post:hover{border-color:#2c2c2c}
   .day1-post-head{display:flex;align-items:center;gap:8px}

@@ -1453,16 +1453,18 @@ function planRenderDay(plan, di) {
     return html;
   }
 
-  // Pair LinkedIn + X by index into Post 1, Post 2, Post 3 rows
+  // Arrange Post 1 / Post 2 / Post 3 as side-by-side columns; LinkedIn + X stacked inside each
   const liPosts = posts.map((p, i) => ({ p, i })).filter(o => o.p.platform === 'linkedin');
   const xPosts  = posts.map((p, i) => ({ p, i })).filter(o => o.p.platform === 'x');
   const count = Math.max(liPosts.length, xPosts.length);
+  html += `<div class="day1-posts-grid">`;
   for (let n = 0; n < count; n++) {
-    html += `<div class="day1-pair-head">Post ${n + 1}</div><div class="day1-pair-row">`;
+    html += `<div class="day1-post-col"><div class="day1-pair-head">Post ${n + 1}</div>`;
     if (liPosts[n]) html += planDayCard(liPosts[n].p, di, liPosts[n].i, 'linkedin');
     if (xPosts[n])  html += planDayCard(xPosts[n].p,  di, xPosts[n].i,  'x');
     html += `</div>`;
   }
+  html += `</div>`;
 
   html += `<div style="margin-top:12px;display:flex;justify-content:flex-end">
       <button class="btn secondary" style="height:36px;padding:0 14px;font-size:13px" onclick="planPrepareDay(${di})">↻ Rewrite all posts</button>
